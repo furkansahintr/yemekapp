@@ -111,7 +111,7 @@ function _renderStaffListTab() {
       }).join('')}
     </div>
     ${isOwnerOrManager ? `
-    <div style="margin-top:16px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+    <div onclick="openBizAddStaff()" style="margin-top:16px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
       <iconify-icon icon="solar:user-plus-bold" style="font-size:18px;color:#fff"></iconify-icon>
       <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Personel Ekle</span>
     </div>` : ''}
@@ -482,4 +482,259 @@ function bizSaveStaffStations(staffId) {
     detailOverlay.remove();
     openBizStaffDetail(staffId);
   }
+}
+
+/* ═══ ADD STAFF (INVITE) FLOW ═══
+ * Owner or Şube Müdürü clicks "Personel Ekle" → modal asks for ad/soyad,
+ * rol, telefon, e-posta. On submit, system generates a username & password,
+ * "sends" them via SMS/E-posta, and the new credential is saved into
+ * BIZ_INVITES so the new employee can log in via Settings →
+ * "Bir İşletmede Çalışıyorum".
+ *
+ * Permission rules:
+ *   - owner: can assign any role across any branch (defaults to current branch).
+ *   - manager (Şube Müdürü): can only assign staff to OWN branch and CANNOT
+ *     create owners or other managers.
+ */
+function _bizCanInviteStaff() {
+  return bizCurrentRole === 'owner' || bizCurrentRole === 'manager';
+}
+
+function _bizAssignableRoles() {
+  if (bizCurrentRole === 'owner') {
+    return ['manager','coordinator','chef','waiter','cashier','courier'];
+  }
+  if (bizCurrentRole === 'manager') {
+    // Managers cannot create owner OR other managers
+    return ['coordinator','chef','waiter','cashier','courier'];
+  }
+  return [];
+}
+
+function _bizGenerateCredentials(name) {
+  const slug = (name || 'kullanici')
+    .toLocaleLowerCase('tr-TR')
+    .replace(/ı/g,'i').replace(/ş/g,'s').replace(/ğ/g,'g')
+    .replace(/ü/g,'u').replace(/ö/g,'o').replace(/ç/g,'c')
+    .replace(/[^a-z0-9]+/g,'.').replace(/^\.+|\.+$/g,'').slice(0,20) || 'kullanici';
+  const suffix = Math.floor(100 + Math.random() * 900);
+  const username = `${slug}.${suffix}`;
+  // Password: capitalised 3-letter prefix + 4 digits, e.g. Lez4821
+  const prefix = (slug.replace(/[^a-z]/g,'').slice(0,3) || 'usr');
+  const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+  const digits = Math.floor(1000 + Math.random() * 9000);
+  return { username, password: `${cap}${digits}` };
+}
+
+function openBizAddStaff() {
+  if (!_bizCanInviteStaff()) return;
+
+  const roles = _bizAssignableRoles();
+  // Owner can pick branch; manager is locked to own branch
+  const branches = (typeof BIZ_BRANCHES !== 'undefined')
+    ? BIZ_BRANCHES.filter(b => b.businessId === (bizCurrentEmployment ? bizCurrentEmployment.businessId : 'bus_001'))
+    : [];
+  const lockedBranchId = bizCurrentRole === 'manager' ? bizActiveBranch : null;
+
+  const modal = document.createElement('div');
+  modal.id = 'bizAddStaffModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  modal.onclick = function(e){ if (e.target === modal) modal.remove(); };
+
+  modal.innerHTML = `
+    <div style="width:100%;max-width:420px;background:var(--bg-page);border-radius:var(--r-2xl) var(--r-2xl) 0 0;padding:18px 18px max(env(safe-area-inset-bottom),18px);max-height:92vh;overflow:auto;box-shadow:0 -8px 30px rgba(0,0,0,.25)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:var(--r-lg);background:var(--primary)15;display:flex;align-items:center;justify-content:center">
+            <iconify-icon icon="solar:user-plus-bold" style="font-size:20px;color:var(--primary)"></iconify-icon>
+          </div>
+          <div>
+            <div style="font:var(--fw-semibold) var(--fs-lg)/1.1 var(--font);color:var(--text-primary)">Personel Ekle</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-muted);margin-top:2px">Bilgiler doğrultusunda kişiye SMS ve e-posta ile giriş bilgileri gönderilir</div>
+          </div>
+        </div>
+        <div class="btn-icon" onclick="document.getElementById('bizAddStaffModal').remove()" style="width:32px;height:32px;flex-shrink:0">
+          <iconify-icon icon="solar:close-circle-linear" style="font-size:18px"></iconify-icon>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Ad Soyad</span>
+          <input id="invName" type="text" placeholder="Örn. Mehmet Yıldız" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Telefon Numarası</span>
+          <input id="invPhone" type="tel" placeholder="+90 555 000 00 00" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">E-posta</span>
+          <input id="invEmail" type="email" placeholder="ornek@firma.com" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
+        </label>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Rol</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="invRoleChips">
+            ${roles.map((r, i) => `
+              <div data-role="${r}" onclick="_bizPickInvRole('${r}')" class="inv-role-chip" style="padding:8px 12px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;${i===0 ? 'background:var(--primary);color:#fff;border:1px solid var(--primary)' : 'background:var(--bg-phone);color:var(--text-secondary);border:1px solid var(--border-subtle)'}">${BIZ_ROLE_LABELS[r] || r}</div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Şube</span>
+          ${lockedBranchId ? `
+            <div style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;display:flex;align-items:center;gap:8px">
+              <iconify-icon icon="solar:lock-keyhole-bold" style="font-size:14px;color:var(--text-muted)"></iconify-icon>
+              <span style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">${escHtml(branches.find(b=>b.id===lockedBranchId)?.name || 'Şube')}</span>
+              <span style="margin-left:auto;font:var(--fw-regular) 10px/1 var(--font);color:var(--text-muted)">Sadece kendi şubeniz</span>
+            </div>
+            <input type="hidden" id="invBranch" value="${lockedBranchId}">
+          ` : `
+            <select id="invBranch" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
+              ${branches.map(b => `<option value="${b.id}" ${b.id === bizActiveBranch ? 'selected' : ''}>${escHtml(b.name)}</option>`).join('')}
+            </select>
+          `}
+        </div>
+
+        <input type="hidden" id="invSelectedRole" value="${roles[0] || ''}">
+
+        <div onclick="_bizSubmitInvite()" style="margin-top:6px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <iconify-icon icon="solar:plain-bold" style="font-size:18px;color:#fff"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Davet Gönder</span>
+        </div>
+        <div style="font:var(--fw-regular) 11px/1.4 var(--font);color:var(--text-muted);text-align:center">SMS ve e-posta otomatik gönderilir. Kullanıcı uygulamadan giriş yaparak hesabını aktifleştirebilir.</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function _bizPickInvRole(role) {
+  document.getElementById('invSelectedRole').value = role;
+  document.querySelectorAll('.inv-role-chip').forEach(el => {
+    const active = el.dataset.role === role;
+    el.style.background = active ? 'var(--primary)' : 'var(--bg-phone)';
+    el.style.color = active ? '#fff' : 'var(--text-secondary)';
+    el.style.border = active ? '1px solid var(--primary)' : '1px solid var(--border-subtle)';
+  });
+}
+
+function _bizSubmitInvite() {
+  const name  = (document.getElementById('invName').value || '').trim();
+  const phone = (document.getElementById('invPhone').value || '').trim();
+  const email = (document.getElementById('invEmail').value || '').trim();
+  const role  = document.getElementById('invSelectedRole').value;
+  const branchId = document.getElementById('invBranch').value;
+
+  if (!name || !phone || !email || !role || !branchId) {
+    alert('Lütfen tüm alanları doldurun.');
+    return;
+  }
+  if (!_bizAssignableRoles().includes(role)) {
+    alert('Bu rolü atama yetkiniz bulunmuyor.');
+    return;
+  }
+  if (bizCurrentRole === 'manager' && branchId !== bizActiveBranch) {
+    alert('Şube müdürü olarak yalnızca kendi şubenize personel ekleyebilirsiniz.');
+    return;
+  }
+
+  const businessId = bizCurrentEmployment ? bizCurrentEmployment.businessId : 'bus_001';
+  const businessName = bizCurrentEmployment ? bizCurrentEmployment.businessName : 'Lezzet Mutfak';
+  const branch = (typeof BIZ_BRANCHES !== 'undefined') ? BIZ_BRANCHES.find(b => b.id === branchId) : null;
+  const creds = _bizGenerateCredentials(name);
+  const inviterId = (typeof getCurrentBizStaff === 'function' && getCurrentBizStaff()) ? getCurrentBizStaff().id : (bizCurrentRole === 'owner' ? 'staff_001' : null);
+
+  const invite = {
+    id: 'inv_' + Date.now(),
+    username: creds.username,
+    password: creds.password,
+    name, phone, email, role,
+    businessId, businessName,
+    branchId, branchName: branch ? branch.name : '',
+    invitedBy: inviterId,
+    invitedAt: new Date().toISOString(),
+    status: 'pending'
+  };
+  if (typeof BIZ_INVITES !== 'undefined') BIZ_INVITES.push(invite);
+
+  // Also create a BIZ_STAFF entry so the new person appears in the personnel list immediately
+  const newStaffId = 'staff_' + Date.now();
+  const roleColors = { owner:'#8B5CF6', manager:'#3B82F6', coordinator:'#A855F7', chef:'#F59E0B', waiter:'#22C55E', cashier:'#06B6D4', courier:'#EF4444' };
+  const avatarSeed = Math.floor(Math.random() * 70) + 1;
+  if (typeof BIZ_STAFF !== 'undefined') {
+    BIZ_STAFF.push({
+      id: newStaffId,
+      businessId, branchId,
+      name, phone, email,
+      avatar: `https://api.pravatar.cc/img?img=${avatarSeed}`,
+      role,
+      roleLabel: BIZ_ROLE_LABELS[role] || role,
+      permissions: [],
+      status: 'pending', // becomes 'active' after first login
+      hireDate: new Date().toISOString().slice(0,10)
+    });
+  }
+  invite.staffId = newStaffId;
+
+  // Close form and show success card with credentials
+  const form = document.getElementById('bizAddStaffModal');
+  if (form) form.remove();
+  _bizShowInviteSent(invite, roleColors[role] || '#6B7280');
+
+  // Refresh staff list if open
+  const container = document.getElementById('bizStaffMainContent');
+  if (container) container.innerHTML = _renderStaffTabContent();
+}
+
+function _bizShowInviteSent(invite, color) {
+  const modal = document.createElement('div');
+  modal.id = 'bizInviteSentModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.onclick = function(e){ if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `
+    <div style="width:100%;max-width:380px;background:var(--bg-page);border-radius:var(--r-2xl);padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.3)">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="width:60px;height:60px;border-radius:50%;background:#22C55E15;display:flex;align-items:center;justify-content:center">
+          <iconify-icon icon="solar:check-circle-bold" style="font-size:36px;color:#22C55E"></iconify-icon>
+        </div>
+        <div style="font:var(--fw-bold) var(--fs-lg)/1.2 var(--font);color:var(--text-primary);text-align:center">Davet Gönderildi</div>
+        <div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-muted);text-align:center">
+          <strong style="color:var(--text-primary)">${escHtml(invite.name)}</strong> kullanıcısına SMS ve e-posta ile giriş bilgileri iletildi.
+        </div>
+      </div>
+
+      <div style="background:var(--bg-phone);border:1px dashed var(--border-subtle);border-radius:var(--r-xl);padding:14px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Kullanıcı Adı</span>
+          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);font-family:monospace">${escHtml(invite.username)}</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Şifre</span>
+          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);font-family:monospace">${escHtml(invite.password)}</span>
+        </div>
+        <div style="height:1px;background:var(--border-subtle)"></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <iconify-icon icon="solar:phone-bold" style="font-size:13px;color:var(--text-muted)"></iconify-icon>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-secondary)">${escHtml(invite.phone)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <iconify-icon icon="solar:letter-bold" style="font-size:13px;color:var(--text-muted)"></iconify-icon>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-secondary)">${escHtml(invite.email)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <iconify-icon icon="solar:shield-user-bold" style="font-size:13px;color:${color}"></iconify-icon>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1.2 var(--font);color:${color}">${escHtml(BIZ_ROLE_LABELS[invite.role] || invite.role)} · ${escHtml(invite.branchName)}</span>
+        </div>
+      </div>
+
+      <div onclick="document.getElementById('bizInviteSentModal').remove()" style="background:var(--primary);border-radius:var(--r-xl);padding:13px;text-align:center;cursor:pointer">
+        <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Tamam</span>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }

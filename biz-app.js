@@ -105,22 +105,10 @@ function returnToUserAccount() {
   switchTab('profile');
 }
 
-/* ═══ ROLE INDICATOR IN HEADER ═══ */
+/* ═══ ROLE INDICATOR IN HEADER (disabled — hidden per design) ═══ */
 function updateBizRoleIndicator() {
-  let badge = document.getElementById('bizRoleBadge');
-  if (!badge) {
-    badge = document.createElement('div');
-    badge.id = 'bizRoleBadge';
-    const selector = document.getElementById('bizHeaderBranchSelector');
-    if (selector) selector.parentElement.appendChild(badge);
-  }
-  const perms = BIZ_ROLE_PERMISSIONS[bizCurrentRole];
-  if (perms && bizCurrentRole !== 'owner') {
-    badge.style.cssText = 'display:inline-flex;align-items:center;gap:3px;margin-top:2px;padding:2px 8px;border-radius:var(--r-full);font:var(--fw-medium) 9px/1 var(--font);color:' + perms.color + ';background:' + perms.color + '12';
-    badge.innerHTML = '<iconify-icon icon="solar:shield-user-bold" style="font-size:10px"></iconify-icon> ' + perms.label;
-  } else {
-    badge.style.display = 'none';
-  }
+  const badge = document.getElementById('bizRoleBadge');
+  if (badge && badge.parentElement) badge.parentElement.removeChild(badge);
 }
 
 /* ═══ ROLE PERMISSION HELPERS ═══ */
@@ -132,11 +120,13 @@ function bizHasPermission(action) {
 }
 
 function bizCanSeeTile(tileId) {
+  if (bizCurrentRole === 'owner') return true; // owner sees all tiles
   const perms = BIZ_ROLE_PERMISSIONS[bizCurrentRole];
   return perms ? perms.tiles.includes(tileId) : false;
 }
 
 function bizCanSeeScreen(screenId) {
+  if (bizCurrentRole === 'owner') return true; // owner has universal access
   const perms = BIZ_ROLE_PERMISSIONS[bizCurrentRole];
   return perms ? perms.screens.includes(screenId) : false;
 }
@@ -160,16 +150,20 @@ function applyRoleToUI() {
   // Update role badge
   updateBizRoleIndicator();
 
-  // Show/hide branch picker for non-owner roles (they're locked to their branch)
+  // Show/hide branch picker — only owner can switch branches.
+  // Manager and other roles are locked to their assigned branch so they
+  // cannot access other branches' dashboard, AI or community.
   const branchSelector = document.getElementById('bizHeaderBranchSelector');
   if (branchSelector) {
-    if (bizCurrentRole === 'owner' || bizCurrentRole === 'manager') {
+    if (bizCurrentRole === 'owner') {
       branchSelector.style.cursor = 'pointer';
       branchSelector.onclick = toggleBizBranchPicker;
     } else {
       branchSelector.style.cursor = 'default';
       branchSelector.onclick = null;
       // Remove the dropdown arrow for locked roles
+      const arrow = branchSelector.querySelector('iconify-icon[icon*="alt-arrow"]');
+      if (arrow) arrow.style.display = 'none';
     }
   }
 }
@@ -259,7 +253,13 @@ function getBizBranch() {
 }
 
 function getBranchTables() {
-  return BIZ_TABLES.filter(t => t.branchId === bizActiveBranch);
+  const tables = BIZ_TABLES.filter(t => t.branchId === bizActiveBranch);
+  // Waiters only see tables in zones assigned to them
+  if (bizCurrentRole === 'waiter') {
+    const zoneIds = getWaiterAssignedZoneIds();
+    return tables.filter(t => zoneIds.includes(t.zoneId));
+  }
+  return tables;
 }
 
 function getBranchOrders() {
@@ -271,7 +271,35 @@ function getBranchStaff() {
 }
 
 function getBranchCalls() {
-  return BIZ_WAITER_CALLS.filter(c => c.branchId === bizActiveBranch);
+  const calls = BIZ_WAITER_CALLS.filter(c => c.branchId === bizActiveBranch);
+  // Waiters only receive notifications for their assigned zones
+  if (bizCurrentRole === 'waiter') {
+    const zoneIds = getWaiterAssignedZoneIds();
+    return calls.filter(c => {
+      const table = BIZ_TABLES.find(t => t.id === c.tableId);
+      return table && zoneIds.includes(table.zoneId);
+    });
+  }
+  return calls;
+}
+
+/* ═══ CURRENT STAFF / WAITER-ZONE HELPERS ═══ */
+function getCurrentBizStaff() {
+  if (!bizCurrentEmployment) return null;
+  // Prefer explicit staffId if provided on the employment record.
+  if (bizCurrentEmployment.staffId) {
+    return BIZ_STAFF.find(s => s.id === bizCurrentEmployment.staffId) || null;
+  }
+  // Fallback: match by name within the active branch.
+  return BIZ_STAFF.find(s => s.branchId === bizActiveBranch && s.name === bizCurrentEmployment.staffName) || null;
+}
+
+function getWaiterAssignedZoneIds() {
+  const staff = getCurrentBizStaff();
+  if (!staff) return [];
+  return BIZ_TABLE_ZONES
+    .filter(z => z.branchId === bizActiveBranch && Array.isArray(z.assignedWaiters) && z.assignedWaiters.includes(staff.id))
+    .map(z => z.id);
 }
 
 /* ═══ BRANCH PICKER ═══ */
@@ -339,6 +367,13 @@ function closeBizBranchPicker() {
 }
 
 function selectBizBranch(branchId) {
+  // Only owner may switch branches. Other roles (incl. manager) are locked
+  // to their own branch so they cannot view other branches' dashboard,
+  // AI or community.
+  if (bizCurrentRole !== 'owner') {
+    closeBizBranchPicker();
+    return;
+  }
   bizActiveBranch = branchId;
   closeBizBranchPicker();
 

@@ -734,7 +734,8 @@ const USER_EMPLOYMENTS = [
     status: 'active',
     assignedAt: '2026-02-20',
     isOwner: false,
-    staffName: 'Ayşe Kaya'
+    staffName: 'Ayşe Kaya',
+    staffId: 'staff_005'
   },
   {
     id: 'emp_005',
@@ -767,6 +768,22 @@ const USER_EMPLOYMENTS = [
     assignedAt: '2026-03-18',
     isOwner: false,
     staffName: 'Barış Güzel'
+  },
+  {
+    id: 'emp_009',
+    businessId: 'bus_001',
+    businessName: 'Lezzet Mutfak',
+    businessLogo: null,
+    businessCuisine: 'Türk & Dünya Mutfağı',
+    branchId: 'b1',
+    branchName: 'Kadıköy Şubesi',
+    role: 'coordinator',
+    roleLabel: 'Koordinatör',
+    roleColor: '#A855F7',
+    status: 'active',
+    assignedAt: '2026-03-25',
+    isOwner: false,
+    staffName: 'Elif Aslan'
   },
   // ═══ Diğer işletmeler ═══
   {
@@ -829,6 +846,10 @@ const USER_EMPLOYEE_SHIFTS = [
   { id: 'shift_u16', empId: 'emp_006', date: '2026-04-12', start: '08:00', end: '20:00', status: 'active', businessName: 'Lezzet Mutfak', branchName: 'Kadıköy Şubesi' },
   { id: 'shift_u17', empId: 'emp_006', date: '2026-04-13', start: '08:00', end: '20:00', status: 'upcoming', businessName: 'Lezzet Mutfak', branchName: 'Kadıköy Şubesi' },
   { id: 'shift_u18', empId: 'emp_006', date: '2026-04-11', start: '08:00', end: '20:00', status: 'completed', businessName: 'Lezzet Mutfak', branchName: 'Kadıköy Şubesi' },
+  // Koordinatör - Lezzet Mutfak
+  { id: 'shift_u23', empId: 'emp_009', date: '2026-04-12', start: '09:00', end: '19:00', status: 'active', businessName: 'Lezzet Mutfak', branchName: 'Kadıköy Şubesi' },
+  { id: 'shift_u24', empId: 'emp_009', date: '2026-04-13', start: '09:00', end: '19:00', status: 'upcoming', businessName: 'Lezzet Mutfak', branchName: 'Kadıköy Şubesi' },
+  { id: 'shift_u25', empId: 'emp_009', date: '2026-04-11', start: '09:00', end: '19:00', status: 'completed', businessName: 'Lezzet Mutfak', branchName: 'Kadıköy Şubesi' },
   // Kahve Dünyası - Şube Müdürü
   { id: 'shift_u19', empId: 'emp_007', date: '2026-04-12', start: '12:00', end: '20:00', status: 'active', businessName: 'Kahve Dünyası', branchName: 'Beşiktaş Şubesi' },
   { id: 'shift_u20', empId: 'emp_007', date: '2026-04-13', start: '08:00', end: '16:00', status: 'upcoming', businessName: 'Kahve Dünyası', branchName: 'Beşiktaş Şubesi' },
@@ -857,6 +878,9 @@ const USER_EMPLOYEE_TASKS = [
   // Kurye
   { id: 'task_u10', empId: 'emp_006', title: 'Teslimat rotası optimizasyonu', desc: 'Kadıköy bölgesi rota planını güncelle', priority: 'medium', status: 'in_progress', dueDate: '2026-04-12', businessName: 'Lezzet Mutfak' },
   { id: 'task_u11', empId: 'emp_006', title: 'Araç bakımı', desc: 'Motosiklet periyodik bakım randevusu al', priority: 'high', status: 'pending', dueDate: '2026-04-15', businessName: 'Lezzet Mutfak' },
+  // Koordinatör
+  { id: 'task_u16', empId: 'emp_009', title: 'Vardiya planı kontrolü', desc: 'Haftalık garson ve mutfak vardiyasını gözden geçir', priority: 'high', status: 'in_progress', dueDate: '2026-04-13', businessName: 'Lezzet Mutfak' },
+  { id: 'task_u17', empId: 'emp_009', title: 'Müşteri yorumları değerlendirme', desc: 'Son hafta gelen yorumları incele ve topluluğa yanıt ver', priority: 'medium', status: 'pending', dueDate: '2026-04-14', businessName: 'Lezzet Mutfak' },
   // Kahve Dünyası
   { id: 'task_u14', empId: 'emp_007', title: 'Barista eğitimi', desc: 'Yeni barista için oryantasyon hazırla', priority: 'medium', status: 'pending', dueDate: '2026-04-14', businessName: 'Kahve Dünyası' },
   // Balıkçı Hasan

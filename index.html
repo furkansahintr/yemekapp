@@ -273,13 +273,14 @@
   <div class="app-body" id="bizAppBody">
     <div class="app-header" id="bizAppHeader">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="display:flex;align-items:center;gap:8px;flex:1">
-          <div style="width:34px;height:34px;border-radius:var(--r-lg);background:var(--primary);display:flex;align-items:center;justify-content:center">
-            <iconify-icon icon="solar:shop-bold" style="font-size:18px;color:#fff"></iconify-icon>
+        <div style="display:flex;align-items:center;gap:10px;flex:1">
+          <div onclick="openBizProfOverlay()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,#ff6b35 0%,#f7931e 55%,#ffc75f 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(255,107,53,0.35);position:relative">
+            <span style="font:800 15px/1 'Poppins',var(--font);color:#fff;letter-spacing:0.5px;text-shadow:0 1px 2px rgba(0,0,0,0.15)">LM</span>
+            <iconify-icon icon="solar:chef-hat-minimalistic-bold" style="position:absolute;bottom:-2px;right:-1px;font-size:14px;color:#fff;background:#d94e1f;border-radius:50%;padding:1px"></iconify-icon>
           </div>
-          <div>
-            <div id="bizHeaderName" style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Lezzet Mutfak</div>
-            <div id="bizHeaderBranchSelector" onclick="toggleBizBranchPicker()" style="display:flex;align-items:center;gap:4px;cursor:pointer;margin-top:2px">
+          <div style="min-width:0;flex:1">
+            <div id="bizHeaderName" onclick="openBizProfOverlay()" style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary);cursor:pointer">Lezzet Mutfak</div>
+            <div id="bizHeaderBranchSelector" onclick="toggleBizBranchPicker()" style="display:flex;align-items:center;gap:4px;cursor:pointer;margin-top:3px">
               <iconify-icon icon="solar:map-point-bold" style="font-size:12px;color:var(--primary)"></iconify-icon>
               <span id="bizBranchLabel" style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Kadıköy Şubesi</span>
               <iconify-icon icon="solar:alt-arrow-down-linear" style="font-size:10px;color:var(--text-muted)"></iconify-icon>
@@ -401,6 +402,9 @@
     'js/biz-waiter-calls.js',
     'js/biz-reviews.js',
     'js/biz-ai.js',
+    'js/biz-reservations.js',
+    'js/biz-table-order.js',
+    'js/biz-profile.js',
     'js/biz-branch-detail.js',
     'js/biz-notifications.js',
     'js/biz-kitchen.js',
@@ -408,7 +412,25 @@
   ];
   let i = 0;
   function loadNext() {
-    if (i >= scripts.length) return;
+    if (i >= scripts.length) {
+      // All scripts loaded — now safe to initialize the app
+      try {
+        if (typeof AUTH !== 'undefined' && typeof AUTH.login === 'function') AUTH.login();
+        if (typeof initApp === 'function') initApp();
+        // Safety retry — re-render home after next frame in case of any DOM timing race
+        requestAnimationFrame(() => {
+          try {
+            const tT = document.getElementById('tabTarifler');
+            if (tT && !tT.innerHTML.trim() && typeof renderMenu === 'function') renderMenu();
+            const kc0 = document.getElementById('kesfetCol0');
+            if (kc0 && !kc0.innerHTML.trim() && typeof renderKesfet === 'function') renderKesfet();
+          } catch (err) { console.error('[retry] init failed:', err); }
+        });
+      } catch (e) {
+        console.error('App init error:', e);
+      }
+      return;
+    }
     const s = document.createElement('script');
     s.src = scripts[i++];
     s.onload = loadNext;

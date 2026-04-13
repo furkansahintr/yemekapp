@@ -55,8 +55,21 @@ function obEnterApp() {
 
 /* ═══ INIT APP ═══ */
 function initApp() {
-  renderMenu();
-  renderKesfet();
+  try {
+    if (typeof renderMenu === 'function') renderMenu();
+    else console.warn('[initApp] renderMenu not loaded yet');
+  } catch (e) { console.error('[initApp] renderMenu failed:', e); }
+  try {
+    if (typeof renderKesfet === 'function') renderKesfet();
+    else console.warn('[initApp] renderKesfet not loaded yet');
+  } catch (e) { console.error('[initApp] renderKesfet failed:', e); }
+  // Ensure the correct home-tab pane is visible
+  try {
+    const tT = document.getElementById('tabTarifler');
+    const tR = document.getElementById('tabRestoranlar');
+    if (tT) tT.style.display = activeHomeTab === 'tarifler' ? '' : 'none';
+    if (tR) tR.style.display = activeHomeTab === 'restoranlar' ? '' : 'none';
+  } catch (e) { console.error('[initApp] tab toggle failed:', e); }
 }
 
 /* ═══ CORE STATE ═══ */
@@ -64,21 +77,25 @@ let currentView = 'menu';
 let isDark = false;
 let activeHomeTab = 'tarifler';
 
-injectTokens();
+try { if (typeof injectTokens === 'function') injectTokens(); } catch (e) { console.error('[app.js] injectTokens failed:', e); }
 
 // Home Tabs
-document.getElementById('homeTabs').addEventListener('click', e => {
-  const tab = e.target.closest('.home-tab');
-  if (!tab) return;
-  document.querySelectorAll('.home-tab').forEach(t => t.classList.remove('active'));
-  tab.classList.add('active');
-  const tabName = tab.dataset.tab;
-  activeHomeTab = tabName;
-  document.getElementById('tabTarifler').style.display = tabName === 'tarifler' ? '' : 'none';
-  document.getElementById('tabRestoranlar').style.display = tabName === 'restoranlar' ? '' : 'none';
-  if (tabName === 'tarifler') renderMenu();
-  else renderRestoranlar();
-});
+(function attachHomeTabs() {
+  const el = document.getElementById('homeTabs');
+  if (!el) { console.warn('[app.js] #homeTabs not in DOM yet'); return; }
+  el.addEventListener('click', e => {
+    const tab = e.target.closest('.home-tab');
+    if (!tab) return;
+    document.querySelectorAll('.home-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const tabName = tab.dataset.tab;
+    activeHomeTab = tabName;
+    document.getElementById('tabTarifler').style.display = tabName === 'tarifler' ? '' : 'none';
+    document.getElementById('tabRestoranlar').style.display = tabName === 'restoranlar' ? '' : 'none';
+    if (tabName === 'tarifler') renderMenu();
+    else renderRestoranlar();
+  });
+})();
 
 /* ═══ THEME ═══ */
 function toggleTheme() {
@@ -184,6 +201,7 @@ function syncStickyHeader() {
 function handleHeaderScroll() {
   const sticky = document.getElementById('stickyHeader');
   const staticHeader = document.getElementById('appHeader');
+  if (!sticky || !staticHeader) return;
   const headerH = staticHeader.offsetHeight;
   const scrollY = window.scrollY || window.pageYOffset;
   const now = Date.now();
@@ -227,5 +245,5 @@ function escHtml(s) {
 
 /* ═══ APP STARTUP ═══ */
 // App starts directly on home page; onboarding shows only after logout
-AUTH.login();
-initApp();
+// NOTE: Actual init is triggered from index.html after ALL scripts load,
+// so that renderMenu/renderKesfet (defined in js/menu.js) are available.

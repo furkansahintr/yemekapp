@@ -101,12 +101,13 @@ function renderProfileEmployments() {
   const container = document.getElementById('profEmployments');
   if (!container || typeof USER_EMPLOYMENTS === 'undefined') return;
 
-  if (USER_EMPLOYMENTS.length === 0) {
+  const visible = USER_EMPLOYMENTS.filter(e => !e.transient);
+  if (visible.length === 0) {
     container.innerHTML = '<div style="padding:20px;text-align:center;font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-muted)">Henüz bir işletmeye bağlı değilsiniz</div>';
     return;
   }
 
-  container.innerHTML = USER_EMPLOYMENTS.map(emp => `
+  container.innerHTML = visible.map(emp => `
     <div class="g-card" style="padding:14px;border-radius:var(--r-xl);display:flex;align-items:center;gap:12px">
       <div style="width:44px;height:44px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <iconify-icon icon="${emp.isOwner ? 'solar:shop-bold' : 'solar:buildings-2-bold'}" style="font-size:22px;color:${emp.roleColor}"></iconify-icon>
@@ -257,4 +258,147 @@ function closeProfileEdit(){
 
 function saveProfile(){
   closeProfileEdit();
+}
+
+/* ═══ "BİR İŞLETMEDE ÇALIŞIYORUM" — EMPLOYEE LOGIN FLOW ═══
+ * Settings → "Bir İşletmede Çalışıyorum" → modal asks for kullanıcı adı + şifre
+ * (the credentials sent via SMS/E-posta when the owner/manager invited them).
+ * If "Profilimi açık tut" is on, an entry is added to USER_EMPLOYMENTS so the
+ * business is remembered under "Çalıştığım İşletmeler". After login, the app
+ * switches to the business shell automatically.
+ */
+function openBizEmployeeLogin() {
+  // Close settings panel if it is still open (visually cleaner)
+  // (kept open intentionally so user can return after cancel)
+  let modal = document.getElementById('bizEmployeeLoginModal');
+  if (modal) modal.remove();
+
+  modal = document.createElement('div');
+  modal.id = 'bizEmployeeLoginModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:flex-end;justify-content:center';
+  modal.onclick = function(e){ if (e.target === modal) modal.remove(); };
+
+  modal.innerHTML = `
+    <div style="width:100%;max-width:420px;background:var(--bg-page);border-radius:var(--r-2xl) var(--r-2xl) 0 0;padding:18px 18px max(env(safe-area-inset-bottom),18px);max-height:92vh;overflow:auto;box-shadow:0 -8px 30px rgba(0,0,0,.25)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:var(--r-lg);background:#06B6D415;display:flex;align-items:center;justify-content:center">
+            <iconify-icon icon="solar:case-round-bold" style="font-size:20px;color:#06B6D4"></iconify-icon>
+          </div>
+          <div>
+            <div style="font:var(--fw-semibold) var(--fs-lg)/1.1 var(--font);color:var(--text-primary)">İşletme Girişi</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-muted);margin-top:2px">SMS / e-posta ile gönderilen bilgilerle giriş yapın</div>
+          </div>
+        </div>
+        <div class="btn-icon" onclick="document.getElementById('bizEmployeeLoginModal').remove()" style="width:32px;height:32px;flex-shrink:0">
+          <iconify-icon icon="solar:close-circle-linear" style="font-size:18px"></iconify-icon>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Kullanıcı Adı</span>
+          <input id="bizLoginUsername" type="text" autocomplete="off" placeholder="kullanici.adi" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none;font-family:monospace">
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Şifre</span>
+          <input id="bizLoginPassword" type="password" autocomplete="off" placeholder="••••••••" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none;font-family:monospace">
+        </label>
+
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 4px">
+          <input id="bizLoginRemember" type="checkbox" checked style="width:18px;height:18px;accent-color:var(--primary)">
+          <span style="font:var(--fw-medium) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">Profilimi açık tut</span>
+          <span style="font:var(--fw-regular) 11px/1.2 var(--font);color:var(--text-muted);margin-left:auto">Çalıştığım İşletmeler'e kaydet</span>
+        </label>
+
+        <div id="bizLoginError" style="display:none;background:#EF444415;color:#EF4444;border-radius:var(--r-lg);padding:10px 12px;font:var(--fw-medium) var(--fs-xs)/1.3 var(--font)"></div>
+
+        <div onclick="_bizSubmitEmployeeLogin()" style="margin-top:6px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <iconify-icon icon="solar:login-3-bold" style="font-size:18px;color:#fff"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Giriş Yap</span>
+        </div>
+
+        <div style="font:var(--fw-regular) 11px/1.5 var(--font);color:var(--text-muted);text-align:center">
+          Henüz davet almadınız mı? İşletme sahibinizden veya şube müdürünüzden personel daveti göndermesini isteyin.
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => { const f = document.getElementById('bizLoginUsername'); if (f) f.focus(); }, 60);
+}
+
+function _bizSubmitEmployeeLogin() {
+  const u = (document.getElementById('bizLoginUsername').value || '').trim();
+  const p = (document.getElementById('bizLoginPassword').value || '').trim();
+  const remember = !!document.getElementById('bizLoginRemember').checked;
+  const errEl = document.getElementById('bizLoginError');
+
+  if (!u || !p) {
+    errEl.textContent = 'Lütfen kullanıcı adı ve şifreyi giriniz.';
+    errEl.style.display = '';
+    return;
+  }
+
+  const inv = (typeof BIZ_INVITES !== 'undefined')
+    ? BIZ_INVITES.find(i => i.username === u && i.password === p && i.status !== 'revoked')
+    : null;
+
+  if (!inv) {
+    errEl.textContent = 'Kullanıcı adı veya şifre hatalı. Lütfen davet bilgilerini kontrol edin.';
+    errEl.style.display = '';
+    return;
+  }
+
+  // Mark invite accepted, mark linked staff active
+  inv.status = 'accepted';
+  if (typeof BIZ_STAFF !== 'undefined' && inv.staffId) {
+    const st = BIZ_STAFF.find(s => s.id === inv.staffId);
+    if (st) st.status = 'active';
+  }
+
+  // Build employment
+  const roleColors = { owner:'#8B5CF6', manager:'#3B82F6', coordinator:'#A855F7', chef:'#F59E0B', waiter:'#10B981', cashier:'#EC4899', courier:'#F97316' };
+  const employment = {
+    id: 'emp_' + Date.now(),
+    businessId: inv.businessId,
+    businessName: inv.businessName,
+    businessLogo: null,
+    businessCuisine: '',
+    branchId: inv.branchId,
+    branchName: inv.branchName,
+    role: inv.role,
+    roleLabel: (typeof BIZ_ROLE_LABELS !== 'undefined' ? BIZ_ROLE_LABELS[inv.role] : inv.role) || inv.role,
+    roleColor: roleColors[inv.role] || '#6B7280',
+    status: 'active',
+    assignedAt: new Date().toISOString().slice(0,10),
+    isOwner: inv.role === 'owner',
+    staffName: inv.name,
+    staffId: inv.staffId || null
+  };
+
+  // Push to USER_EMPLOYMENTS so switchToBizAccount can resolve the id.
+  // If "remember" is off, mark transient so we can hide it from the profile list.
+  if (typeof USER_EMPLOYMENTS !== 'undefined') {
+    const exists = USER_EMPLOYMENTS.find(e => e.businessId === employment.businessId && e.branchId === employment.branchId && e.role === employment.role && e.staffName === employment.staffName);
+    if (exists) {
+      employment.id = exists.id; // reuse so we don't duplicate the card
+    } else {
+      employment.transient = !remember;
+      USER_EMPLOYMENTS.unshift(employment);
+    }
+    if (remember && typeof renderProfileEmployments === 'function') renderProfileEmployments();
+  }
+
+  // Close login + settings, switch to business
+  const modal = document.getElementById('bizEmployeeLoginModal');
+  if (modal) modal.remove();
+  if (typeof closeSettingsPanel === 'function') closeSettingsPanel();
+
+  if (typeof switchToBizAccount === 'function') {
+    switchToBizAccount(employment.id);
+  } else {
+    alert('Giriş başarılı: ' + employment.businessName + ' / ' + employment.roleLabel);
+  }
 }

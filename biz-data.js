@@ -116,12 +116,12 @@ const BIZ_BRANCHES = [
 
 /* ═══ TABLE ZONES ═══ */
 const BIZ_TABLE_ZONES = [
-  { id: 'zone_1', branchId: 'b1', name: 'İç Salon', icon: 'solar:home-angle-bold', color: '#3B82F6', order: 1 },
-  { id: 'zone_2', branchId: 'b1', name: 'Teras', icon: 'solar:sun-2-bold', color: '#F59E0B', order: 2 },
-  { id: 'zone_3', branchId: 'b1', name: 'Bahçe', icon: 'solar:leaf-bold', color: '#22C55E', order: 3 },
-  { id: 'zone_4', branchId: 'b1', name: 'VIP Oda', icon: 'solar:crown-bold', color: '#8B5CF6', order: 4 },
-  { id: 'zone_5', branchId: 'b2', name: 'İç Salon', icon: 'solar:home-angle-bold', color: '#3B82F6', order: 1 },
-  { id: 'zone_6', branchId: 'b2', name: 'Teras', icon: 'solar:sun-2-bold', color: '#F59E0B', order: 2 }
+  { id: 'zone_1', branchId: 'b1', name: 'İç Salon', icon: 'solar:home-angle-bold', color: '#3B82F6', order: 1, assignedWaiters: ['staff_005'] },
+  { id: 'zone_2', branchId: 'b1', name: 'Teras', icon: 'solar:sun-2-bold', color: '#F59E0B', order: 2, assignedWaiters: ['staff_006'] },
+  { id: 'zone_3', branchId: 'b1', name: 'Bahçe', icon: 'solar:leaf-bold', color: '#22C55E', order: 3, assignedWaiters: ['staff_007'] },
+  { id: 'zone_4', branchId: 'b1', name: 'VIP Oda', icon: 'solar:crown-bold', color: '#8B5CF6', order: 4, assignedWaiters: [] },
+  { id: 'zone_5', branchId: 'b2', name: 'İç Salon', icon: 'solar:home-angle-bold', color: '#3B82F6', order: 1, assignedWaiters: [] },
+  { id: 'zone_6', branchId: 'b2', name: 'Teras', icon: 'solar:sun-2-bold', color: '#F59E0B', order: 2, assignedWaiters: [] }
 ];
 
 const BIZ_TABLES = [
@@ -143,9 +143,73 @@ const BIZ_TABLES = [
   { id: 't12', branchId: 'b1', zoneId: 'zone_4', number: 12, capacity: 4, status: 'occupied', currentOrder: '#1051', assignedWaiter: 'Fatih Demir', occupiedSince: '2026-04-10T12:30:00Z', guestCount: 3 }
 ];
 
+/* ═══ BUSINESS PROFILE (community-facing) ═══ */
+const BIZ_PROFILE = {
+  id: 'bus_001',
+  handle: '@lezzetmutfak',
+  avatar: 'https://api.pravatar.cc/img?img=68',
+  cover: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200',
+  bio: 'Geleneksel lezzetler, modern sunum. Kadıköy • Beşiktaş • Ataşehir',
+  rating: 4.7,
+  postsCount: 18,
+  followersCount: 1284,
+  followingCount: 42
+};
+
+const BIZ_FOLLOWERS = [
+  { id: 'u1', name: 'Zeynep Kaplan', handle: '@zeynepk',  avatar: 'https://api.pravatar.cc/img?img=11', follows: true },
+  { id: 'u2', name: 'Ahmet Şahin',   handle: '@ahmets',   avatar: 'https://api.pravatar.cc/img?img=12', follows: false },
+  { id: 'u3', name: 'Fatma Çetin',   handle: '@fatmac',   avatar: 'https://api.pravatar.cc/img?img=13', follows: true },
+  { id: 'u4', name: 'Can Akın',      handle: '@cana',     avatar: 'https://api.pravatar.cc/img?img=14', follows: false },
+  { id: 'u5', name: 'Dilara Yılmaz', handle: '@dilaray',  avatar: 'https://api.pravatar.cc/img?img=15', follows: true },
+  { id: 'u6', name: 'Mert Öztürk',   handle: '@merto',    avatar: 'https://api.pravatar.cc/img?img=16', follows: false },
+  { id: 'u7', name: 'Elif Demir',    handle: '@elifd',    avatar: 'https://api.pravatar.cc/img?img=17', follows: true },
+  { id: 'u8', name: 'Burak Arslan',  handle: '@buraka',   avatar: 'https://api.pravatar.cc/img?img=18', follows: false }
+];
+
+const BIZ_FOLLOWING = [
+  { id: 'f1', name: 'Şef Mehmet Usta',  handle: '@sefmehmet', avatar: 'https://api.pravatar.cc/img?img=33', verified: true },
+  { id: 'f2', name: 'Anadolu Tatları',  handle: '@anadolut',  avatar: 'https://api.pravatar.cc/img?img=34', verified: true },
+  { id: 'f3', name: 'İstanbul Gurme',   handle: '@istgurme',  avatar: 'https://api.pravatar.cc/img?img=35', verified: false },
+  { id: 'f4', name: 'Kahve Dünyası',    handle: '@kahvedunyasi', avatar: 'https://api.pravatar.cc/img?img=36', verified: true }
+];
+
+/* ═══ RESERVATIONS ═══ */
+const BIZ_RESERVATIONS = [
+  {
+    id: 'res_001',
+    branchId: 'b1',
+    tableId: 't6',
+    customerName: 'Şahin Ailesi',
+    customerPhone: '+905551112233',
+    guestCount: 4,
+    reservedAt: '2026-04-10T19:00:00Z',
+    note: 'Pencere kenarı tercih edilir',
+    createdBy: 'staff_001',
+    createdByName: 'Furkan Yılmaz',
+    createdAt: '2026-04-09T14:00:00Z',
+    status: 'confirmed'
+  },
+  {
+    id: 'res_002',
+    branchId: 'b1',
+    tableId: 't11',
+    customerName: 'Doğum Günü Grubu',
+    customerPhone: '+905554445566',
+    guestCount: 6,
+    reservedAt: '2026-04-13T20:30:00Z',
+    note: 'Pasta servisi yapılacak',
+    createdBy: 'staff_004',
+    createdByName: 'Ayşe Kaya',
+    createdAt: '2026-04-11T10:30:00Z',
+    status: 'confirmed'
+  }
+];
+
 const BIZ_ROLE_LABELS = {
   'owner': 'İşletme Sahibi',
   'manager': 'Şube Müdürü',
+  'coordinator': 'Koordinatör',
   'chef': 'Mutfak Sorumlusu',
   'waiter': 'Garson',
   'cashier': 'Kasiyer',
@@ -157,7 +221,7 @@ const BIZ_ROLE_PERMISSIONS = {
   owner: {
     label: 'İşletme Sahibi',
     color: '#8B5CF6',
-    tiles: ['orders','tables','menu','waiterCalls','staff','reviews','branches','kitchen','bar','reservations','delivery'],
+    tiles: ['orders','tables','menu','waiterCalls','staff','reviews','branches','delivery'],
     navTabs: ['bizHome','bizDashboard','bizAI','bizCommunity','bizMyBusiness'],
     screens: ['orders','tables','menu','waiterCalls','staff','reviews','dashboard','ai','community','myBusiness','branches','roles','payments','invoice','settings','notifications'],
     actions: ['edit_menu','manage_staff','assign_roles','view_reports','process_payment','manage_tables','manage_orders','manage_settings','manage_branches']
@@ -168,38 +232,48 @@ const BIZ_ROLE_PERMISSIONS = {
     tiles: ['orders','tables','menu','waiterCalls','staff','reviews'],
     navTabs: ['bizHome','bizDashboard','bizAI','bizCommunity','bizMyBusiness'],
     screens: ['orders','tables','menu','waiterCalls','staff','reviews','dashboard','ai','community','myBusiness'],
-    actions: ['edit_menu','manage_staff','view_reports','manage_tables','manage_orders']
+    actions: ['edit_menu','manage_staff','view_reports','manage_tables','manage_orders','manage_reservations']
+  },
+  coordinator: {
+    label: 'Koordinatör',
+    color: '#A855F7',
+    tiles: ['orders','tables','waiterCalls','staff','reviews','delivery'],
+    // AI access: only for the coordinator's own branch (branch picker is
+    // already locked to bizActiveBranch for non-owner roles in biz-app.js).
+    navTabs: ['bizHome','bizAI','bizCommunity'],
+    screens: ['orders','tables','waiterCalls','staff','reviews','delivery','ai','community'],
+    actions: ['manage_tables','manage_orders','post_community','manage_reservations']
   },
   chef: {
     label: 'Mutfak Sorumlusu',
     color: '#F59E0B',
-    tiles: ['orders','menu','kitchen','bar'],
-    navTabs: ['bizHome','bizAI','bizCommunity'],
-    screens: ['orders','menu','kitchen','bar','ai','community'],
+    tiles: ['orders','menu'],
+    navTabs: ['bizHome','bizAI'],
+    screens: ['orders','menu','ai'],
     actions: ['edit_menu','manage_orders']
   },
   waiter: {
     label: 'Garson',
     color: '#22C55E',
     tiles: ['orders','tables','waiterCalls'],
-    navTabs: ['bizHome','bizCommunity'],
-    screens: ['orders','tables','waiterCalls','community'],
-    actions: ['manage_tables','manage_orders']
+    navTabs: ['bizHome'],
+    screens: ['orders','tables','waiterCalls'],
+    actions: ['manage_tables','manage_orders','manage_reservations']
   },
   cashier: {
     label: 'Kasiyer',
     color: '#06B6D4',
     tiles: ['orders','tables','menu'],
-    navTabs: ['bizHome','bizCommunity'],
-    screens: ['orders','tables','menu','community'],
-    actions: ['process_payment','manage_orders']
+    navTabs: ['bizHome','bizAI','bizCommunity'],
+    screens: ['orders','tables','menu','ai','community'],
+    actions: ['process_payment','manage_orders','manage_reservations']
   },
   courier: {
     label: 'Kurye',
     color: '#EF4444',
     tiles: ['orders','delivery'],
-    navTabs: ['bizHome','bizCommunity'],
-    screens: ['orders','delivery','community'],
+    navTabs: ['bizHome'],
+    screens: ['orders','delivery'],
     actions: ['manage_orders']
   },
 };
@@ -212,9 +286,6 @@ const BIZ_TILE_DEFS = {
   waiterCalls:  { icon: 'solar:bell-bing-bold',                    color: '#EF4444', title: 'Garson Çağrıları', fn: 'openBizWaiterCalls' },
   staff:        { icon: 'solar:users-group-two-rounded-bold',      color: '#EC4899', title: 'Personel',         fn: 'openBizStaff' },
   reviews:      { icon: 'solar:star-bold',                         color: '#F59E0B', title: 'Değerlendirmeler', fn: 'openBizReviews' },
-  kitchen:      { icon: 'solar:chef-hat-bold',                     color: '#F97316', title: 'Mutfak',           fn: 'openBizKitchen' },
-  bar:          { icon: 'solar:cup-hot-bold',                      color: '#A855F7', title: 'Bar/İçecek',       fn: 'openBizBar' },
-  reservations: { icon: 'solar:calendar-mark-bold',                color: '#14B8A6', title: 'Rezervasyonlar',   fn: 'openBizReservations' },
   delivery:     { icon: 'solar:delivery-bold',                     color: '#EF4444', title: 'Teslimatlar',      fn: 'openBizDelivery' },
   branches:     { icon: 'solar:buildings-2-bold',                  color: '#6366F1', title: 'Şubeler',          fn: 'openBizBranches' }
 };
@@ -594,6 +665,7 @@ const BIZ_ORDERS = [
     customerName: 'Ali Yılmaz',
     customerPhone: '+905558888888',
     customerAddress: 'Moda Cad. No: 50, Kadıköy',
+    customerNote: 'Lütfen acılı turşuyu ayrı paketleyin, kapıyı çalmayın.',
     items: [
       { name: 'İskender Kebap Tavası', qty: 1, price: 24.00 },
       { name: 'Acılı Turşu', qty: 1, price: 3.00 },
@@ -660,6 +732,7 @@ const BIZ_ORDERS = [
     customerName: 'Murat Kaya',
     customerPhone: '+905551111111',
     customerAddress: 'Caferağa Mah. Cad. No: 75, Kadıköy',
+    customerNote: 'Sosu az olsun, plastik çatal-bıçak istemiyorum.',
     items: [
       { name: 'Şiş Tavuk', qty: 2, price: 14.00 },
       { name: 'Garnitür', qty: 2, price: 5.00 },
@@ -1283,6 +1356,33 @@ const BIZ_MENU_ITEMS = [
   { id: 'mi_29', name: 'Limonata',               price: 3.00,  category: 'İçecekler', kitchenCategory: 'bar',          status: 'active', branchId: 'b1' }
 ];
 
+/* ═══ STAFF INVITATIONS / CREDENTIALS ═══
+ * When an owner/manager invites someone via "Personel Ekle", the system
+ * generates a username + password and "sends" it via SMS/email. The pending
+ * credential is stored here so it can be matched when the new employee logs in
+ * via Settings → "Bir İşletmede Çalışıyorum".
+ */
+const BIZ_INVITES = [
+  // Demo invite: username 'demo.garson' / password 'Lez4821' is preloaded
+  // so the login flow can be tried out immediately.
+  {
+    id: 'inv_demo_001',
+    username: 'demo.garson',
+    password: 'Lez4821',
+    name: 'Demo Garson',
+    phone: '+905550000000',
+    email: 'demo.garson@example.com',
+    role: 'waiter',
+    businessId: 'bus_001',
+    businessName: 'Lezzet Mutfak',
+    branchId: 'b1',
+    branchName: 'Kadıköy Şubesi',
+    invitedBy: 'staff_001',
+    invitedAt: '2026-04-12T10:00:00Z',
+    status: 'pending' // pending | accepted | revoked
+  }
+];
+
 // Export all data
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -1290,7 +1390,12 @@ if (typeof module !== 'undefined' && module.exports) {
     BIZ_BRANCHES,
     BIZ_TABLE_ZONES,
     BIZ_TABLES,
+    BIZ_RESERVATIONS,
+    BIZ_PROFILE,
+    BIZ_FOLLOWERS,
+    BIZ_FOLLOWING,
     BIZ_STAFF,
+    BIZ_INVITES,
     BIZ_ROLE_LABELS,
     BIZ_ROLE_PERMISSIONS,
     BIZ_TILE_DEFS,
