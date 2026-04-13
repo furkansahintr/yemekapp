@@ -3,29 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>Menu App — Interactive Demo</title>
-<script>window.APP_VERSION = Date.now();</script>
 <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<script>
-  // Cache-busting: append version to every asset that supports src/href mutation
-  (function(){
-    const v = window.APP_VERSION;
-    document.querySelectorAll('link[rel="stylesheet"][href="styles.css"]').forEach(l => l.href = 'styles.css?v=' + v);
-  })();
-</script>
-<script>
-  (function(){
-    const v = window.APP_VERSION;
-    ['tokens.js','data.js','biz-data.js'].forEach(src => {
-      document.write('<script src="' + src + '?v=' + v + '"><\/script>');
-    });
-  })();
-</script>
+<script src="tokens.js"></script>
+<script src="data.js"></script>
+<script src="biz-data.js"></script>
 </head>
 <body>
 
@@ -448,7 +432,7 @@
       return;
     }
     const s = document.createElement('script');
-    s.src = scripts[i++] + '?v=' + (window.APP_VERSION || Date.now());
+    s.src = scripts[i++];
     s.onload = loadNext;
     s.onerror = function() { console.error('Failed to load:', this.src); loadNext(); };
     document.body.appendChild(s);
