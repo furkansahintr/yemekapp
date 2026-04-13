@@ -1,0 +1,11 @@
+    <!-- ═══ NOTIFICATIONS PANEL ═══ -->
+    <div class="notif-overlay" id="notifOverlay">
+      <div class="notif-panel">
+        <div class="notif-header">
+          <div class="btn-icon" onclick="closeNotifications()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>
+          <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary);flex:1">Bildirimler</span>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);cursor:pointer" onclick="markAllRead()">Tümünü Oku</span>
+        </div>
+        <div class="notif-list" id="notifList"></div>
+      </div>
+    </div>

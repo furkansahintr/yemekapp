@@ -1,0 +1,107 @@
+    <div class="screen" id="screenProfile">
+      <div style="padding:0 var(--app-px) var(--app-px);display:flex;flex-direction:column;gap:16px">
+        <!-- Dark Mode & Fullscreen Toggle -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="g-card" style="flex:1;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:var(--r-lg)" onclick="toggleTheme()">
+            <iconify-icon icon="solar:moon-linear" id="themeIcon" style="font-size:20px;color:var(--primary)"></iconify-icon>
+            <span style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)" id="themeLabel">Karanlık Mod</span>
+            <div style="margin-left:auto;width:36px;height:20px;border-radius:10px;background:var(--glass-card-strong);position:relative;transition:background .2s" id="themeSwitch">
+              <div style="width:16px;height:16px;border-radius:50%;background:var(--text-muted);position:absolute;top:2px;left:2px;transition:all .2s" id="themeSwitchDot"></div>
+            </div>
+          </div>
+          <div class="g-card" style="padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:var(--r-lg)" onclick="toggleFullscreen()">
+            <iconify-icon icon="solar:full-screen-linear" id="fullscreenIcon" style="font-size:20px;color:var(--primary)"></iconify-icon>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center">
+            <span style="font:var(--fw-bold) var(--fs-2xl)/1 var(--font);color:#fff">F</span>
+          </div>
+          <div style="flex:1">
+            <div style="font:var(--fw-bold) var(--fs-xl)/1.2 var(--font);color:var(--text-primary)">Furkan</div>
+            <div style="font:var(--fw-regular) var(--fs-sm)/1.3 var(--font);color:var(--text-tertiary)">furkan.sahin@campusaxess.com</div>
+          </div>
+          <div class="g-pill" style="padding:8px 14px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);cursor:pointer" onclick="openProfileEdit()">Düzenle</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="g-card" style="padding:14px;text-align:center">
+            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:var(--primary)">23</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:4px">Sipariş</div>
+          </div>
+          <div class="g-card" style="padding:14px;text-align:center">
+            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:var(--primary)">8</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:4px">Favori</div>
+          </div>
+          <div class="g-card" style="padding:14px;text-align:center">
+            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:var(--primary)">350</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:4px">Puan</div>
+          </div>
+        </div>
+        <div class="g-card-strong" style="padding:16px;display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <iconify-icon icon="solar:gift-bold" style="font-size:24px;color:var(--primary)"></iconify-icon>
+          </div>
+          <div style="flex:1">
+            <div style="font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:var(--text-primary)">150 puana ücretsiz teslimat!</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary)">350 / 500 puan</div>
+            <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--glass-card)">
+              <div style="height:100%;width:70%;border-radius:2px;background:var(--primary)"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)" onclick="openOrderHistory()">
+            <iconify-icon icon="solar:bag-check-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+            <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Siparişlerim</div>
+            <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-right:4px">3 aktif</span>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)">
+            <iconify-icon icon="solar:map-point-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+            <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Adreslerim</div>
+            <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-right:4px">2 adres</span>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)">
+            <iconify-icon icon="solar:card-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+            <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Ödeme Yöntemlerim</div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)">
+            <iconify-icon icon="solar:heart-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+            <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Favorilerim</div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)" onclick="openNotifications()">
+            <iconify-icon icon="solar:bell-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+            <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Bildirimler</div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--primary);margin-right:4px"></div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- ═══ Çalıştığım İşletmeler ═══ -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <iconify-icon icon="solar:buildings-2-bold" style="font-size:18px;color:var(--primary)"></iconify-icon>
+            <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Çalıştığım İşletmeler</span>
+          </div>
+          <div id="profEmployments" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)" onclick="openSettingsPanel()">
+            <iconify-icon icon="solar:settings-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+            <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Ayarlar</div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+          <div style="text-align:center;font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary)">Versiyon 1.0.0</div>
+          <div style="padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer" onclick="AUTH.logout()">
+            <iconify-icon icon="solar:logout-2-bold" style="font-size:20px;color:#EF4444"></iconify-icon>
+            <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:#EF4444">Çıkış Yap</div>
+          </div>
+        </div>
+      </div>
+    </div>

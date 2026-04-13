@@ -1,0 +1,120 @@
+    <div class="screen" id="screenAI">
+      <div class="ai-chat-container">
+        <!-- Chat Messages Area -->
+        <div class="ai-chat-messages" id="aiChatMessages">
+
+          <!-- Welcome Card (shown at start) -->
+          <div class="ai-welcome" id="aiWelcome">
+            <div class="ai-welcome-avatar">
+              <div class="ai-avatar-glow"></div>
+              <iconify-icon icon="solar:chef-hat-bold" style="font-size:28px;color:#fff"></iconify-icon>
+            </div>
+            <div class="ai-welcome-title">AI Şef</div>
+            <div class="ai-welcome-desc">Merhaba! Ben senin kişisel mutfak asistanınım. Tarif öner, haftalık plan oluştur veya elindeki malzemelerle ne yapabileceğini keşfet.</div>
+
+            <!-- Task 6.2: Hazır Aksiyon Butonları -->
+            <div class="ai-action-grid">
+              <div class="ai-action-card" onclick="aiQuickAction('weekly')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)">
+                  <iconify-icon icon="solar:calendar-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Haftalık Plan</div>
+                <div class="ai-action-hint">7 günlük menü planı</div>
+              </div>
+              <div class="ai-action-card" onclick="aiQuickAction('ingredients')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#F59E0B,#D97706)">
+                  <iconify-icon icon="solar:fridge-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Malzemeden Tarif</div>
+                <div class="ai-action-hint">Elindekilerle yemek yap</div>
+              </div>
+              <div class="ai-action-card" onclick="aiQuickAction('personalize')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#10B981,#059669)">
+                  <iconify-icon icon="solar:user-heart-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Kişiselleştir</div>
+                <div class="ai-action-hint">Diyet & alerjen filtrele</div>
+              </div>
+              <div class="ai-action-card" onclick="aiQuickAction('surprise')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#F65013,#D44410)">
+                  <iconify-icon icon="solar:magic-stick-3-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Beni Şaşırt</div>
+                <div class="ai-action-hint">Rastgele tarif öner</div>
+              </div>
+            </div>
+
+            <!-- Quick Command Chips -->
+            <div class="ai-quick-chips">
+              <div class="ai-chip" onclick="aiSendQuick('Bugün ne yesem?')">
+                <iconify-icon icon="solar:fire-linear" style="font-size:14px"></iconify-icon> Bugün ne yesem?
+              </div>
+              <div class="ai-chip" onclick="aiSendQuick('Düşük kalorili tarifler')">
+                <iconify-icon icon="solar:heart-pulse-linear" style="font-size:14px"></iconify-icon> Düşük kalorili
+              </div>
+              <div class="ai-chip" onclick="aiSendQuick('15 dakikada hazır tarifler')">
+                <iconify-icon icon="solar:alarm-linear" style="font-size:14px"></iconify-icon> 15dk'da hazır
+              </div>
+              <div class="ai-chip" onclick="aiSendQuick('Tatlı öner')">
+                <iconify-icon icon="solar:cup-star-linear" style="font-size:14px"></iconify-icon> Tatlı öner
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="ai-chat-input-bar" id="aiChatInputBar">
+          <!-- Quick chips (scrollable, shown when chat is active) -->
+          <div class="ai-input-chips" id="aiInputChips" style="display:none">
+            <div class="ai-chip-sm" onclick="aiSendQuick('Tarifi paylaş')">Paylaş</div>
+            <div class="ai-chip-sm" onclick="aiSendQuick('Plana ekle')">Plana Ekle</div>
+            <div class="ai-chip-sm" onclick="aiSendQuick('Başka öner')">Başka Öner</div>
+            <div class="ai-chip-sm" onclick="aiSendQuick('Daha az kalorili')">Az Kalorili</div>
+            <div class="ai-chip-sm" onclick="aiSendQuick('Vejetaryen versiyonu')">Vejetaryen</div>
+          </div>
+          <div class="ai-input-row">
+            <button class="ai-input-action-btn" onclick="toggleAiActionMenu()" id="aiActionMenuBtn">
+              <iconify-icon icon="solar:add-circle-linear" style="font-size:22px"></iconify-icon>
+            </button>
+            <div class="ai-input-field">
+              <input type="text" id="aiChatInput" placeholder="AI Şef'e bir şey sor..." onkeydown="if(event.key==='Enter')aiSend()">
+            </div>
+            <button class="ai-send-btn" id="aiSendBtn" onclick="aiSend()">
+              <iconify-icon icon="solar:arrow-up-linear" style="font-size:18px;color:#fff"></iconify-icon>
+            </button>
+          </div>
+          <!-- Action Menu (hidden by default) -->
+          <div class="ai-action-menu" id="aiActionMenu">
+            <div class="ai-action-menu-item" onclick="aiQuickAction('weekly');toggleAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#8B5CF6"><iconify-icon icon="solar:calendar-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Haftalık Plan Oluştur</div>
+                <div class="ai-action-menu-desc">7 günlük kişiselleştirilmiş menü</div>
+              </div>
+            </div>
+            <div class="ai-action-menu-item" onclick="aiQuickAction('ingredients');toggleAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#F59E0B"><iconify-icon icon="solar:fridge-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Malzemeden Tarif Bul</div>
+                <div class="ai-action-menu-desc">Buzdolabındaki malzemeleri söyle</div>
+              </div>
+            </div>
+            <div class="ai-action-menu-item" onclick="aiQuickAction('personalize');toggleAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#10B981"><iconify-icon icon="solar:user-heart-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Diyet Tercihlerimi Ayarla</div>
+                <div class="ai-action-menu-desc">Alerjen, kalori ve diyet filtresi</div>
+              </div>
+            </div>
+            <div class="ai-action-menu-item" onclick="aiQuickAction('photo');toggleAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#3B82F6"><iconify-icon icon="solar:camera-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Fotoğraftan Tarif Tanı</div>
+                <div class="ai-action-menu-desc">Yemek fotoğrafı çek, tarifi öğren</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

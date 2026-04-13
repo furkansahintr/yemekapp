@@ -1,0 +1,26 @@
+    <!-- ═══ STORY VIEWER ═══ -->
+    <div class="story-viewer" id="storyViewer">
+      <div class="story-viewer-progress" id="storyViewerProgress"></div>
+      <div class="story-viewer-header">
+        <img class="story-viewer-avatar" id="storyViewerAvatar" src="" alt="">
+        <div class="story-viewer-info">
+          <span class="story-viewer-name" id="storyViewerName">—</span>
+          <span class="story-viewer-time">2 saat önce</span>
+        </div>
+        <div class="btn-icon" onclick="closeStoryViewer()" style="color:#fff"><iconify-icon icon="solar:close-circle-linear" style="font-size:26px"></iconify-icon></div>
+      </div>
+      <div class="story-viewer-content" id="storyViewerContent">
+        <img id="storyViewerImg" src="" alt="" style="width:100%;height:100%;object-fit:cover">
+      </div>
+      <div class="story-viewer-nav">
+        <div class="story-viewer-nav-left" onclick="prevStory()"></div>
+        <div class="story-viewer-nav-right" onclick="nextStory()"></div>
+      </div>
+      <div class="story-viewer-footer">
+        <div class="story-viewer-input">
+          <input type="text" placeholder="Mesaj gönder...">
+          <iconify-icon icon="solar:heart-linear" style="font-size:22px;color:#fff;cursor:pointer"></iconify-icon>
+          <iconify-icon icon="solar:share-linear" style="font-size:22px;color:#fff;cursor:pointer"></iconify-icon>
+        </div>
+      </div>
+    </div>

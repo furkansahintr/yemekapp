@@ -1,0 +1,66 @@
+    <!-- ═══ BMI CALCULATOR OVERLAY (Task 8.4) ═══ -->
+    <div class="bmi-overlay" id="bmiOverlay">
+      <div class="bmi-panel">
+        <div class="notif-header">
+          <div class="btn-icon" onclick="closeBMICalculator()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>
+          <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary);flex:1">Sağlık Verileri</span>
+          <div style="width:36px"></div>
+        </div>
+        <div class="bmi-body">
+          <div class="bmi-card">
+            <div class="bmi-card-icon"><iconify-icon icon="solar:health-bold" style="font-size:28px;color:#EC4899"></iconify-icon></div>
+            <div class="bmi-card-title">Vücut Kitle Endeksi (BMI)</div>
+            <div class="bmi-card-desc">Boy ve kilonuzu girerek sağlık durumunuzu öğrenin</div>
+          </div>
+
+          <div class="bmi-input-group">
+            <label>Boy (cm)</label>
+            <div class="bmi-input-row">
+              <button class="bmi-adj-btn" onclick="adjBMI('height',-1)">−</button>
+              <input type="number" id="bmiHeight" value="178" class="bmi-input">
+              <button class="bmi-adj-btn" onclick="adjBMI('height',1)">+</button>
+            </div>
+          </div>
+          <div class="bmi-input-group">
+            <label>Kilo (kg)</label>
+            <div class="bmi-input-row">
+              <button class="bmi-adj-btn" onclick="adjBMI('weight',-1)">−</button>
+              <input type="number" id="bmiWeight" value="75" class="bmi-input">
+              <button class="bmi-adj-btn" onclick="adjBMI('weight',1)">+</button>
+            </div>
+          </div>
+          <div class="bmi-input-group">
+            <label>Yaş</label>
+            <div class="bmi-input-row">
+              <button class="bmi-adj-btn" onclick="adjBMI('age',-1)">−</button>
+              <input type="number" id="bmiAge" value="26" class="bmi-input">
+              <button class="bmi-adj-btn" onclick="adjBMI('age',1)">+</button>
+            </div>
+          </div>
+
+          <button class="bmi-calc-btn" onclick="calculateBMI()">
+            <iconify-icon icon="solar:calculator-bold" style="font-size:18px"></iconify-icon> Hesapla
+          </button>
+
+          <!-- Result Area -->
+          <div class="bmi-result" id="bmiResult" style="display:none">
+            <div class="bmi-result-value" id="bmiValue">—</div>
+            <div class="bmi-result-label" id="bmiLabel">—</div>
+            <div class="bmi-gauge">
+              <div class="bmi-gauge-bar">
+                <div class="bmi-gauge-fill" id="bmiGaugeFill"></div>
+                <div class="bmi-gauge-marker" id="bmiGaugeMarker"></div>
+              </div>
+              <div class="bmi-gauge-labels">
+                <span>Zayıf</span><span>Normal</span><span>Kilolu</span><span>Obez</span>
+              </div>
+            </div>
+            <div class="bmi-result-info" id="bmiInfo">—</div>
+            <button class="bmi-ai-btn" onclick="bmiAskAI()">
+              <iconify-icon icon="solar:star-circle-bold" style="font-size:18px"></iconify-icon>
+              AI Şef'ten Diyet Önerisi Al
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>

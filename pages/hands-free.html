@@ -1,0 +1,78 @@
+<!-- ═══ HANDS-FREE MODE OVERLAY ═══ -->
+<div class="handsfree-overlay" id="handsfreeOverlay">
+  <!-- Animated Background -->
+  <div class="handsfree-bg"></div>
+
+  <!-- Close button -->
+  <div class="handsfree-close" onclick="closeHandsfreeMode()">
+    <iconify-icon icon="solar:close-circle-linear" style="font-size:28px;color:var(--text-inverse)"></iconify-icon>
+  </div>
+
+  <!-- Recipe info -->
+  <div class="handsfree-header">
+    <span class="handsfree-recipe-name" id="handsfreeRecipeName">—</span>
+    <span class="handsfree-step-label" id="handsfreeStepLabel">Adım 1/6</span>
+  </div>
+
+  <!-- TTS Animation (sound wave) -->
+  <div class="handsfree-tts-anim" id="handsfreeTtsAnim">
+    <div class="sound-wave">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="handsfree-tts-status" id="handsfreeTtsStatus">Okunuyor...</div>
+  </div>
+
+  <!-- Step Content -->
+  <div class="handsfree-step-content">
+    <div class="handsfree-step-number" id="handsfreeStepNumber">ADIM 1</div>
+    <h2 class="handsfree-step-title" id="handsfreeStepTitle">—</h2>
+    <p class="handsfree-step-desc" id="handsfreeStepDesc">—</p>
+  </div>
+
+  <!-- Microphone Active Visual -->
+  <div class="handsfree-mic-area" id="handsfreeMicArea">
+    <div class="mic-pulse-ring"></div>
+    <div class="mic-pulse-ring mic-pulse-ring-2"></div>
+    <div class="mic-button" id="handsfreeMicBtn" onclick="toggleVoiceCommand()">
+      <iconify-icon icon="solar:microphone-3-linear" style="font-size:28px;color:#fff" id="handsfreeMicIcon"></iconify-icon>
+    </div>
+    <div class="mic-status" id="handsfreeMicStatus">Sesli Komut Aktif</div>
+    <div class="mic-hint">"Sonraki adım" veya "Tekrarla" deyin</div>
+  </div>
+
+  <!-- Hand Gesture Overlay Info -->
+  <div class="handsfree-gesture-info" id="handsfreeGestureInfo">
+    <div class="gesture-info-card">
+      <div class="gesture-info-icon">
+        <iconify-icon icon="solar:hand-shake-linear" style="font-size:32px;color:var(--primary)"></iconify-icon>
+      </div>
+      <div class="gesture-info-text">
+        <div class="gesture-info-title">El Hareketi ile Geçiş</div>
+        <div class="gesture-info-desc">Ön kamera açıkken elinizi sağa/sola kaydırarak adımlar arasında geçiş yapabilirsiniz</div>
+      </div>
+      <div class="gesture-info-demo">
+        <div class="gesture-hand-anim">
+          <iconify-icon icon="solar:hand-shake-linear" style="font-size:24px"></iconify-icon>
+        </div>
+        <div class="gesture-arrows">
+          <iconify-icon icon="solar:arrow-left-linear" style="font-size:14px;color:var(--text-tertiary)"></iconify-icon>
+          <iconify-icon icon="solar:arrow-right-linear" style="font-size:14px;color:var(--text-tertiary)"></iconify-icon>
+        </div>
+      </div>
+      <button class="gesture-dismiss-btn" onclick="dismissGestureInfo()">Anladım</button>
+    </div>
+  </div>
+
+  <!-- Bottom Nav for Hands-Free -->
+  <div class="handsfree-bottom">
+    <button class="handsfree-nav-btn" onclick="cookingPrev();updateHandsfreeUI()">
+      <iconify-icon icon="solar:arrow-left-linear" style="font-size:22px"></iconify-icon>
+    </button>
+    <div class="handsfree-progress" id="handsfreeProgress">
+      <div class="handsfree-progress-fill" id="handsfreeProgressFill" style="width:16.6%"></div>
+    </div>
+    <button class="handsfree-nav-btn" onclick="cookingNext();updateHandsfreeUI()">
+      <iconify-icon icon="solar:arrow-right-linear" style="font-size:22px"></iconify-icon>
+    </button>
+  </div>
+</div>

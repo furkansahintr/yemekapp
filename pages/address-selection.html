@@ -1,0 +1,49 @@
+<!-- ═══ ADDRESS SELECTION OVERLAY ═══ -->
+<div class="address-overlay" id="addressOverlay">
+  <div class="cart-header">
+    <div class="btn-icon" onclick="closeAddressOverlay()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>
+    <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">Teslimat Adresi</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="address-content">
+    <div style="text-align:center;padding:20px 0 8px">
+      <iconify-icon icon="solar:map-point-wave-bold" style="font-size:48px;color:var(--primary)"></iconify-icon>
+      <div style="font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:var(--text-primary);margin-top:10px">Siparişin nereye gelsin?</div>
+      <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:4px">Kayıtlı adreslerinden seç veya yeni ekle</div>
+    </div>
+    <div class="address-gps" onclick="selectDeliveryAddress('gps')">
+      <iconify-icon icon="solar:gps-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+      <div style="flex:1">
+        <div style="font:var(--fw-medium) var(--fs-md)/1.2 var(--font);color:var(--primary)">Mevcut Konumumu Kullan</div>
+        <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px">GPS ile otomatik tespit</div>
+      </div>
+    </div>
+    <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);padding:16px 0 8px;text-transform:uppercase;letter-spacing:0.5px">Kayıtlı Adresler</div>
+    <div id="addressSavedList" class="address-saved-list"></div>
+    <div class="address-new-form" id="addressNewForm">
+      <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);padding:16px 0 8px;text-transform:uppercase;letter-spacing:0.5px">veya yeni adres gir</div>
+      <div class="ob-input-group" style="margin-bottom:8px">
+        <iconify-icon icon="solar:tag-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Adres başlığı (ör: Ofis)" id="newAddrTitle">
+      </div>
+      <div class="ob-input-group" style="margin-bottom:8px">
+        <iconify-icon icon="solar:map-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Açık adres" id="newAddrFull">
+      </div>
+      <div class="ob-input-group" style="margin-bottom:8px">
+        <iconify-icon icon="solar:buildings-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Bina No / Kat / Daire (opsiyonel)" id="newAddrDetail">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:notebook-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Kurye notu (opsiyonel)" id="newAddrNote">
+      </div>
+    </div>
+  </div>
+  <div class="address-footer">
+    <button class="btn-primary" style="width:100%;padding:16px;font-size:var(--fs-md);display:flex;align-items:center;justify-content:center;gap:8px" onclick="confirmOrder()">
+      <iconify-icon icon="solar:check-circle-bold" style="font-size:18px"></iconify-icon>
+      Siparişi Tamamla
+    </button>
+  </div>
+</div>

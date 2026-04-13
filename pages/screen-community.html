@@ -1,0 +1,59 @@
+    <div class="screen" id="screenCommunity">
+      <div class="community-container">
+
+        <!-- ═══ Community Top Bar ═══ -->
+        <div class="comm-topbar">
+          <div class="comm-topbar-left">
+            <div class="comm-user-avatar" onclick="openProfOverlay()" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <div style="width:38px;height:38px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <span style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:#fff">F</span>
+              </div>
+              <div>
+                <div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Furkan</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Profilini gör</div>
+              </div>
+            </div>
+          </div>
+          <div class="comm-topbar-right">
+            <div class="btn-icon comm-topbar-btn" onclick="openNotifications()" id="commNotifBtn">
+              <iconify-icon icon="solar:bell-linear" style="font-size:22px"></iconify-icon>
+              <span class="comm-notif-dot" id="commNotifDot"></span>
+            </div>
+            <div class="btn-icon comm-topbar-btn" onclick="openSettingsPanel()">
+              <iconify-icon icon="solar:settings-linear" style="font-size:22px"></iconify-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Task 7.1: Stories Bar ═══ -->
+        <div class="comm-stories" id="commStoriesContainer"></div>
+
+        <!-- ═══ Task 7.4: Filter Tabs ═══ -->
+        <div class="comm-filter-bar" id="commFilterBar">
+          <div class="comm-filter-tab active" data-filter="all" onclick="setCommFilter('all')">
+            <iconify-icon icon="solar:home-smile-linear" style="font-size:15px"></iconify-icon> Akış
+          </div>
+          <div class="comm-filter-tab" data-filter="popular" onclick="setCommFilter('popular')">
+            <iconify-icon icon="solar:fire-linear" style="font-size:15px"></iconify-icon> Popüler
+          </div>
+          <div class="comm-filter-tab" data-filter="discover" onclick="setCommFilter('discover')">
+            <iconify-icon icon="solar:compass-linear" style="font-size:15px"></iconify-icon> Keşfet
+          </div>
+          <div class="comm-filter-tab" data-filter="chefs" onclick="setCommFilter('chefs')">
+            <iconify-icon icon="solar:chef-hat-linear" style="font-size:15px"></iconify-icon> Şefler
+          </div>
+        </div>
+
+        <!-- ═══ Top Chefs Banner (only on chefs filter) ═══ -->
+        <div class="comm-chefs-banner" id="commChefsBanner" style="display:none"></div>
+
+        <!-- ═══ Task 7.2 & 7.3: Feed ═══ -->
+        <div class="community-feed" id="communityFeed"></div>
+
+        <!-- ═══ FAB: New Post ═══ -->
+        <div class="comm-fab" onclick="openNewPost()">
+          <iconify-icon icon="solar:pen-new-round-bold" style="font-size:22px;color:#fff"></iconify-icon>
+        </div>
+
+      </div>
+    </div>

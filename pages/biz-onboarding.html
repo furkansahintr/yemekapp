@@ -1,0 +1,99 @@
+<!-- ═══ BUSINESS ONBOARDING SCREENS ═══ -->
+
+<!-- Step: Business Welcome -->
+<div class="ob-screen" id="obBizWelcome">
+  <div class="ob-form-screen">
+    <div class="ob-back" onclick="obGoTo('obWelcome')"><iconify-icon icon="solar:arrow-left-outline" style="font-size:22px"></iconify-icon></div>
+    <div style="display:flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;background:var(--primary);margin:20px auto 0">
+      <iconify-icon icon="solar:shop-bold" style="font-size:48px;color:#fff"></iconify-icon>
+    </div>
+    <h2 class="ob-form-title" style="margin-top:16px">İşletme Paneli</h2>
+    <p class="ob-form-desc">Restoranını yönet, siparişleri takip et, ekibini organize et.</p>
+    <div class="ob-form" style="margin-top:24px">
+      <button class="ob-btn ob-btn-primary" onclick="obGoTo('obBizRegister')">İşletme Kaydı</button>
+      <button class="ob-btn ob-btn-secondary" onclick="obGoTo('obBizLogin')" style="margin-top:8px">İşletme Girişi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step: Business Login -->
+<div class="ob-screen" id="obBizLogin">
+  <div class="ob-form-screen">
+    <div class="ob-back" onclick="obGoTo('obBizWelcome')"><iconify-icon icon="solar:arrow-left-outline" style="font-size:22px"></iconify-icon></div>
+    <h2 class="ob-form-title">İşletme Girişi</h2>
+    <p class="ob-form-desc">İşletme e-postanız ile giriş yapın</p>
+    <div class="ob-form">
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:letter-linear" class="ob-input-icon"></iconify-icon>
+        <input type="email" class="ob-input" placeholder="İşletme e-postası" id="bizLoginEmail">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:lock-password-linear" class="ob-input-icon"></iconify-icon>
+        <input type="password" class="ob-input" placeholder="Şifre" id="bizLoginPassword">
+      </div>
+      <button class="ob-btn ob-btn-primary" onclick="obBizLogin()" style="margin-top:8px">Giriş Yap</button>
+    </div>
+    <p class="ob-link">Hesabın yok mu? <span onclick="obGoTo('obBizRegister')">İşletme kaydı oluştur</span></p>
+  </div>
+</div>
+
+<!-- Step: Business Register -->
+<div class="ob-screen" id="obBizRegister">
+  <div class="ob-form-screen">
+    <div class="ob-back" onclick="obGoTo('obBizWelcome')"><iconify-icon icon="solar:arrow-left-outline" style="font-size:22px"></iconify-icon></div>
+    <h2 class="ob-form-title">İşletme Kaydı</h2>
+    <p class="ob-form-desc">İşletmenizi platforma ekleyin</p>
+    <div class="ob-form">
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:shop-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="İşletme Adı" id="bizRegBizName">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:user-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Yetkili Ad Soyad" id="bizRegOwnerName">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:phone-linear" class="ob-input-icon"></iconify-icon>
+        <input type="tel" class="ob-input" placeholder="Telefon" id="bizRegPhone">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:letter-linear" class="ob-input-icon"></iconify-icon>
+        <input type="email" class="ob-input" placeholder="E-posta" id="bizRegEmail">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:document-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Vergi No" id="bizRegTaxNo">
+      </div>
+      <button class="ob-btn ob-btn-primary" onclick="obGoTo('obBizBranch')" style="margin-top:8px">Devam Et</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step: First Branch Setup -->
+<div class="ob-screen" id="obBizBranch">
+  <div class="ob-form-screen">
+    <div class="ob-back" onclick="obGoTo('obBizRegister')"><iconify-icon icon="solar:arrow-left-outline" style="font-size:22px"></iconify-icon></div>
+    <h2 class="ob-form-title">İlk Şubenizi Ekleyin</h2>
+    <p class="ob-form-desc">Ana şubenizin bilgilerini girin</p>
+    <div class="ob-form">
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:shop-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Şube Adı" id="bizBranchName">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:map-point-linear" class="ob-input-icon"></iconify-icon>
+        <input type="text" class="ob-input" placeholder="Adres" id="bizBranchAddress">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:phone-linear" class="ob-input-icon"></iconify-icon>
+        <input type="tel" class="ob-input" placeholder="Telefon" id="bizBranchPhone">
+      </div>
+      <div class="ob-input-group">
+        <iconify-icon icon="solar:sofa-2-linear" class="ob-input-icon"></iconify-icon>
+        <input type="number" class="ob-input" placeholder="Masa Sayısı" id="bizBranchTables">
+      </div>
+      <button class="ob-btn ob-btn-primary" onclick="obBizFinish()" style="margin-top:8px">Tamamla</button>
+      <button class="ob-btn-ghost" onclick="obBizFinish()">Şimdilik geç</button>
+    </div>
+  </div>
+</div>

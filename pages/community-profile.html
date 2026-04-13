@@ -1,0 +1,74 @@
+    <!-- ═══ COMMUNITY PROFILE OVERLAY (Instagram-style) ═══ -->
+    <div class="prof-overlay" id="profOverlay">
+      <div class="prof-container">
+
+        <!-- Profile Top Bar -->
+        <div class="prof-topbar">
+          <div class="btn-icon" onclick="closeProfOverlay()">
+            <iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon>
+          </div>
+          <span class="prof-topbar-name">furkan</span>
+          <div class="prof-topbar-actions">
+            <div class="btn-icon" onclick="openNotifications()" style="position:relative">
+              <iconify-icon icon="solar:bell-linear" style="font-size:22px"></iconify-icon>
+              <span class="comm-notif-dot"></span>
+            </div>
+            <div class="btn-icon" onclick="openSettingsPanel()">
+              <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:22px"></iconify-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Header -->
+        <div class="prof-header">
+          <div class="prof-avatar-area">
+            <img class="prof-avatar" src="https://i.pravatar.cc/200?img=11" alt="Furkan">
+          </div>
+          <div class="prof-stats">
+            <div class="prof-stat">
+              <span class="prof-stat-num">12</span>
+              <span class="prof-stat-label">Paylaşım</span>
+            </div>
+            <div class="prof-stat">
+              <span class="prof-stat-num">128</span>
+              <span class="prof-stat-label">Takipçi</span>
+            </div>
+            <div class="prof-stat">
+              <span class="prof-stat-num">87</span>
+              <span class="prof-stat-label">Takip</span>
+            </div>
+          </div>
+        </div>
+        <div class="prof-info">
+          <div class="prof-name">Furkan</div>
+          <div class="prof-bio">Yemek yapmayı ve yeni tarifler keşfetmeyi seviyorum!</div>
+        </div>
+        <div class="prof-action-row">
+          <button class="prof-edit-btn" onclick="openProfileEdit()">
+            <iconify-icon icon="solar:pen-2-linear" style="font-size:14px"></iconify-icon> Profili Düzenle
+          </button>
+          <button class="prof-share-btn">
+            <iconify-icon icon="solar:share-linear" style="font-size:14px"></iconify-icon> Paylaş
+          </button>
+        </div>
+
+        <!-- Content Tabs -->
+        <div class="prof-tabs">
+          <div class="prof-tab active" data-proftab="posts" onclick="setProfTab('posts')">
+            <iconify-icon icon="solar:posts-carousel-horizontal-bold" style="font-size:22px"></iconify-icon>
+          </div>
+          <div class="prof-tab" data-proftab="recipes" onclick="setProfTab('recipes')">
+            <iconify-icon icon="solar:book-bookmark-bold" style="font-size:22px"></iconify-icon>
+          </div>
+          <div class="prof-tab" data-proftab="liked" onclick="setProfTab('liked')">
+            <iconify-icon icon="solar:heart-bold" style="font-size:22px"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="prof-tab-content" id="profTabContent">
+          <!-- Dynamically rendered -->
+        </div>
+
+      </div>
+    </div>

@@ -1,0 +1,120 @@
+    <div class="screen" id="screenBizAI">
+      <div class="ai-chat-container">
+        <!-- Chat Messages Area -->
+        <div class="ai-chat-messages" id="bizAiChatMessages">
+
+          <!-- Welcome Card (shown at start) -->
+          <div class="ai-welcome" id="bizAiWelcome">
+            <div class="ai-welcome-avatar">
+              <div class="ai-avatar-glow"></div>
+              <iconify-icon icon="solar:chart-square-bold" style="font-size:28px;color:#fff"></iconify-icon>
+            </div>
+            <div class="ai-welcome-title">İşletme Asistanı</div>
+            <div class="ai-welcome-desc">İşletmeniz hakkında sorular sorun, analiz ve öneriler alın. Siparişleri takip et, personel performansını izle, menü önerilerine sahip ol.</div>
+
+            <!-- Task 6.2: Hazır Aksiyon Butonları -->
+            <div class="ai-action-grid">
+              <div class="ai-action-card" onclick="bizAiQuickAction('daily')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)">
+                  <iconify-icon icon="solar:chart-2-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Günlük Rapor</div>
+                <div class="ai-action-hint">Satış ve performans özeti</div>
+              </div>
+              <div class="ai-action-card" onclick="bizAiQuickAction('menu')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#F59E0B,#D97706)">
+                  <iconify-icon icon="solar:notebook-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Menü Önerisi</div>
+                <div class="ai-action-hint">Popüler ve yeni ürün</div>
+              </div>
+              <div class="ai-action-card" onclick="bizAiQuickAction('shift')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#10B981,#059669)">
+                  <iconify-icon icon="solar:users-group-two-rounded-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Vardiya Planı</div>
+                <div class="ai-action-hint">Optimal personel düzeni</div>
+              </div>
+              <div class="ai-action-card" onclick="bizAiQuickAction('reviews')">
+                <div class="ai-action-icon" style="background:linear-gradient(135deg,#F65013,#D44410)">
+                  <iconify-icon icon="solar:star-bold" style="font-size:22px;color:#fff"></iconify-icon>
+                </div>
+                <div class="ai-action-label">Yorum Analizi</div>
+                <div class="ai-action-hint">Müşteri feedback özeti</div>
+              </div>
+            </div>
+
+            <!-- Quick Command Chips -->
+            <div class="ai-quick-chips">
+              <div class="ai-chip" onclick="bizAiSendQuick('En çok satan ne?')">
+                <iconify-icon icon="solar:fire-linear" style="font-size:14px"></iconify-icon> En çok satan?
+              </div>
+              <div class="ai-chip" onclick="bizAiSendQuick('Bugün kaç sipariş?')">
+                <iconify-icon icon="solar:bag-check-linear" style="font-size:14px"></iconify-icon> Bugün siparişler
+              </div>
+              <div class="ai-chip" onclick="bizAiSendQuick('Stok durumu nasıl?')">
+                <iconify-icon icon="solar:home-smile-linear" style="font-size:14px"></iconify-icon> Stok durumu
+              </div>
+              <div class="ai-chip" onclick="bizAiSendQuick('Müşteri trendi ne?')">
+                <iconify-icon icon="solar:chart-2-linear" style="font-size:14px"></iconify-icon> Müşteri trendi
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="ai-chat-input-bar" id="bizAiChatInputBar">
+          <!-- Quick chips (scrollable, shown when chat is active) -->
+          <div class="ai-input-chips" id="bizAiInputChips" style="display:none">
+            <div class="ai-chip-sm" onclick="bizAiSendQuick('Yazdir')">Yazdır</div>
+            <div class="ai-chip-sm" onclick="bizAiSendQuick('Kaydet')">Kaydet</div>
+            <div class="ai-chip-sm" onclick="bizAiSendQuick('Başka analiz')">Başka Analiz</div>
+            <div class="ai-chip-sm" onclick="bizAiSendQuick('Öner')">Öneriler</div>
+            <div class="ai-chip-sm" onclick="bizAiSendQuick('Detay göster')">Detay</div>
+          </div>
+          <div class="ai-input-row">
+            <button class="ai-input-action-btn" onclick="toggleBizAiActionMenu()" id="bizAiActionMenuBtn">
+              <iconify-icon icon="solar:add-circle-linear" style="font-size:22px"></iconify-icon>
+            </button>
+            <div class="ai-input-field">
+              <input type="text" id="bizAiChatInput" placeholder="İşletmeniz hakkında sorun..." onkeydown="if(event.key==='Enter')bizAiSend()">
+            </div>
+            <button class="ai-send-btn" id="bizAiSendBtn" onclick="bizAiSend()">
+              <iconify-icon icon="solar:arrow-up-linear" style="font-size:18px;color:#fff"></iconify-icon>
+            </button>
+          </div>
+          <!-- Action Menu (hidden by default) -->
+          <div class="ai-action-menu" id="bizAiActionMenu">
+            <div class="ai-action-menu-item" onclick="bizAiQuickAction('daily');toggleBizAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#8B5CF6"><iconify-icon icon="solar:chart-2-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Günlük Rapor Oluştur</div>
+                <div class="ai-action-menu-desc">Satış, sipariş ve performans özeti</div>
+              </div>
+            </div>
+            <div class="ai-action-menu-item" onclick="bizAiQuickAction('menu');toggleBizAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#F59E0B"><iconify-icon icon="solar:notebook-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Menü Önerisi Al</div>
+                <div class="ai-action-menu-desc">Popüler ve rotasyon ürünler</div>
+              </div>
+            </div>
+            <div class="ai-action-menu-item" onclick="bizAiQuickAction('shift');toggleBizAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#10B981"><iconify-icon icon="solar:users-group-two-rounded-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Vardiya Planı</div>
+                <div class="ai-action-menu-desc">Optimal personel dağılımı öner</div>
+              </div>
+            </div>
+            <div class="ai-action-menu-item" onclick="bizAiQuickAction('reviews');toggleBizAiActionMenu()">
+              <div class="ai-action-menu-icon" style="background:#3B82F6"><iconify-icon icon="solar:star-bold" style="font-size:18px;color:#fff"></iconify-icon></div>
+              <div>
+                <div class="ai-action-menu-label">Yorum Analizi</div>
+                <div class="ai-action-menu-desc">Müşteri geri bildirimini analiz et</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

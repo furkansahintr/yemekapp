@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Menu App — Interactive Demo</title>
+<script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="tokens.js"></script>
+<script src="data.js"></script>
+<script src="biz-data.js"></script>
+</head>
+<body>
+
+<!-- #include pages/onboarding.html -->
+
+<!-- ═══ HTML SHELL ═══ -->
+<div class="phone" id="phone">
+  <div class="app-body" id="appBody">
+    <div class="app-header" id="appHeader">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="headerLocation" style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0" onclick="toggleLocationPicker()">
+          <iconify-icon icon="solar:map-point-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+          <div>
+            <div style="font:var(--fw-regular) 10px/1.2 var(--font);color:var(--text-muted)">Kayıtlı Konum</div>
+            <div style="display:flex;align-items:center;gap:2px">
+              <span id="locationLabel" style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Evim</span>
+              <iconify-icon id="locationArrow" icon="solar:alt-arrow-down-linear" style="font-size:14px;color:var(--text-muted);transition:transform .2s"></iconify-icon>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1" id="headerTitle"></div>
+        <div id="headerTitleCenter" style="display:none;flex:1;text-align:left;font:var(--fw-semibold) 22px/1 var(--font);color:var(--text-primary)"></div>
+        <div id="headerIcons" style="display:flex;align-items:center;gap:8px">
+          <div class="btn-icon" style="position:relative" onclick="showFavorites()">
+            <iconify-icon icon="solar:heart-linear"></iconify-icon>
+          </div>
+          <div class="btn-icon" style="position:relative" onclick="openCartOverlay()" id="headerCartBtn">
+            <iconify-icon icon="solar:cart-large-2-linear"></iconify-icon>
+            <span class="cart-badge" id="headerCartBadge" style="display:none">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LOCATION PICKER DROPDOWN ═══ -->
+    <div class="loc-overlay" id="locOverlay" onclick="closeLocationPicker()"></div>
+    <div class="loc-picker" id="locPicker">
+      <div class="loc-picker-header">
+        <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">Teslimat Adresi</span>
+        <div class="btn-icon" onclick="closeLocationPicker()" style="width:32px;height:32px">
+          <iconify-icon icon="solar:close-circle-linear" style="font-size:20px"></iconify-icon>
+        </div>
+      </div>
+      <div class="loc-search">
+        <iconify-icon icon="solar:magnifer-linear" style="font-size:16px;color:var(--text-muted)"></iconify-icon>
+        <input type="text" placeholder="Adres ara veya yeni ekle..." class="loc-search-input">
+      </div>
+      <div class="loc-current" onclick="closeLocationPicker()">
+        <iconify-icon icon="solar:gps-bold" style="font-size:20px;color:var(--primary)"></iconify-icon>
+        <div style="flex:1">
+          <div style="font:var(--fw-medium) var(--fs-md)/1.2 var(--font);color:var(--primary)">Mevcut Konumumu Kullan</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px">GPS ile otomatik tespit et</div>
+        </div>
+        <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-muted)"></iconify-icon>
+      </div>
+      <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);padding:12px 0 8px;text-transform:uppercase;letter-spacing:0.5px">Kayıtlı Adresler</div>
+      <div id="locSavedList" class="loc-saved-list"></div>
+      <div class="loc-add-btn" onclick="closeLocationPicker()">
+        <iconify-icon icon="solar:add-circle-linear" style="font-size:20px;color:var(--primary)"></iconify-icon>
+        <span style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--primary)">Yeni Adres Ekle</span>
+      </div>
+    </div>
+
+    <div class="app-header-sticky" id="stickyHeader">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="stickyLocation" style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0">
+          <iconify-icon icon="solar:map-point-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+          <div>
+            <div style="font:var(--fw-regular) 10px/1.2 var(--font);color:var(--text-muted)">Kayıtlı Konum</div>
+            <div style="display:flex;align-items:center;gap:2px">
+              <span style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Evim</span>
+              <iconify-icon icon="solar:alt-arrow-down-linear" style="font-size:14px;color:var(--text-muted)"></iconify-icon>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1" id="stickyTitle"></div>
+        <div id="stickyTitleCenter" style="display:none;flex:1;text-align:left;font:var(--fw-semibold) 22px/1 var(--font);color:var(--text-primary)"></div>
+        <div id="stickyIcons" style="display:flex;align-items:center;gap:8px">
+          <div class="btn-icon" style="position:relative" onclick="showFavorites()">
+            <iconify-icon icon="solar:heart-linear"></iconify-icon>
+          </div>
+          <div class="btn-icon" style="position:relative" onclick="openCartOverlay()" id="stickyCartBtn">
+            <iconify-icon icon="solar:cart-large-2-linear"></iconify-icon>
+            <span class="cart-badge" id="stickyCartBadge" style="display:none">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- #include pages/screen-menu.html -->
+
+    <!-- #include pages/screen-community.html -->
+
+    <!-- #include pages/notifications.html -->
+
+    <!-- #include pages/new-post.html -->
+
+    <!-- #include pages/story-viewer.html -->
+
+    <!-- #include pages/profile-edit.html -->
+
+    <!-- #include pages/screen-search.html -->
+
+    <!-- #include pages/screen-ai.html -->
+
+    <!-- #include pages/screen-profile.html -->
+
+    <!-- #include pages/screen-employee.html -->
+
+    <!-- #include pages/community-profile.html -->
+
+    <!-- #include pages/settings.html -->
+
+    <!-- #include pages/bmi-calculator.html -->
+
+    <!-- #include pages/order-history.html -->
+
+    <div class="app-nav">
+      <div class="ni active" onclick="switchTab('menu')" id="navHome" data-icon-active="solar:home-smile-bold" data-icon="solar:home-smile-linear">
+        <iconify-icon icon="solar:home-smile-bold" style="font-size:26px"></iconify-icon>
+        <span>Ana Sayfa</span>
+      </div>
+      <div class="ni" onclick="switchTab('search')" id="navSearch" data-icon-active="solar:magnifer-bold" data-icon="solar:magnifer-linear">
+        <iconify-icon icon="solar:magnifer-linear" style="font-size:26px"></iconify-icon>
+        <span>Keşfet</span>
+      </div>
+      <div class="ni" onclick="switchTab('ai')" id="navAI" data-icon-active="solar:star-circle-bold" data-icon="solar:star-circle-linear">
+        <iconify-icon icon="solar:star-circle-linear" style="font-size:26px"></iconify-icon>
+        <span>AI</span>
+      </div>
+<div class="ni" onclick="switchTab('community')" id="navCommunity" data-icon-active="solar:users-group-rounded-bold" data-icon="solar:users-group-rounded-linear">
+        <iconify-icon icon="solar:users-group-rounded-linear" style="font-size:26px"></iconify-icon>
+        <span>Topluluk</span>
+      </div>
+      <div class="ni" onclick="switchTab('profile')" id="navProfile" data-icon-active="solar:user-circle-bold" data-icon="solar:user-circle-linear">
+        <iconify-icon icon="solar:user-circle-linear" style="font-size:26px"></iconify-icon>
+        <span>Profil</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-overlay" id="detailOverlay">
+    <!-- Üst Butonlar (görsel üzerinde) -->
+    <div style="position:absolute;top:0;left:0;right:0;z-index:5;padding:max(env(safe-area-inset-top),16px) var(--app-px) 14px;display:flex;align-items:center;justify-content:space-between">
+      <div class="btn-icon" onclick="closeDetail()"><iconify-icon icon="solar:arrow-left-outline"></iconify-icon></div>
+      <div style="display:flex;gap:8px">
+        <div class="btn-icon"><iconify-icon icon="solar:share-outline"></iconify-icon></div>
+        <div class="btn-icon"><iconify-icon icon="solar:heart-outline"></iconify-icon></div>
+      </div>
+    </div>
+    <!-- Görsel -->
+    <div style="width:100%;aspect-ratio:1;flex-shrink:0;overflow:hidden">
+      <img id="detailImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+    </div>
+    <!-- Detay Kartı -->
+    <div style="margin-top:-28px;border-radius:var(--r-2xl) var(--r-2xl) 0 0;background:var(--bg-page);position:relative;z-index:2;flex:1;padding:24px var(--app-px) 0">
+      <div style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font:var(--fw-bold) var(--fs-2xl)/1.2 var(--font);color:var(--text-primary)" id="detailName">—</div>
+        <span style="font:var(--fw-bold) var(--fs-2xl)/1 var(--font);color:var(--primary);display:none;flex-shrink:0" id="detailPrice"></span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:2px">
+          <iconify-icon icon="solar:star-bold" style="font-size:13px;color:#f59e0b"></iconify-icon>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);letter-spacing:-0.3px" id="detailRating">4.8 (234 değerlendirme)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:2px;cursor:pointer" id="detailBookmarkBtn" onclick="this.classList.toggle('active')">
+          <iconify-icon icon="solar:book-bookmark-linear" style="font-size:13px;color:var(--primary)"></iconify-icon>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);letter-spacing:-0.3px" id="detailBookmarks">(1.2K)</span>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);letter-spacing:-0.3px">Tarif Defterine Ekle</span>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--border-subtle);margin-bottom:16px"></div>
+      <div style="display:flex;gap:10px;margin-bottom:16px" id="detailCookingInfo">
+        <div style="flex:1;background:var(--glass-card);border-radius:var(--r-xl);padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <iconify-icon icon="solar:clock-circle-linear" style="font-size:20px;color:var(--primary)"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)" id="detailPrepTime">—</span>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary)">Hazırlık</span>
+        </div>
+        <div style="flex:1;background:var(--glass-card);border-radius:var(--r-xl);padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <iconify-icon icon="solar:fire-linear" style="font-size:20px;color:var(--primary)"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)" id="detailCookTime">—</span>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary)">Pişirme</span>
+        </div>
+        <div style="flex:1;background:var(--glass-card);border-radius:var(--r-xl);padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <iconify-icon icon="solar:chef-hat-linear" style="font-size:20px;color:var(--primary)"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)" id="detailDifficulty">—</span>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary)">Zorluk</span>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--border-subtle);margin-bottom:16px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px" id="detailAuthorSection">
+        <div style="display:flex;align-items:center;gap:10px">
+          <img id="detailAuthorAvatar" src="" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border-subtle)">
+          <div style="display:flex;flex-direction:column;justify-content:center;gap:1px">
+            <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)" id="detailAuthorName">—</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-secondary);letter-spacing:-0.4px" id="detailAuthorFollowers">— takipçi</span>
+              <span style="color:var(--text-tertiary)">·</span>
+              <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-secondary);letter-spacing:-0.4px" id="detailAuthorRecipes">— tarif</span>
+            </div>
+          </div>
+        </div>
+        <button id="detailFollowBtn" style="background:var(--bg-btn);border:1px solid var(--border-subtle);border-radius:var(--r-full);padding:10px 16px;font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:var(--text-primary);cursor:pointer">Takip Et</button>
+      </div>
+      <div style="height:1px;background:var(--border-subtle);margin-bottom:16px"></div>
+      <div style="font:var(--fw-regular) var(--fs-md)/1.6 var(--font);color:var(--text-secondary);margin-bottom:20px" id="detailDesc">—</div>
+      <div style="font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:var(--text-primary);margin-bottom:12px">Malzemeler</div>
+      <div style="display:flex;flex-direction:column;gap:0;margin-bottom:20px" id="detailIngredients"></div>
+      <div style="font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:var(--text-primary);margin-bottom:12px">Puf Noktalar</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px" id="detailTips"></div>
+      <div id="detailNutritionSection">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:var(--text-primary)">Tarif Analizi</div>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary)" id="detailNutritionLabel">1 kişilik</span>
+        </div>
+        <div style="background:var(--glass-card);border-radius:var(--r-xl);padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <iconify-icon icon="solar:fire-bold" style="font-size:20px;color:var(--primary)"></iconify-icon>
+            <span style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Kalori</span>
+          </div>
+          <span style="font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:var(--primary)" id="detailNutKalori">—</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1;background:var(--glass-card);border-radius:var(--r-xl);padding:12px;text-align:center">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)" id="detailNutProtein">—</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-top:4px">Protein</div>
+          </div>
+          <div style="flex:1;background:var(--glass-card);border-radius:var(--r-xl);padding:12px;text-align:center">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)" id="detailNutYag">—</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-top:4px">Yağ</div>
+          </div>
+          <div style="flex:1;background:var(--glass-card);border-radius:var(--r-xl);padding:12px;text-align:center">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)" id="detailNutKarb">—</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-top:4px">Karbonhidrat</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0;margin-bottom:24px" id="detailNutritionList"></div>
+      </div>
+    </div>
+    <!-- Alt Bar -->
+    <div style="position:sticky;bottom:0;background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-top:1px solid var(--border-subtle);padding:14px var(--app-px) max(env(safe-area-inset-bottom),16px);display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--glass-card);border:1px solid var(--border-subtle);border-radius:var(--r-full);padding:6px 10px;flex-shrink:0">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--bg-btn);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="changeServing(-1)">
+          <iconify-icon icon="solar:minus-circle-linear" style="font-size:15px"></iconify-icon>
+        </div>
+        <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);min-width:32px;text-align:center;white-space:nowrap" id="detailServing">2 Kişi</span>
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="changeServing(1)">
+          <iconify-icon icon="solar:add-circle-linear" style="font-size:15px;color:#fff"></iconify-icon>
+        </div>
+      </div>
+      <button class="btn-primary" style="flex:1;text-align:center" id="detailStartBtn">Tarife Başla</button>
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-btn);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <iconify-icon icon="solar:calendar-add-outline" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BUSINESS PHONE SHELL ═══ -->
+<div class="phone" id="bizPhone" style="display:none">
+  <div class="app-body" id="bizAppBody">
+    <div class="app-header" id="bizAppHeader">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <div style="width:34px;height:34px;border-radius:var(--r-lg);background:var(--primary);display:flex;align-items:center;justify-content:center">
+            <iconify-icon icon="solar:shop-bold" style="font-size:18px;color:#fff"></iconify-icon>
+          </div>
+          <div>
+            <div id="bizHeaderName" style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Lezzet Mutfak</div>
+            <div id="bizHeaderBranchSelector" onclick="toggleBizBranchPicker()" style="display:flex;align-items:center;gap:4px;cursor:pointer;margin-top:2px">
+              <iconify-icon icon="solar:map-point-bold" style="font-size:12px;color:var(--primary)"></iconify-icon>
+              <span id="bizBranchLabel" style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Kadıköy Şubesi</span>
+              <iconify-icon icon="solar:alt-arrow-down-linear" style="font-size:10px;color:var(--text-muted)"></iconify-icon>
+              <span id="bizBranchStatus" style="font:var(--fw-medium) 9px/1 var(--font);color:#22c55e;background:rgba(34,197,94,0.1);padding:2px 6px;border-radius:var(--r-full);margin-left:2px">Açık</span>
+            </div>
+          </div>
+        </div>
+        <div id="bizHeaderIcons" style="display:flex;align-items:center;gap:8px">
+          <div class="btn-icon" style="position:relative" onclick="openBizNotifications()" id="bizNotifBtn">
+            <iconify-icon icon="solar:bell-linear"></iconify-icon>
+            <span class="cart-badge" id="bizNotifBadge">3</span>
+          </div>
+          <div class="btn-icon" onclick="returnToUserAccount()" id="bizReturnBtn" title="Kişisel Hesaba Dön" style="display:none">
+            <iconify-icon icon="solar:user-circle-linear" style="font-size:20px;color:var(--primary)"></iconify-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- #include pages/biz-home.html -->
+
+    <!-- #include pages/biz-dashboard.html -->
+
+    <!-- #include pages/biz-ai.html -->
+
+    <!-- Business Community (shared screen, rendered by JS) -->
+    <div class="screen" id="screenBizCommunity">
+      <div id="bizCommunityContainer"></div>
+    </div>
+
+    <!-- Business My Business Screen -->
+    <div class="screen" id="screenBizMyBusiness">
+      <div id="bizMyBusinessContainer"></div>
+    </div>
+
+    <div class="app-nav" id="bizAppNav">
+      <div class="ni active" onclick="bizSwitchTab('bizHome')" id="bizNavHome" data-icon-active="solar:home-smile-bold" data-icon="solar:home-smile-linear">
+        <iconify-icon icon="solar:home-smile-bold" style="font-size:26px"></iconify-icon>
+        <span>Ana Sayfa</span>
+      </div>
+      <div class="ni" onclick="bizSwitchTab('bizDashboard')" id="bizNavDashboard" data-icon-active="solar:chart-2-bold" data-icon="solar:chart-2-linear">
+        <iconify-icon icon="solar:chart-2-linear" style="font-size:26px"></iconify-icon>
+        <span>Dashboard</span>
+      </div>
+      <div class="ni" onclick="bizSwitchTab('bizAI')" id="bizNavAI" data-icon-active="solar:star-circle-bold" data-icon="solar:star-circle-linear">
+        <iconify-icon icon="solar:star-circle-linear" style="font-size:26px"></iconify-icon>
+        <span>AI</span>
+      </div>
+      <div class="ni" onclick="bizSwitchTab('bizCommunity')" id="bizNavCommunity" data-icon-active="solar:users-group-rounded-bold" data-icon="solar:users-group-rounded-linear">
+        <iconify-icon icon="solar:users-group-rounded-linear" style="font-size:26px"></iconify-icon>
+        <span>Topluluk</span>
+      </div>
+      <div class="ni" onclick="bizSwitchTab('bizMyBusiness')" id="bizNavMyBusiness" data-icon-active="solar:buildings-2-bold" data-icon="solar:buildings-2-linear">
+        <iconify-icon icon="solar:buildings-2-linear" style="font-size:26px"></iconify-icon>
+        <span>İşletmem</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- #include pages/cooking-steps.html -->
+
+<!-- #include pages/hands-free.html -->
+
+<!-- #include pages/cart.html -->
+
+<!-- #include pages/address-selection.html -->
+
+<!-- #include pages/order-success.html -->
+
+<script>
+// Dynamic page loader - loads HTML partials from pages/ folder
+// Then loads app.js after all pages are in the DOM
+(async function loadPages() {
+  const comments = [];
+  const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null, false);
+  while (walker.nextNode()) {
+    const match = walker.currentNode.textContent.trim().match(/^#include\s+(.+)$/);
+    if (match) comments.push({ node: walker.currentNode, path: match[1] });
+  }
+  for (const { node, path } of comments) {
+    try {
+      const resp = await fetch(path);
+      if (!resp.ok) throw new Error(`Failed to load ${path}`);
+      const html = await resp.text();
+      const template = document.createElement('template');
+      template.innerHTML = html;
+      node.parentNode.insertBefore(template.content, node);
+      node.remove();
+    } catch (e) {
+      console.error('Page load error:', e);
+    }
+  }
+  // All pages loaded, now load scripts in order
+  const scripts = [
+    // Core orchestrators first
+    'app.js',
+    'biz-app.js',
+    // User-side components
+    'js/menu.js',
+    'js/detail.js',
+    'js/community.js',
+    'js/stories.js',
+    'js/ai.js',
+    'js/employee.js',
+    'js/profile.js',
+    'js/cart.js',
+    'js/notifications.js',
+    'js/new-post.js',
+    // Business-side components
+    'js/biz-home.js',
+    'js/biz-dashboard.js',
+    'js/biz-orders.js',
+    'js/biz-tables.js',
+    'js/biz-community.js',
+    'js/biz-my-business.js',
+    'js/biz-staff.js',
+    'js/biz-menu.js',
+    'js/biz-waiter-calls.js',
+    'js/biz-reviews.js',
+    'js/biz-ai.js',
+    'js/biz-branch-detail.js',
+    'js/biz-notifications.js',
+    'js/biz-kitchen.js',
+    'js/biz-placeholders.js'
+  ];
+  let i = 0;
+  function loadNext() {
+    if (i >= scripts.length) return;
+    const s = document.createElement('script');
+    s.src = scripts[i++];
+    s.onload = loadNext;
+    s.onerror = function() { console.error('Failed to load:', this.src); loadNext(); };
+    document.body.appendChild(s);
+  }
+  loadNext();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+    <!-- ═══ PROFILE EDIT SHEET ═══ -->
+    <div class="profile-edit-overlay" id="profileEditOverlay">
+      <div class="profile-edit-panel">
+        <div class="notif-header">
+          <div class="btn-icon" onclick="closeProfileEdit()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>
+          <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary);flex:1">Profili Düzenle</span>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--primary);cursor:pointer" onclick="saveProfile()">Kaydet</span>
+        </div>
+        <div class="profile-edit-body">
+          <div class="profile-edit-avatar-area">
+            <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;position:relative">
+              <span style="font:var(--fw-bold) 28px/1 var(--font);color:#fff">F</span>
+              <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:var(--bg-surface);border:2px solid var(--bg-page);display:flex;align-items:center;justify-content:center">
+                <iconify-icon icon="solar:camera-bold" style="font-size:14px;color:var(--primary)"></iconify-icon>
+              </div>
+            </div>
+          </div>
+          <div class="profile-edit-field">
+            <label>Ad Soyad</label>
+            <input type="text" value="Furkan" id="editName">
+          </div>
+          <div class="profile-edit-field">
+            <label>Kullanıcı Adı</label>
+            <input type="text" value="@furkan" id="editUsername">
+          </div>
+          <div class="profile-edit-field">
+            <label>Bio</label>
+            <textarea id="editBio" placeholder="Kendinizi tanıtın...">Yemek yapmayı ve yeni tarifler keşfetmeyi seviyorum!</textarea>
+          </div>
+          <div class="profile-edit-field">
+            <label>E-posta</label>
+            <input type="email" value="furkan.sahin@campusaxess.com" id="editEmail">
+          </div>
+          <div class="profile-edit-field">
+            <label>Telefon</label>
+            <input type="tel" value="+905551234548" id="editPhone">
+          </div>
+        </div>
+      </div>
+    </div>

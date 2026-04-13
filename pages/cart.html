@@ -1,0 +1,38 @@
+<!-- ═══ CART OVERLAY ═══ -->
+<div class="cart-overlay" id="cartOverlay">
+  <div class="cart-header">
+    <div class="btn-icon" onclick="closeCartOverlay()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>
+    <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">Sepetim</span>
+    <div class="btn-icon" onclick="clearCart()" id="cartClearBtn" style="display:none"><iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:20px;color:#EF4444"></iconify-icon></div>
+  </div>
+  <!-- Empty state -->
+  <div class="cart-empty" id="cartEmpty">
+    <iconify-icon icon="solar:cart-large-2-linear" style="font-size:64px;color:var(--text-muted)"></iconify-icon>
+    <div style="font:var(--fw-semibold) var(--fs-lg)/1.3 var(--font);color:var(--text-primary);margin-top:16px">Sepetin boş</div>
+    <div style="font:var(--fw-regular) var(--fs-sm)/1.5 var(--font);color:var(--text-muted);margin-top:6px;text-align:center;max-width:260px">Tariflerden veya restoranlardan ürün ekleyerek başla</div>
+    <button class="ob-btn ob-btn-primary" style="margin-top:20px;width:auto;padding:12px 32px" onclick="closeCartOverlay()">Keşfetmeye Başla</button>
+  </div>
+  <!-- Cart items -->
+  <div class="cart-items" id="cartItems"></div>
+  <!-- Cart footer -->
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-summary">
+      <div class="cart-summary-row">
+        <span>Ara Toplam</span>
+        <span id="cartSubtotal">₺0</span>
+      </div>
+      <div class="cart-summary-row">
+        <span>Teslimat</span>
+        <span id="cartDelivery" style="color:var(--primary)">Ücretsiz</span>
+      </div>
+      <div class="cart-summary-row cart-total">
+        <span>Toplam</span>
+        <span id="cartTotal">₺0</span>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%;padding:16px;font-size:var(--fs-md);display:flex;align-items:center;justify-content:center;gap:8px" onclick="goToAddressSelection()">
+      <iconify-icon icon="solar:bag-check-bold" style="font-size:18px"></iconify-icon>
+      Siparişi Onayla
+    </button>
+  </div>
+</div>

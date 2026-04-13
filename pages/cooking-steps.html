@@ -1,0 +1,77 @@
+<!-- ═══ COOKING STEPS OVERLAY ═══ -->
+<div class="cooking-overlay" id="cookingOverlay">
+  <!-- Top Bar -->
+  <div class="cooking-topbar">
+    <div class="btn-icon cooking-back-btn" onclick="closeCooking()">
+      <iconify-icon icon="solar:arrow-left-outline"></iconify-icon>
+    </div>
+    <div class="cooking-topbar-info">
+      <span class="cooking-recipe-name" id="cookingRecipeName">—</span>
+      <span class="cooking-step-label" id="cookingStepLabel">Adım 1/6</span>
+    </div>
+    <div class="cooking-topbar-actions">
+      <div class="btn-icon cooking-handsfree-btn" onclick="toggleHandsfreeMode()" id="handsfreeBtn" title="Eller Serbest Modu">
+        <iconify-icon icon="solar:hand-stars-linear" style="font-size:20px"></iconify-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="cooking-progress-bar">
+    <div class="cooking-progress-fill" id="cookingProgressFill" style="width:16.6%"></div>
+  </div>
+
+  <!-- Step Card Area (swipeable) -->
+  <div class="cooking-step-area" id="cookingStepArea">
+    <div class="cooking-step-card" id="cookingStepCard">
+      <!-- Step Number Badge -->
+      <div class="cooking-step-badge" id="cookingStepBadge">
+        <iconify-icon id="cookingStepIcon" icon="solar:chef-hat-heart-linear" style="font-size:22px"></iconify-icon>
+      </div>
+      <div class="cooking-step-number" id="cookingStepNumber">ADIM 1</div>
+      <h2 class="cooking-step-title" id="cookingStepTitle">Malzemeleri Hazırla</h2>
+      <p class="cooking-step-desc" id="cookingStepDesc">Açıklama burada...</p>
+      <div class="cooking-step-duration">
+        <iconify-icon icon="solar:clock-circle-linear" style="font-size:16px"></iconify-icon>
+        <span id="cookingStepDuration">5dk</span>
+      </div>
+
+      <!-- TTS Controls on Card -->
+      <div class="cooking-tts-controls">
+        <button class="cooking-tts-btn" id="cookingTtsBtn" onclick="toggleTTS()">
+          <div class="tts-icon-wrap" id="ttsIconWrap">
+            <iconify-icon icon="solar:volume-loud-linear" style="font-size:20px" id="ttsIcon"></iconify-icon>
+          </div>
+          <span id="ttsLabel">Sesli Oku</span>
+        </button>
+        <button class="cooking-repeat-btn" id="cookingRepeatBtn" onclick="repeatTTS()">
+          <iconify-icon icon="solar:repeat-linear" style="font-size:18px"></iconify-icon>
+          <span>Tekrarla</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ingredients Quick View (collapsible) -->
+  <div class="cooking-ingredients-toggle" onclick="toggleCookingIngredients()">
+    <iconify-icon icon="solar:checklist-linear" style="font-size:18px;color:var(--primary)"></iconify-icon>
+    <span>Malzemeler</span>
+    <iconify-icon icon="solar:alt-arrow-down-linear" style="font-size:16px;color:var(--text-tertiary)" id="cookingIngArrow"></iconify-icon>
+  </div>
+  <div class="cooking-ingredients-panel" id="cookingIngredientsPanel">
+    <div id="cookingIngredientsList"></div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="cooking-bottom-bar">
+    <button class="cooking-nav-btn cooking-prev-btn" id="cookingPrevBtn" onclick="cookingPrev()">
+      <iconify-icon icon="solar:arrow-left-linear" style="font-size:20px"></iconify-icon>
+      <span>Önceki</span>
+    </button>
+    <div class="cooking-step-dots" id="cookingStepDots"></div>
+    <button class="cooking-nav-btn cooking-next-btn" id="cookingNextBtn" onclick="cookingNext()">
+      <span>Sonraki</span>
+      <iconify-icon icon="solar:arrow-right-linear" style="font-size:20px"></iconify-icon>
+    </button>
+  </div>
+</div>

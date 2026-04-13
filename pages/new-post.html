@@ -1,0 +1,47 @@
+    <!-- ═══ NEW POST SHEET ═══ -->
+    <div class="newpost-overlay" id="newpostOverlay">
+      <div class="newpost-sheet">
+        <div class="newpost-header">
+          <div class="btn-icon" onclick="closeNewPost()"><iconify-icon icon="solar:close-circle-linear" style="font-size:22px"></iconify-icon></div>
+          <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary);flex:1;text-align:center">Yeni Gönderi</span>
+          <button class="newpost-publish-btn" onclick="publishPost()">Paylaş</button>
+        </div>
+        <div class="newpost-body">
+          <div class="newpost-user-row">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center">
+              <span style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:#fff">F</span>
+            </div>
+            <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Furkan</span>
+          </div>
+          <!-- Post type selector -->
+          <div class="newpost-type-bar">
+            <div class="newpost-type active" data-type="normal" onclick="selectPostType('normal')">
+              <iconify-icon icon="solar:document-text-linear" style="font-size:16px"></iconify-icon> Gönderi
+            </div>
+            <div class="newpost-type" data-type="recipe" onclick="selectPostType('recipe')">
+              <iconify-icon icon="solar:chef-hat-linear" style="font-size:16px"></iconify-icon> Tarif
+            </div>
+            <div class="newpost-type" data-type="ask" onclick="selectPostType('ask')">
+              <iconify-icon icon="solar:question-circle-linear" style="font-size:16px"></iconify-icon> Topluluğa Sor
+            </div>
+          </div>
+          <textarea class="newpost-textarea" id="newpostText" placeholder="Ne düşünüyorsun?"></textarea>
+          <!-- Ask community hint -->
+          <div class="newpost-ask-hint" id="newpostAskHint" style="display:none">
+            <iconify-icon icon="solar:info-circle-linear" style="font-size:16px;color:var(--primary)"></iconify-icon>
+            <span>Yemeğinin fotoğrafını ekle ve topluluktan yardım iste!</span>
+          </div>
+          <div class="newpost-actions-row">
+            <div class="newpost-action-chip">
+              <iconify-icon icon="solar:camera-linear" style="font-size:18px;color:var(--primary)"></iconify-icon> Fotoğraf
+            </div>
+            <div class="newpost-action-chip">
+              <iconify-icon icon="solar:link-round-linear" style="font-size:18px;color:#8B5CF6"></iconify-icon> Tarif Bağla
+            </div>
+            <div class="newpost-action-chip">
+              <iconify-icon icon="solar:hashtag-linear" style="font-size:18px;color:#F59E0B"></iconify-icon> Etiket
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

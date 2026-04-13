@@ -1,0 +1,205 @@
+    <div class="screen" id="screenBizDashboard">
+      <div style="padding:14px var(--app-px) 0">
+        <!-- Date Range Selector -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none">
+          <div style="background:var(--primary);color:var(--text-inverse);padding:8px 16px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-sm)/1 var(--font);white-space:nowrap;cursor:pointer">Bugün</div>
+          <div class="g-pill" style="padding:8px 16px;font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary);white-space:nowrap;cursor:pointer">Bu Hafta</div>
+          <div class="g-pill" style="padding:8px 16px;font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary);white-space:nowrap;cursor:pointer">Bu Ay</div>
+          <div class="g-pill" style="padding:8px 16px;font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary);white-space:nowrap;cursor:pointer">Özel</div>
+        </div>
+      </div>
+
+      <div style="padding:0 var(--app-px) var(--app-px);display:flex;flex-direction:column;gap:16px" id="bizDashboardContent">
+
+        <!-- Revenue Card -->
+        <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:20px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-lg)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <iconify-icon icon="solar:chart-2-bold" style="font-size:20px;color:var(--primary)"></iconify-icon>
+            <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Ciro Özeti</span>
+          </div>
+          <div style="margin-bottom:8px">
+            <div style="font:var(--fw-bold) var(--fs-2xl)/1.2 var(--font);color:var(--text-primary)">₺12.450</div>
+            <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:#22c55e;margin-top:4px">Dünden %12 fazla ↑</div>
+          </div>
+          <div style="width:100%;height:160px;background:var(--bg-surface-alt);border-radius:var(--r-lg);margin-top:12px" id="bizRevenueChart"></div>
+        </div>
+
+        <!-- Order Stats Card -->
+        <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:20px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-lg)">
+          <div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-bottom:16px">Sipariş Analizi</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+            <div style="background:var(--bg-surface-alt);border-radius:var(--r-lg);padding:12px;text-align:center">
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-bottom:4px">Toplam</div>
+              <div style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">47</div>
+            </div>
+            <div style="background:var(--bg-surface-alt);border-radius:var(--r-lg);padding:12px;text-align:center">
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-bottom:4px">Ort. Sepet</div>
+              <div style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">₺264</div>
+            </div>
+            <div style="background:var(--bg-surface-alt);border-radius:var(--r-lg);padding:12px;text-align:center">
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-bottom:4px">İptal</div>
+              <div style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">1</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;height:24px">
+            <div style="flex:0.55;background:var(--primary);border-radius:var(--r-full)"></div>
+            <div style="flex:0.35;background:rgba(59,130,246,0.6);border-radius:var(--r-full)"></div>
+            <div style="flex:0.10;background:rgba(239,68,68,0.6);border-radius:var(--r-full)"></div>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:12px;font:var(--fw-medium) var(--fs-xs)/1 var(--font)">
+            <div style="display:flex;align-items:center;gap:6px;color:var(--text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:var(--primary)"></div> Masa %55</div>
+            <div style="display:flex;align-items:center;gap:6px;color:var(--text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:rgba(59,130,246,0.6)"></div> Online %35</div>
+            <div style="display:flex;align-items:center;gap:6px;color:var(--text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,0.6)"></div> Paket %10</div>
+          </div>
+        </div>
+
+        <!-- Top Items Card -->
+        <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:20px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-lg)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <iconify-icon icon="solar:cup-star-bold" style="font-size:20px;color:var(--primary)"></iconify-icon>
+            <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">En Çok Satanlar</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-inverse);display:flex;align-items:center;justify-content:center;font:var(--fw-semibold) var(--fs-xs)/1 var(--font)">1</div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Adana Kebabı</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">23 sipariş</div>
+              </div>
+              <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">₺690</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-inverse);display:flex;align-items:center;justify-content:center;font:var(--fw-semibold) var(--fs-xs)/1 var(--font)">2</div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Merguez Sandwich</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">18 sipariş</div>
+              </div>
+              <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">₺450</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-inverse);display:flex;align-items:center;justify-content:center;font:var(--fw-semibold) var(--fs-xs)/1 var(--font)">3</div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Tavuk Döner</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">15 sipariş</div>
+              </div>
+              <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">₺330</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-inverse);display:flex;align-items:center;justify-content:center;font:var(--fw-semibold) var(--fs-xs)/1 var(--font)">4</div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Hummus Tabağı</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">12 sipariş</div>
+              </div>
+              <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">₺120</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--text-inverse);display:flex;align-items:center;justify-content:center;font:var(--fw-semibold) var(--fs-xs)/1 var(--font)">5</div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Ayran</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">34 sipariş</div>
+              </div>
+              <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">₺85</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peak Hours Card -->
+        <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:20px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-lg)">
+          <div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-bottom:16px">Yoğun Saatler</div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="bizPeakHoursChart">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">10:00</div>
+              <div style="flex:1;background:var(--bg-surface-alt);border-radius:var(--r-full);height:24px;overflow:hidden">
+                <div style="width:25%;height:100%;background:var(--primary);border-radius:var(--r-full)"></div>
+              </div>
+              <div style="width:30px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-align:right">8</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">12:00</div>
+              <div style="flex:1;background:var(--bg-surface-alt);border-radius:var(--r-full);height:24px;overflow:hidden">
+                <div style="width:95%;height:100%;background:var(--primary);border-radius:var(--r-full)"></div>
+              </div>
+              <div style="width:30px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-align:right">28</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">15:00</div>
+              <div style="flex:1;background:var(--bg-surface-alt);border-radius:var(--r-full);height:24px;overflow:hidden">
+                <div style="width:45%;height:100%;background:var(--primary);border-radius:var(--r-full)"></div>
+              </div>
+              <div style="width:30px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-align:right">14</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">18:00</div>
+              <div style="flex:1;background:var(--bg-surface-alt);border-radius:var(--r-full);height:24px;overflow:hidden">
+                <div style="width:88%;height:100%;background:var(--primary);border-radius:var(--r-full)"></div>
+              </div>
+              <div style="width:30px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-align:right">26</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:40px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">21:00</div>
+              <div style="flex:1;background:var(--bg-surface-alt);border-radius:var(--r-full);height:24px;overflow:hidden">
+                <div style="width:65%;height:100%;background:var(--primary);border-radius:var(--r-full)"></div>
+              </div>
+              <div style="width:30px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-align:right">19</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Stats Card -->
+        <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:20px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-lg)">
+          <div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-bottom:16px">Müşteri Analizi</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:var(--bg-surface-alt);border-radius:var(--r-lg);padding:16px;text-align:center">
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-bottom:8px">Yeni Müşteri</div>
+              <div style="font:var(--fw-semibold) var(--fs-xl)/1 var(--font);color:var(--text-primary)">12</div>
+            </div>
+            <div style="background:var(--bg-surface-alt);border-radius:var(--r-lg);padding:16px;text-align:center">
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-bottom:8px">Tekrar Gelen</div>
+              <div style="font:var(--fw-semibold) var(--fs-xl)/1 var(--font);color:var(--text-primary)">35</div>
+            </div>
+          </div>
+          <div style="width:100%;height:120px;background:var(--bg-surface-alt);border-radius:var(--r-lg);margin-top:12px"></div>
+        </div>
+
+        <!-- Staff Performance Card -->
+        <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:20px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-lg)">
+          <div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-bottom:16px">Personel Performansı</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--border-subtle)">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Ahmet K.</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">18 sipariş</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">4.8★</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">3.2dk ort.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--border-subtle)">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(139,92,246,0.6);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Fatih Y.</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">15 sipariş</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">4.6★</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">3.5dk ort.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(34,197,94,0.6);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Zeynep S.</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">14 sipariş</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-primary)">4.4★</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">3.8dk ort.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
