@@ -27,13 +27,22 @@ function showDetail(i,source){
   else{priceEl.style.display='none';}
 
   document.getElementById('detailRating').textContent=item.rating+' ('+item.reviews+' değerlendirme)';
-  const bookmarkBtn=document.getElementById('detailBookmarkBtn');
-  if(isRestoran){bookmarkBtn.style.display='none';}
-  else{bookmarkBtn.style.display='flex';document.getElementById('detailBookmarks').textContent='('+(item.bookmarks||'0')+')';}
+  // Bookmark — tarif defterine ekle (sadece tarif için göster)
+  var _bmBtn=document.getElementById('detailBookmarkBtn');
+  if(isRestoran){_bmBtn.style.display='none';}
+  else{
+    _bmBtn.style.display='flex';
+    var _saved=(USER_PROFILE.savedRecipes||[]).indexOf(i)!==-1;
+    document.getElementById('detailBookmarkIcon').setAttribute('icon', _saved?'solar:bookmark-bold':'solar:bookmark-linear');
+    document.getElementById('detailBookmarkLabel').textContent=_saved?'Tarif Defterinde':'Tarif Defterine Ekle';
+  }
 
   document.getElementById('detailDesc').textContent=item.desc||'';
   document.getElementById('detailImg').src=item.img;
   document.getElementById('detailImg').alt=item.name;
+
+  /* ── Alerjen Uyarı Badge ── */
+  _renderDetailAllergenBadge(item);
 
   const prepTimeEl=document.getElementById('detailPrepTime');
   const cookTimeEl=document.getElementById('detailCookTime');
@@ -430,4 +439,97 @@ function stopTTS() {
   ttsActive = false;
   ttsSpeaking = false;
   updateTTSUI();
+}
+
+/* ═══ TARİF DEFTERİ — Bookmark ═══ */
+function toggleDetailBookmark() {
+  var idx = currentItem;
+  if (currentSource === 'restoran') return;
+  if (!USER_PROFILE.savedRecipes) USER_PROFILE.savedRecipes = [];
+  var arr = USER_PROFILE.savedRecipes;
+  var pos = arr.indexOf(idx);
+  if (pos !== -1) arr.splice(pos, 1); else arr.push(idx);
+  var saved = pos === -1;
+  document.getElementById('detailBookmarkIcon').setAttribute('icon', saved ? 'solar:bookmark-bold' : 'solar:bookmark-linear');
+  document.getElementById('detailBookmarkLabel').textContent = saved ? 'Tarif Defterinde' : 'Tarif Defterine Ekle';
+}
+
+/* ═══ ALERJEN UYARI SİSTEMİ ═══ */
+function _getMatchingAllergens(item) {
+  var itemAllergens = item.allergens || [];
+  if (itemAllergens.length === 0) return [];
+  var userAllergens = (USER_PROFILE && USER_PROFILE.allergens) || [];
+  if (userAllergens.length === 0) return [];
+  var matched = [];
+  itemAllergens.forEach(function(a) {
+    if (userAllergens.indexOf(a) !== -1) matched.push(a);
+  });
+  return matched;
+}
+
+function _allergenLabel(id) {
+  if (typeof ALLERGEN_LIST !== 'undefined') {
+    var found = ALLERGEN_LIST.find(function(a) { return a.id === id; });
+    if (found) return found.label;
+  }
+  // Fallback
+  var map = { gluten:'Gluten', laktoz:'Laktoz', fistik:'Fıstık', kabuklu:'Sert Kabuklu', deniz:'Deniz Ürünü', yumurta:'Yumurta', soya:'Soya', balik:'Balık', susam:'Susam', kereviz:'Kereviz', hardal:'Hardal', lupin:'Lupin', sulfit:'Sülfitler', selenyum:'Yumuşakçalar' };
+  return map[id] || id;
+}
+
+function _renderDetailAllergenBadge(item) {
+  var badge = document.getElementById('detailAllergenBadge');
+  if (!badge) return;
+  var matched = _getMatchingAllergens(item);
+  if (matched.length === 0) {
+    badge.style.display = 'none';
+    return;
+  }
+  var names = matched.map(function(id) { return _allergenLabel(id); });
+  var text = names.join(', ');
+  document.getElementById('detailAllergenText').textContent = 'Alerjen: ' + text;
+  badge.style.display = 'flex';
+}
+
+function _showAllergenDetail() {
+  var list = getListBySource(currentSource);
+  var item = list[currentItem];
+  if (!item) return;
+  var matched = _getMatchingAllergens(item);
+  var allItemAllergens = (item.allergens || []);
+
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center';
+
+  var backdrop = document.createElement('div');
+  backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.45)';
+  backdrop.onclick = function() { overlay.remove(); };
+  overlay.appendChild(backdrop);
+
+  var sheet = document.createElement('div');
+  sheet.style.cssText = 'position:relative;z-index:1;background:var(--bg-page);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:16px 20px 28px;max-height:60vh;overflow-y:auto';
+
+  var html = '<div style="display:flex;justify-content:center;padding:0 0 12px"><div style="width:36px;height:4px;border-radius:2px;background:var(--border-subtle)"></div></div>';
+  html += '<div style="font:var(--fw-bold) var(--fs-lg)/1.2 var(--font);color:var(--text-primary);margin-bottom:4px">Alerjen Bilgisi</div>';
+  html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-bottom:16px">' + item.name + ' içeriğindeki alerjenler</div>';
+
+  allItemAllergens.forEach(function(id) {
+    var isMatch = matched.indexOf(id) !== -1;
+    var label = _allergenLabel(id);
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r-lg);margin-bottom:6px;background:' + (isMatch ? 'rgba(239,68,68,.08)' : 'var(--glass-card)') + ';border:1.5px solid ' + (isMatch ? '#EF4444' : 'transparent') + '">';
+    html += '<iconify-icon icon="solar:shield-warning-bold" style="font-size:20px;color:' + (isMatch ? '#EF4444' : 'var(--text-muted)') + '"></iconify-icon>';
+    html += '<div style="flex:1"><div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + label + '</div>';
+    if (isMatch) {
+      html += '<div style="font:var(--fw-medium) var(--fs-xs)/1.2 var(--font);color:#EF4444;margin-top:2px">Profilinizde eşleşme var</div>';
+    }
+    html += '</div>';
+    if (isMatch) {
+      html += '<div style="padding:4px 10px;border-radius:12px;background:#EF4444;color:#fff;font:var(--fw-semibold) 10px/1 var(--font)">Uyarı</div>';
+    }
+    html += '</div>';
+  });
+
+  sheet.innerHTML = html;
+  overlay.appendChild(sheet);
+  document.getElementById('phone').appendChild(overlay);
 }

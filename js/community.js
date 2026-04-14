@@ -2,7 +2,150 @@
 
 let commActiveFilter = 'all';
 
+/* ── Topluluk Menü (Beğendiklerim / Kaydedilenler / Yorumlar) ── */
+let _commMenuTab = 'liked';
+
+function openCommMenu() {
+  _commMenuTab = 'liked';
+  var existing = document.getElementById('commMenuOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'commMenuOverlay';
+  overlay.className = 'prof-overlay open';
+  overlay.style.display = 'flex';
+
+  overlay.innerHTML = '<div class="prof-container">'
+    + '<div class="prof-topbar">'
+    + '<div class="btn-icon" onclick="closeCommMenu()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>'
+    + '<span class="prof-topbar-name">Menü</span>'
+    + '<div style="width:32px"></div>'
+    + '</div>'
+    + '<div id="commMenuTabs" style="display:flex;border-bottom:1px solid var(--border-subtle)"></div>'
+    + '<div id="commMenuContent" style="flex:1;overflow-y:auto"></div>'
+    + '</div>';
+
+  document.getElementById('phone').appendChild(overlay);
+  _renderCommMenuTabs();
+  _renderCommMenuContent();
+}
+
+function closeCommMenu() {
+  var el = document.getElementById('commMenuOverlay');
+  if (el) el.remove();
+}
+
+function _setCommMenuTab(tab) {
+  _commMenuTab = tab;
+  _renderCommMenuTabs();
+  _renderCommMenuContent();
+}
+
+function _renderCommMenuTabs() {
+  var tabsEl = document.getElementById('commMenuTabs');
+  if (!tabsEl) return;
+  var tabs = [
+    { id: 'liked', icon: 'solar:like-bold', label: 'Beğendiklerim' },
+    { id: 'saved', icon: 'solar:bookmark-bold', label: 'Kaydedilenler' },
+    { id: 'comments', icon: 'solar:chat-round-dots-bold', label: 'Yorumlar' },
+  ];
+  tabsEl.innerHTML = tabs.map(function(t) {
+    var active = _commMenuTab === t.id;
+    return '<div onclick="_setCommMenuTab(\'' + t.id + '\')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;cursor:pointer;border-bottom:2px solid ' + (active ? 'var(--primary)' : 'transparent') + ';transition:all .2s">'
+      + '<iconify-icon icon="' + t.icon + '" style="font-size:20px;color:' + (active ? 'var(--primary)' : 'var(--text-muted)') + '"></iconify-icon>'
+      + '<span style="font:var(--fw-medium) 10px/1 var(--font);color:' + (active ? 'var(--primary)' : 'var(--text-muted)') + '">' + t.label + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function _renderCommMenuContent() {
+  var container = document.getElementById('commMenuContent');
+  if (!container) return;
+  if (_commMenuTab === 'liked') _renderCommMenuLiked(container);
+  else if (_commMenuTab === 'saved') _renderCommMenuSaved(container);
+  else _renderCommMenuComments(container);
+}
+
+/* ── helper: find any liked/saved item from both feeds + academy ── */
+function _findAnyPost(id) {
+  var p = COMMUNITY_FEED.find(function(x) { return x.id === id; });
+  if (p) return p;
+  if (typeof ACADEMY_VIDEOS !== 'undefined') {
+    var av = ACADEMY_VIDEOS.find(function(x) { return x.id === id; });
+    if (av) return { id: av.id, user: av.user, text: av.title, img: av.thumbnail, likes: av.likes, liked: av.liked, saved: av.saved, _isAcademy: true };
+  }
+  return null;
+}
+
+function _renderCommMenuLiked(container) {
+  var ids = USER_PROFILE.likedPosts || [];
+  if (!ids.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-muted)"><iconify-icon icon="solar:like-linear" style="font-size:40px;display:block;margin-bottom:10px;opacity:.4"></iconify-icon><div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font)">Henüz beğendiğiniz gönderi yok</div></div>';
+    return;
+  }
+  var html = '';
+  for (var k = ids.length - 1; k >= 0; k--) {
+    var post = _findAnyPost(ids[k]);
+    if (!post) continue;
+    var badge = post._isAcademy ? '<span style="display:inline-flex;align-items:center;gap:2px;background:var(--primary-soft);color:var(--primary);padding:2px 6px;border-radius:var(--r-full);font:var(--fw-medium) 9px/1 var(--font);margin-left:6px"><iconify-icon icon="solar:square-academic-cap-bold" style="font-size:10px"></iconify-icon>Akademi</span>' : '';
+    html += '<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border-subtle)">';
+    if (post.img) html += '<img src="' + post.img + '" alt="" style="width:56px;height:56px;border-radius:var(--r-lg);object-fit:cover;flex-shrink:0">';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + post.user.name + badge + '</div>';
+    html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + post.text + '</div>';
+    html += '<div style="font:var(--fw-medium) 11px/1 var(--font);color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:4px"><iconify-icon icon="solar:like-bold" style="font-size:12px;color:var(--primary)"></iconify-icon>' + formatCount(post.likes) + ' beğeni</div>';
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+}
+
+function _renderCommMenuSaved(container) {
+  var ids = USER_PROFILE.savedPosts || [];
+  if (!ids.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-muted)"><iconify-icon icon="solar:bookmark-linear" style="font-size:40px;display:block;margin-bottom:10px;opacity:.4"></iconify-icon><div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font)">Henüz kaydettiğiniz gönderi yok</div></div>';
+    return;
+  }
+  var html = '';
+  for (var k = ids.length - 1; k >= 0; k--) {
+    var post = _findAnyPost(ids[k]);
+    if (!post) continue;
+    var badge = post._isAcademy ? '<span style="display:inline-flex;align-items:center;gap:2px;background:var(--primary-soft);color:var(--primary);padding:2px 6px;border-radius:var(--r-full);font:var(--fw-medium) 9px/1 var(--font);margin-left:6px"><iconify-icon icon="solar:square-academic-cap-bold" style="font-size:10px"></iconify-icon>Akademi</span>' : '';
+    var toggleFn = post._isAcademy ? 'toggleAcademySave(\'' + post.id + '\')' : 'toggleSave(' + post.id + ')';
+    html += '<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border-subtle)">';
+    if (post.img) html += '<img src="' + post.img + '" alt="" style="width:56px;height:56px;border-radius:var(--r-lg);object-fit:cover;flex-shrink:0">';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + post.user.name + badge + '</div>';
+    html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + post.text + '</div>';
+    html += '</div>';
+    html += '<div onclick="' + toggleFn + ';_renderCommMenuContent();" style="align-self:center;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer"><iconify-icon icon="solar:bookmark-bold" style="font-size:18px;color:var(--primary)"></iconify-icon></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function _renderCommMenuComments(container) {
+  var comments = USER_PROFILE.userComments || [];
+  if (!comments.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-muted)"><iconify-icon icon="solar:chat-round-dots-linear" style="font-size:40px;display:block;margin-bottom:10px;opacity:.4"></iconify-icon><div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font)">Henüz yorum yapmadınız</div></div>';
+    return;
+  }
+  var html = '';
+  for (var k = comments.length - 1; k >= 0; k--) {
+    var c = comments[k];
+    var post = _findAnyPost(c.postId);
+    html += '<div style="padding:14px 16px;border-bottom:1px solid var(--border-subtle)">';
+    if (post) {
+      html += '<div style="font:var(--fw-medium) 11px/1 var(--font);color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:4px"><iconify-icon icon="solar:arrow-right-up-linear" style="font-size:12px"></iconify-icon>' + post.user.name + '\'in gönderisine</div>';
+    }
+    html += '<div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-primary)">' + c.text + '</div>';
+    html += '<div style="font:var(--fw-regular) 11px/1 var(--font);color:var(--text-muted);margin-top:6px">' + c.date + '</div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
 function formatCount(n){
+  if(n>=1000000) return (n/1000000).toFixed(1)+'M';
   if(n>=1000) return (n/1000).toFixed(n%1000===0?0:1)+'K';
   return String(n);
 }
@@ -10,7 +153,6 @@ function formatCount(n){
 function renderCommunity(){
   renderCommStories();
   renderCommFeed();
-  renderCommChefsBanner();
 }
 
 function renderCommStories(){
@@ -29,7 +171,15 @@ function renderCommStories(){
 
 function renderCommFeed(){
   const feed=document.getElementById('communityFeed');
-  if(!feed||typeof COMMUNITY_FEED==='undefined')return;
+  if(!feed)return;
+
+  /* ── Akademi: ayrı render ── */
+  if(commActiveFilter === 'academy'){
+    _renderAcademyFeed(feed);
+    return;
+  }
+
+  if(typeof COMMUNITY_FEED==='undefined')return;
 
   let posts = COMMUNITY_FEED;
   if(commActiveFilter!=='all'){
@@ -99,7 +249,7 @@ function renderCommFeed(){
       <div class="feed-tags">${post.tags.map(t=>`<span class="feed-tag">#${t}</span>`).join('')}</div>
       <div class="feed-actions">
         <div class="feed-action${post.liked?' feed-action-liked':''}" onclick="toggleLike(${post.id})">
-          <iconify-icon icon="${post.liked?'solar:heart-bold':'solar:heart-linear'}" class="feed-action-icon"></iconify-icon>
+          <iconify-icon icon="${post.liked?'solar:like-bold':'solar:like-linear'}" class="feed-action-icon"></iconify-icon>
           <span>${formatCount(post.likes)}</span>
         </div>
         <div class="feed-action">
@@ -123,6 +273,10 @@ function toggleLike(postId){
   if(!post)return;
   post.liked=!post.liked;
   post.likes+=post.liked?1:-1;
+  var lp=USER_PROFILE.likedPosts;
+  var idx=lp.indexOf(postId);
+  if(post.liked && idx===-1) lp.push(postId);
+  else if(!post.liked && idx!==-1) lp.splice(idx,1);
   renderCommFeed();
 }
 
@@ -130,6 +284,11 @@ function toggleSave(postId){
   const post=COMMUNITY_FEED.find(p=>p.id===postId);
   if(!post)return;
   post.saved=!post.saved;
+  if(!USER_PROFILE.savedPosts) USER_PROFILE.savedPosts=[];
+  var sp=USER_PROFILE.savedPosts;
+  var idx=sp.indexOf(postId);
+  if(post.saved && idx===-1) sp.push(postId);
+  else if(!post.saved && idx!==-1) sp.splice(idx,1);
   renderCommFeed();
 }
 
@@ -138,21 +297,551 @@ function setCommFilter(filter){
   document.querySelectorAll('.comm-filter-tab').forEach(t=>{
     t.classList.toggle('active', t.dataset.filter===filter);
   });
-  const banner = document.getElementById('commChefsBanner');
-  if(banner) banner.style.display = filter==='chefs' ? 'flex' : 'none';
+  /* Stories & FAB: gizle academy modunda */
+  var stories = document.getElementById('commStoriesContainer');
+  var fab = document.querySelector('.comm-fab');
+  if (stories) stories.style.display = filter === 'academy' ? 'none' : '';
+  if (fab) fab.style.display = filter === 'academy' ? 'none' : '';
   renderCommFeed();
 }
 
-function renderCommChefsBanner(){
-  const banner = document.getElementById('commChefsBanner');
-  if(!banner||typeof TOP_CHEFS==='undefined')return;
-  banner.innerHTML = TOP_CHEFS.map(chef=>`
-    <div class="comm-chef-card">
-      <img src="${chef.avatar}" alt="${chef.name}">
-      <div class="comm-chef-card-name">${chef.name}</div>
-      <div class="comm-chef-card-spec">${chef.specialty}</div>
-      <div class="comm-chef-card-stats">${chef.followers} takipçi · ${chef.recipes} tarif</div>
-      <button class="comm-chef-follow-btn">Takip Et</button>
-    </div>
-  `).join('');
+
+/* ═══ Topluluk Arama ═══ */
+
+let _commSearchQuery = '';
+
+function openCommSearch() {
+  var existing = document.getElementById('commSearchOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'commSearchOverlay';
+  overlay.className = 'prof-overlay open';
+  overlay.style.display = 'flex';
+
+  overlay.innerHTML = '<div class="prof-container">'
+    + '<div class="prof-topbar">'
+    + '<div class="btn-icon" onclick="closeCommSearch()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>'
+    + '<span class="prof-topbar-name">Ara</span>'
+    + '<div style="width:32px"></div>'
+    + '</div>'
+    + '<div style="padding:12px 16px">'
+    + '<div style="display:flex;align-items:center;gap:8px;background:var(--glass-card);border-radius:var(--r-full);padding:0 14px;border:1px solid var(--border-subtle)">'
+    + '<iconify-icon icon="solar:magnifer-linear" style="font-size:18px;color:var(--text-muted);flex-shrink:0"></iconify-icon>'
+    + '<input id="commSearchInput" type="text" placeholder="Gönderi, kişi veya etiket ara..." oninput="_commSearchLive(this.value)" style="flex:1;border:none;background:transparent;padding:10px 0;font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);outline:none">'
+    + '<div id="commSearchClear" onclick="_commClearSearch()" style="display:none;cursor:pointer;padding:4px"><iconify-icon icon="solar:close-circle-bold" style="font-size:16px;color:var(--text-muted)"></iconify-icon></div>'
+    + '</div>'
+    + '</div>'
+    + '<div id="commSearchResults" style="flex:1;overflow-y:auto;padding:0 16px"></div>'
+    + '</div>';
+
+  document.getElementById('phone').appendChild(overlay);
+  setTimeout(function() {
+    var inp = document.getElementById('commSearchInput');
+    if (inp) inp.focus();
+  }, 100);
+  _commRenderSearchDefault();
+}
+
+function closeCommSearch() {
+  var el = document.getElementById('commSearchOverlay');
+  if (el) el.remove();
+  _commSearchQuery = '';
+}
+
+function _commClearSearch() {
+  var inp = document.getElementById('commSearchInput');
+  if (inp) { inp.value = ''; inp.focus(); }
+  _commSearchQuery = '';
+  _commRenderSearchDefault();
+  var cl = document.getElementById('commSearchClear');
+  if (cl) cl.style.display = 'none';
+}
+
+function _commRenderSearchDefault() {
+  var container = document.getElementById('commSearchResults');
+  if (!container) return;
+
+  /* Popüler etiketler */
+  var popularTags = ['burger', 'pizza', 'kebap', 'tatlı', 'kahvaltı', 'sağlıklı', 'teknik', 'tarif'];
+  var h = '<div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin:8px 0 10px">Popüler Etiketler</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px">';
+  popularTags.forEach(function(t) {
+    h += '<div onclick="_commSearchByTag(\'' + t + '\')" style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:var(--r-full);background:var(--primary-soft);color:var(--primary);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer">'
+      + '<iconify-icon icon="solar:hashtag-linear" style="font-size:12px"></iconify-icon>#' + t + '</div>';
+  });
+  h += '</div>';
+
+  /* Popüler şefler */
+  if (typeof TOP_CHEFS !== 'undefined') {
+    h += '<div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:10px">Popüler Şefler</div>';
+    TOP_CHEFS.forEach(function(c) {
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle)">';
+      h += '<img src="' + c.avatar + '" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover">';
+      h += '<div style="flex:1"><div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);display:flex;align-items:center;gap:4px">' + c.name + ' <iconify-icon icon="solar:verified-check-bold" style="font-size:12px;color:var(--primary)"></iconify-icon></div>';
+      h += '<div style="font:var(--fw-regular) 11px/1 var(--font);color:var(--text-muted);margin-top:2px">' + c.specialty + ' · ' + c.followers + ' takipçi</div></div></div>';
+    });
+  }
+
+  container.innerHTML = h;
+}
+
+function _commSearchByTag(tag) {
+  var inp = document.getElementById('commSearchInput');
+  if (inp) inp.value = '#' + tag;
+  _commSearchLive('#' + tag);
+}
+
+function _commSearchLive(query) {
+  _commSearchQuery = query.toLowerCase().trim();
+  var cl = document.getElementById('commSearchClear');
+  if (cl) cl.style.display = _commSearchQuery ? 'block' : 'none';
+
+  if (!_commSearchQuery) {
+    _commRenderSearchDefault();
+    return;
+  }
+
+  var container = document.getElementById('commSearchResults');
+  if (!container) return;
+
+  var q = _commSearchQuery.replace(/^#/, '');
+  var results = [];
+
+  /* Search community feed */
+  if (typeof COMMUNITY_FEED !== 'undefined') {
+    COMMUNITY_FEED.forEach(function(p) {
+      var match = p.text.toLowerCase().indexOf(q) !== -1
+        || p.user.name.toLowerCase().indexOf(q) !== -1
+        || p.user.handle.toLowerCase().indexOf(q) !== -1
+        || p.tags.some(function(t) { return t.toLowerCase().indexOf(q) !== -1; });
+      if (match) results.push({ type: 'post', data: p });
+    });
+  }
+
+  /* Search academy */
+  if (typeof ACADEMY_VIDEOS !== 'undefined') {
+    ACADEMY_VIDEOS.forEach(function(v) {
+      var match = v.title.toLowerCase().indexOf(q) !== -1
+        || v.description.toLowerCase().indexOf(q) !== -1
+        || v.user.name.toLowerCase().indexOf(q) !== -1
+        || v.tags.some(function(t) { return t.toLowerCase().indexOf(q) !== -1; });
+      if (match) results.push({ type: 'academy', data: v });
+    });
+  }
+
+  if (!results.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted)">'
+      + '<iconify-icon icon="solar:magnifer-linear" style="font-size:36px;display:block;margin-bottom:8px;opacity:.4"></iconify-icon>'
+      + '<div style="font:var(--fw-medium) var(--fs-sm)/1.3 var(--font)">"' + _commSearchQuery + '" için sonuç bulunamadı</div></div>';
+    return;
+  }
+
+  var h = '<div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin:8px 0 10px">' + results.length + ' sonuç</div>';
+
+  results.forEach(function(r) {
+    if (r.type === 'post') {
+      var p = r.data;
+      h += '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle)">';
+      if (p.img) h += '<img src="' + p.img + '" alt="" style="width:48px;height:48px;border-radius:var(--r-md);object-fit:cover;flex-shrink:0">';
+      h += '<div style="flex:1;min-width:0">';
+      h += '<div style="font:var(--fw-semibold) var(--fs-xs)/1.2 var(--font);color:var(--text-primary)">' + p.user.name + '</div>';
+      h += '<div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + p.text + '</div>';
+      h += '</div></div>';
+    } else {
+      var v = r.data;
+      h += '<div onclick="closeCommSearch();setCommFilter(\'academy\');openAcademyPlayer(\'' + v.id + '\')" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle);cursor:pointer">';
+      h += '<div style="position:relative;width:72px;height:42px;border-radius:var(--r-sm);overflow:hidden;flex-shrink:0;background:#000"><img src="' + v.thumbnail + '" alt="" style="width:100%;height:100%;object-fit:cover">';
+      h += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><iconify-icon icon="solar:play-bold" style="font-size:14px;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))"></iconify-icon></div></div>';
+      h += '<div style="flex:1;min-width:0">';
+      h += '<div style="display:flex;align-items:center;gap:4px"><span style="font:var(--fw-semibold) var(--fs-xs)/1.2 var(--font);color:var(--text-primary)">' + v.user.name + '</span><span style="display:inline-flex;align-items:center;gap:2px;background:var(--primary-soft);color:var(--primary);padding:1px 5px;border-radius:var(--r-full);font:var(--fw-medium) 9px/1 var(--font)"><iconify-icon icon="solar:square-academic-cap-bold" style="font-size:9px"></iconify-icon>Akademi</span></div>';
+      h += '<div style="font:var(--fw-medium) var(--fs-xs)/1.3 var(--font);color:var(--text-secondary);margin-top:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + v.title + '</div>';
+      h += '</div></div>';
+    }
+  });
+
+  container.innerHTML = h;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   AKADEMİ — Profesyonel Şef Video Eğitim Alanı
+   ═══════════════════════════════════════════════════════ */
+
+let _acadCategoryFilter = 'all'; // all | tarif | teknik | püf
+
+function _renderAcademyFeed(feed) {
+  if (typeof ACADEMY_VIDEOS === 'undefined' || !ACADEMY_VIDEOS.length) {
+    feed.innerHTML = '<div style="text-align:center;padding:40px var(--app-px)"><iconify-icon icon="solar:square-academic-cap-linear" style="font-size:48px;color:var(--text-muted)"></iconify-icon><div style="font:var(--fw-medium) var(--fs-md)/1.3 var(--font);color:var(--text-secondary);margin-top:12px">Akademi içerikleri yakında</div></div>';
+    return;
+  }
+
+  var vids = ACADEMY_VIDEOS;
+  if (_acadCategoryFilter !== 'all') {
+    vids = vids.filter(function(v) { return v.category === _acadCategoryFilter; });
+  }
+
+  /* ── header banner ── */
+  var html = '<div class="acad-header">'
+    + '<div class="acad-header-icon"><iconify-icon icon="solar:square-academic-cap-bold" style="font-size:28px;color:var(--primary)"></iconify-icon></div>'
+    + '<div class="acad-header-text">'
+    + '<div style="font:var(--fw-bold) var(--fs-lg)/1.2 var(--font);color:var(--text-primary)">Akademi</div>'
+    + '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-secondary);margin-top:2px">Onaylı şeflerden profesyonel video eğitimler</div>'
+    + '</div></div>';
+
+  /* ── category pills ── */
+  var cats = [
+    { id: 'all', label: 'Tümü' },
+    { id: 'tarif', label: 'Tarifler', icon: 'solar:chef-hat-linear' },
+    { id: 'teknik', label: 'Teknikler', icon: 'solar:settings-linear' },
+    { id: 'püf', label: 'Püf Noktaları', icon: 'solar:lightbulb-bolt-linear' },
+  ];
+  html += '<div class="acad-cats">';
+  cats.forEach(function(c) {
+    var active = _acadCategoryFilter === c.id;
+    var iconH = c.icon ? '<iconify-icon icon="' + c.icon + '" style="font-size:13px"></iconify-icon>' : '';
+    html += '<div class="acad-cat-pill' + (active ? ' active' : '') + '" onclick="_setAcadCategory(\'' + c.id + '\')">' + iconH + c.label + '</div>';
+  });
+  html += '</div>';
+
+  /* ── video cards ── */
+  if (!vids.length) {
+    html += '<div style="text-align:center;padding:40px 16px;color:var(--text-muted)"><div style="font:var(--fw-medium) var(--fs-md)/1.3 var(--font)">Bu kategoride henüz video yok</div></div>';
+  } else {
+    html += '<div class="acad-grid">';
+    vids.forEach(function(v) {
+      html += _renderAcademyCard(v);
+    });
+    html += '</div>';
+  }
+
+  feed.innerHTML = html;
+}
+
+function _renderAcademyCard(v) {
+  var catLabel = v.category === 'tarif' ? 'Tarif' : v.category === 'teknik' ? 'Teknik' : 'Püf Noktası';
+  var catIcon = v.category === 'tarif' ? 'solar:chef-hat-bold' : v.category === 'teknik' ? 'solar:settings-bold' : 'solar:lightbulb-bolt-bold';
+
+  return '<div class="acad-card" onclick="openAcademyPlayer(\'' + v.id + '\')">'
+    /* thumbnail container */
+    + '<div class="acad-thumb">'
+    + '<img src="' + v.thumbnail + '" alt="' + v.title + '">'
+    + '<div class="acad-thumb-overlay">'
+    + '<div class="acad-play-btn"><iconify-icon icon="solar:play-bold" style="font-size:24px;color:#fff"></iconify-icon></div>'
+    + '</div>'
+    + '<div class="acad-duration"><iconify-icon icon="solar:videocamera-record-bold" style="font-size:11px"></iconify-icon>' + v.duration + '</div>'
+    + '<div class="acad-cat-badge"><iconify-icon icon="' + catIcon + '" style="font-size:10px"></iconify-icon>' + catLabel + '</div>'
+    + '<div class="acad-aspect-badge">' + v.aspect + '</div>'
+    + '</div>'
+    /* info */
+    + '<div class="acad-card-body">'
+    + '<div class="acad-card-top">'
+    + '<img src="' + v.user.avatar + '" alt="" class="acad-card-avatar">'
+    + '<div class="acad-card-user">'
+    + '<div class="acad-card-name">' + v.user.name + ' <iconify-icon icon="solar:verified-check-bold" style="font-size:12px;color:var(--primary)"></iconify-icon></div>'
+    + '<div class="acad-card-handle">' + v.user.handle + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="acad-card-title">' + v.title + '</div>'
+    + '<div class="acad-card-meta">'
+    + '<span><iconify-icon icon="solar:eye-linear" style="font-size:13px"></iconify-icon>' + formatCount(v.views) + ' izlenme</span>'
+    + '<span><iconify-icon icon="solar:like-linear" style="font-size:13px"></iconify-icon>' + formatCount(v.likes) + '</span>'
+    + '<span>' + v.time + '</span>'
+    + '</div>'
+    + '<div class="acad-card-tags">' + v.tags.map(function(t) { return '<span>#' + t + '</span>'; }).join('') + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+function _setAcadCategory(cat) {
+  _acadCategoryFilter = cat;
+  renderCommFeed();
+}
+
+
+/* ═══ Akademi Fullscreen Video Player ═══ */
+
+let _acadCurrentVideo = null;
+let _acadPlaying = false;
+
+function openAcademyPlayer(videoId) {
+  var v = ACADEMY_VIDEOS.find(function(x) { return x.id === videoId; });
+  if (!v) return;
+  _acadCurrentVideo = v;
+  _acadPlaying = false;
+
+  var existing = document.getElementById('acadPlayerOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'acadPlayerOverlay';
+  overlay.className = 'acad-player-overlay';
+  overlay.innerHTML = _buildPlayerHTML(v);
+
+  document.getElementById('phone').appendChild(overlay);
+
+  /* animate in */
+  requestAnimationFrame(function() {
+    overlay.classList.add('open');
+  });
+}
+
+function closeAcademyPlayer() {
+  var overlay = document.getElementById('acadPlayerOverlay');
+  if (!overlay) return;
+  /* pause any playing video */
+  var vid = overlay.querySelector('video');
+  if (vid) { vid.pause(); }
+  overlay.classList.remove('open');
+  setTimeout(function() { overlay.remove(); }, 300);
+  _acadCurrentVideo = null;
+  _acadPlaying = false;
+}
+
+function _buildPlayerHTML(v) {
+  var isVertical = v.aspect === '9:16';
+
+  return '<div class="acad-player-container' + (isVertical ? ' vertical' : '') + '">'
+    /* top bar */
+    + '<div class="acad-player-topbar">'
+    + '<div class="btn-icon" onclick="closeAcademyPlayer()" style="color:#fff"><iconify-icon icon="solar:arrow-left-outline" style="font-size:22px"></iconify-icon></div>'
+    + '<div style="flex:1;text-align:center"><span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:#fff">Akademi</span></div>'
+    + '<div class="btn-icon" style="color:#fff"><iconify-icon icon="solar:menu-dots-bold" style="font-size:20px"></iconify-icon></div>'
+    + '</div>'
+
+    /* video area */
+    + '<div class="acad-player-video" onclick="_acadTogglePlay()">'
+    + '<video id="acadVideo" preload="metadata" poster="' + v.thumbnail + '" playsinline>'
+    + '<source src="' + v.videoUrl + '" type="video/mp4">'
+    + '</video>'
+    + '<div class="acad-player-play-icon" id="acadPlayIcon">'
+    + '<iconify-icon icon="solar:play-bold" style="font-size:40px;color:#fff"></iconify-icon>'
+    + '</div>'
+    /* progress bar */
+    + '<div class="acad-player-progress">'
+    + '<div class="acad-player-progress-bar" id="acadProgressBar"></div>'
+    + '</div>'
+    + '<div class="acad-player-time" id="acadTimeLabel">0:00 / ' + v.duration + '</div>'
+    + '</div>'
+
+    /* info section (scrollable) */
+    + '<div class="acad-player-info">'
+    /* user row */
+    + '<div class="acad-player-user">'
+    + '<img src="' + v.user.avatar + '" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary);display:flex;align-items:center;gap:4px">' + v.user.name + ' <iconify-icon icon="solar:verified-check-bold" style="font-size:14px;color:var(--primary)"></iconify-icon></div>'
+    + '<div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">' + v.user.followers + ' takipçi</div>'
+    + '</div>'
+    + '<button class="acad-follow-btn">Takip Et</button>'
+    + '</div>'
+
+    /* title + description */
+    + '<div class="acad-player-title">' + v.title + '</div>'
+    + '<div class="acad-player-desc">' + v.description + '</div>'
+    + '<div class="acad-player-stats">'
+    + '<span><iconify-icon icon="solar:eye-linear"></iconify-icon>' + formatCount(v.views) + ' izlenme</span>'
+    + '<span>' + v.time + '</span>'
+    + '</div>'
+
+    /* actions bar */
+    + '<div class="acad-player-actions">'
+    + '<div class="acad-player-action' + (v.liked ? ' active' : '') + '" id="acadLikeBtn" onclick="toggleAcademyLike(\'' + v.id + '\')">'
+    + '<iconify-icon icon="' + (v.liked ? 'solar:like-bold' : 'solar:like-linear') + '" style="font-size:22px"></iconify-icon>'
+    + '<span id="acadLikeCount">' + formatCount(v.likes) + '</span>'
+    + '</div>'
+    + '<div class="acad-player-action" onclick="_acadOpenComments(\'' + v.id + '\')">'
+    + '<iconify-icon icon="solar:chat-round-dots-linear" style="font-size:22px"></iconify-icon>'
+    + '<span>' + formatCount(v.comments) + '</span>'
+    + '</div>'
+    + '<div class="acad-player-action">'
+    + '<iconify-icon icon="solar:share-linear" style="font-size:22px"></iconify-icon>'
+    + '<span>' + formatCount(v.shares) + '</span>'
+    + '</div>'
+    + '<div class="acad-player-action' + (v.saved ? ' active' : '') + '" id="acadSaveBtn" onclick="toggleAcademySave(\'' + v.id + '\')">'
+    + '<iconify-icon icon="' + (v.saved ? 'solar:bookmark-bold' : 'solar:bookmark-linear') + '" style="font-size:22px"></iconify-icon>'
+    + '<span>Kaydet</span>'
+    + '</div>'
+    + '</div>'
+
+    /* tags */
+    + '<div class="acad-player-tags">' + v.tags.map(function(t) { return '<span class="feed-tag">#' + t + '</span>'; }).join('') + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+
+/* ── Video Play/Pause ── */
+function _acadTogglePlay() {
+  var vid = document.getElementById('acadVideo');
+  var icon = document.getElementById('acadPlayIcon');
+  if (!vid) return;
+
+  if (vid.paused) {
+    vid.play();
+    _acadPlaying = true;
+    if (icon) icon.style.opacity = '0';
+    /* progress updater */
+    vid._interval = setInterval(function() { _acadUpdateProgress(); }, 250);
+  } else {
+    vid.pause();
+    _acadPlaying = false;
+    if (icon) {
+      icon.style.opacity = '1';
+      icon.innerHTML = '<iconify-icon icon="solar:play-bold" style="font-size:40px;color:#fff"></iconify-icon>';
+    }
+    clearInterval(vid._interval);
+  }
+
+  vid.onended = function() {
+    _acadPlaying = false;
+    if (icon) {
+      icon.style.opacity = '1';
+      icon.innerHTML = '<iconify-icon icon="solar:restart-bold" style="font-size:40px;color:#fff"></iconify-icon>';
+    }
+    clearInterval(vid._interval);
+  };
+}
+
+function _acadUpdateProgress() {
+  var vid = document.getElementById('acadVideo');
+  var bar = document.getElementById('acadProgressBar');
+  var label = document.getElementById('acadTimeLabel');
+  if (!vid || !vid.duration) return;
+  var pct = (vid.currentTime / vid.duration) * 100;
+  if (bar) bar.style.width = pct + '%';
+  if (label) {
+    var cur = _formatTime(vid.currentTime);
+    var dur = _formatTime(vid.duration);
+    label.textContent = cur + ' / ' + dur;
+  }
+}
+
+function _formatTime(sec) {
+  var m = Math.floor(sec / 60);
+  var s = Math.floor(sec % 60);
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+
+/* ── Akademi Like (entegre: Hamburger > Beğendiklerim) ── */
+function toggleAcademyLike(videoId) {
+  var v = ACADEMY_VIDEOS.find(function(x) { return x.id === videoId; });
+  if (!v) return;
+  v.liked = !v.liked;
+  v.likes += v.liked ? 1 : -1;
+
+  /* Sync to USER_PROFILE.likedPosts */
+  if (!USER_PROFILE.likedPosts) USER_PROFILE.likedPosts = [];
+  var lp = USER_PROFILE.likedPosts;
+  var idx = lp.indexOf(videoId);
+  if (v.liked && idx === -1) lp.push(videoId);
+  else if (!v.liked && idx !== -1) lp.splice(idx, 1);
+
+  /* Update player UI */
+  var btn = document.getElementById('acadLikeBtn');
+  var cnt = document.getElementById('acadLikeCount');
+  if (btn) {
+    btn.classList.toggle('active', v.liked);
+    btn.querySelector('iconify-icon').setAttribute('icon', v.liked ? 'solar:like-bold' : 'solar:like-linear');
+  }
+  if (cnt) cnt.textContent = formatCount(v.likes);
+}
+
+/* ── Akademi Save (entegre: Hamburger > Kaydedilenler) ── */
+function toggleAcademySave(videoId) {
+  var v = ACADEMY_VIDEOS.find(function(x) { return x.id === videoId; });
+  if (!v) return;
+  v.saved = !v.saved;
+
+  if (!USER_PROFILE.savedPosts) USER_PROFILE.savedPosts = [];
+  var sp = USER_PROFILE.savedPosts;
+  var idx = sp.indexOf(videoId);
+  if (v.saved && idx === -1) sp.push(videoId);
+  else if (!v.saved && idx !== -1) sp.splice(idx, 1);
+
+  /* Update player UI */
+  var btn = document.getElementById('acadSaveBtn');
+  if (btn) {
+    btn.classList.toggle('active', v.saved);
+    btn.querySelector('iconify-icon').setAttribute('icon', v.saved ? 'solar:bookmark-bold' : 'solar:bookmark-linear');
+  }
+
+  /* also refresh feed cards if visible */
+  if (commActiveFilter === 'academy') renderCommFeed();
+}
+
+/* ── Akademi Comments (Bottom Sheet) ── */
+function _acadOpenComments(videoId) {
+  var v = ACADEMY_VIDEOS.find(function(x) { return x.id === videoId; });
+  if (!v) return;
+
+  var existing = document.getElementById('acadCommentsSheet');
+  if (existing) existing.remove();
+  var existingBd = document.getElementById('acadCommentsBd');
+  if (existingBd) existingBd.remove();
+
+  /* Demo comments */
+  var demoComments = [
+    { user: 'Zeynep', avatar: 'https://i.pravatar.cc/80?img=9', text: 'Harika bir teknik, çok teşekkürler!', time: '2s önce', likes: 12 },
+    { user: 'Deniz', avatar: 'https://i.pravatar.cc/80?img=15', text: 'Bunu denedim ve gerçekten fark yarattı.', time: '5s önce', likes: 8 },
+    { user: 'Furkan', avatar: 'https://i.pravatar.cc/80?img=11', text: 'Daha fazla bu tarz içerik lütfen!', time: '1g önce', likes: 23 },
+  ];
+
+  var bd = document.createElement('div');
+  bd.id = 'acadCommentsBd';
+  bd.className = 'np-backdrop';
+  bd.style.zIndex = '70';
+  bd.onclick = function() { _acadCloseComments(); };
+
+  var sheet = document.createElement('div');
+  sheet.id = 'acadCommentsSheet';
+  sheet.className = 'np-sheet';
+  sheet.style.zIndex = '71';
+  sheet.style.maxHeight = '60%';
+
+  var h = '<div class="np-handle"><div class="np-handle-bar"></div></div>';
+  h += '<div style="padding:12px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between">';
+  h += '<span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Yorumlar (' + v.comments + ')</span>';
+  h += '<div class="btn-icon" onclick="_acadCloseComments()"><iconify-icon icon="solar:close-circle-linear" style="font-size:20px"></iconify-icon></div>';
+  h += '</div>';
+  h += '<div style="flex:1;overflow-y:auto;padding:8px 0">';
+  demoComments.forEach(function(c) {
+    h += '<div style="display:flex;gap:10px;padding:12px 16px">';
+    h += '<img src="' + c.avatar + '" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">';
+    h += '<div style="flex:1">';
+    h += '<div style="font:var(--fw-semibold) var(--fs-xs)/1.2 var(--font);color:var(--text-primary)">' + c.user + ' <span style="font-weight:400;color:var(--text-muted);margin-left:6px">' + c.time + '</span></div>';
+    h += '<div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-secondary);margin-top:4px">' + c.text + '</div>';
+    h += '<div style="display:flex;align-items:center;gap:4px;margin-top:6px;cursor:pointer;color:var(--text-muted)"><iconify-icon icon="solar:like-linear" style="font-size:14px"></iconify-icon><span style="font:var(--fw-medium) 11px/1 var(--font)">' + c.likes + '</span></div>';
+    h += '</div></div>';
+  });
+  h += '</div>';
+  /* input bar */
+  h += '<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--border-subtle)">';
+  h += '<input type="text" placeholder="Yorum yaz..." style="flex:1;border:1px solid var(--border-subtle);border-radius:var(--r-full);padding:8px 14px;font:var(--fw-regular) var(--fs-sm)/1 var(--font);background:var(--glass-card);color:var(--text-primary);outline:none">';
+  h += '<div style="width:36px;height:36px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><iconify-icon icon="solar:arrow-up-bold" style="font-size:18px;color:#fff"></iconify-icon></div>';
+  h += '</div>';
+
+  sheet.innerHTML = h;
+  var playerOverlay = document.getElementById('acadPlayerOverlay');
+  if (playerOverlay) {
+    playerOverlay.appendChild(bd);
+    playerOverlay.appendChild(sheet);
+  }
+
+  requestAnimationFrame(function() {
+    bd.classList.add('open');
+    sheet.classList.add('open');
+  });
+}
+
+function _acadCloseComments() {
+  var bd = document.getElementById('acadCommentsBd');
+  var sheet = document.getElementById('acadCommentsSheet');
+  if (bd) { bd.classList.remove('open'); }
+  if (sheet) { sheet.classList.remove('open'); }
+  setTimeout(function() {
+    if (bd) bd.remove();
+    if (sheet) sheet.remove();
+  }, 300);
 }

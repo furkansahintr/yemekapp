@@ -20,14 +20,11 @@
   <div class="app-body" id="appBody">
     <div class="app-header" id="appHeader">
       <div style="display:flex;align-items:center;gap:12px">
-        <div id="headerLocation" style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0" onclick="toggleLocationPicker()">
-          <iconify-icon icon="solar:map-point-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
-          <div>
-            <div style="font:var(--fw-regular) 10px/1.2 var(--font);color:var(--text-muted)">Kayıtlı Konum</div>
-            <div style="display:flex;align-items:center;gap:2px">
-              <span id="locationLabel" style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Evim</span>
-              <iconify-icon id="locationArrow" icon="solar:alt-arrow-down-linear" style="font-size:14px;color:var(--text-muted);transition:transform .2s"></iconify-icon>
-            </div>
+        <div id="headerLocation" style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0" onclick="toggleLocationPicker()">
+          <iconify-icon icon="solar:map-point-bold" style="font-size:24px;color:var(--primary)"></iconify-icon>
+          <div style="min-width:0">
+            <span id="locationLabel" style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Evim</span>
+            <div id="locationAddress" style="font:var(--fw-medium) 10px/1.2 var(--font);color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">Atatürk Mah. Cumhuriyet Cad.</div>
           </div>
         </div>
         <div style="flex:1" id="headerTitle"></div>
@@ -75,14 +72,11 @@
 
     <div class="app-header-sticky" id="stickyHeader">
       <div style="display:flex;align-items:center;gap:12px">
-        <div id="stickyLocation" style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0">
-          <iconify-icon icon="solar:map-point-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
-          <div>
-            <div style="font:var(--fw-regular) 10px/1.2 var(--font);color:var(--text-muted)">Kayıtlı Konum</div>
-            <div style="display:flex;align-items:center;gap:2px">
-              <span style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Evim</span>
-              <iconify-icon icon="solar:alt-arrow-down-linear" style="font-size:14px;color:var(--text-muted)"></iconify-icon>
-            </div>
+        <div id="stickyLocation" style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0">
+          <iconify-icon icon="solar:map-point-bold" style="font-size:24px;color:var(--primary)"></iconify-icon>
+          <div style="min-width:0">
+            <span style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Evim</span>
+            <div style="font:var(--fw-medium) 10px/1.2 var(--font);color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">Atatürk Mah. Cumhuriyet Cad.</div>
           </div>
         </div>
         <div style="flex:1" id="stickyTitle"></div>
@@ -161,8 +155,13 @@
       </div>
     </div>
     <!-- Görsel -->
-    <div style="width:100%;aspect-ratio:1;flex-shrink:0;overflow:hidden">
+    <div style="width:100%;aspect-ratio:1;flex-shrink:0;overflow:hidden;position:relative">
       <img id="detailImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+      <!-- Alerjen Uyarı Badge -->
+      <div id="detailAllergenBadge" style="display:none;position:absolute;bottom:36px;right:12px;background:rgba(239,68,68,.92);backdrop-filter:blur(8px);color:#fff;padding:6px 12px;border-radius:20px;display:none;align-items:center;gap:6px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)" onclick="_showAllergenDetail()">
+        <iconify-icon icon="solar:shield-warning-bold" style="font-size:16px"></iconify-icon>
+        <span id="detailAllergenText" style="font:var(--fw-semibold) 11px/1 var(--font);white-space:nowrap">Alerjen Uyarısı</span>
+      </div>
     </div>
     <!-- Detay Kartı -->
     <div style="margin-top:-28px;border-radius:var(--r-2xl) var(--r-2xl) 0 0;background:var(--bg-page);position:relative;z-index:2;flex:1;padding:24px var(--app-px) 0">
@@ -175,10 +174,9 @@
           <iconify-icon icon="solar:star-bold" style="font-size:13px;color:#f59e0b"></iconify-icon>
           <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);letter-spacing:-0.3px" id="detailRating">4.8 (234 değerlendirme)</span>
         </div>
-        <div style="display:flex;align-items:center;gap:2px;cursor:pointer" id="detailBookmarkBtn" onclick="this.classList.toggle('active')">
-          <iconify-icon icon="solar:book-bookmark-linear" style="font-size:13px;color:var(--primary)"></iconify-icon>
-          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);letter-spacing:-0.3px" id="detailBookmarks">(1.2K)</span>
-          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);letter-spacing:-0.3px">Tarif Defterine Ekle</span>
+        <div style="display:flex;align-items:center;gap:4px;cursor:pointer" id="detailBookmarkBtn" onclick="toggleDetailBookmark()">
+          <iconify-icon id="detailBookmarkIcon" icon="solar:bookmark-linear" style="font-size:16px;color:var(--primary)"></iconify-icon>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);letter-spacing:-0.3px" id="detailBookmarkLabel">Tarif Defterine Ekle</span>
         </div>
       </div>
       <div style="height:1px;background:var(--border-subtle);margin-bottom:16px"></div>
@@ -390,6 +388,7 @@
     'js/cart.js',
     'js/notifications.js',
     'js/new-post.js',
+    'js/plans.js',
     // Business-side components
     'js/biz-home.js',
     'js/biz-dashboard.js',

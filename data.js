@@ -8,11 +8,19 @@
  */
 
 
+/* ── Kayıtlı Adresler ── */
+const USER_ADDRESSES = [
+  { id: 'ev',  label: 'Evim',    address: 'Atatürk Mah. Cumhuriyet Cad.', icon: 'solar:home-smile-bold' },
+  { id: 'is',  label: 'İşyerim', address: 'Levent Mah. Büyükdere Cad.',  icon: 'solar:case-round-bold' },
+];
+let SELECTED_ADDRESS_ID = 'ev';
+
 /* ── Menu Items (Tarifler - Ana Sayfa) ── */
 const menuItems = [
   {
     name: 'Truffle Burger',
     type: 'tarif', category: 'Burger',
+    allergens: ['gluten', 'laktoz', 'yumurta'],
     price: 185, rating: '4.8', reviews: '234', bookmarks: '1.2K', prepTime: '15dk', cookTime: '25dk', difficulty: 'Orta',
     desc: 'Özel truffle sosumuzla hazırlanan premium burger. 200 gram dana eti, taze marul, domates, karamelize soğan ve aged cheddar peyniri ile brioche ekmeğinde servis edilir.',
     ing: [{name:'Dana Eti',amount:'200g'},{name:'Aged Cheddar',amount:'2 dilim'},{name:'Truffle Sos',amount:'2 yemek kaşığı'},{name:'Marul',amount:'3 yaprak'},{name:'Karamelize Soğan',amount:'1 adet'},{name:'Brioche Ekmeği',amount:'1 adet'}],
@@ -55,6 +63,7 @@ const menuItems = [
   {
     name: 'Margherita Pizza',
     type: 'tarif', category: 'Pizza',
+    allergens: ['gluten', 'laktoz'],
     price: 165, rating: '4.7', reviews: '431', bookmarks: '1.5K', prepTime: '30dk', cookTime: '20dk', difficulty: 'Orta',
     desc: 'Taze mozzarella, domates sosu ve fesleğen ile klasik İtalyan pizzası.',
     ing: [{name:'Pizza Hamuru',amount:'300g'},{name:'Mozzarella',amount:'200g'},{name:'Domates Sosu',amount:'100g'},{name:'Fesleğen',amount:'5 yaprak'}],
@@ -264,6 +273,7 @@ const menuItems = [
 const restaurantItems = [
   {
     name: 'Klasik Cheeseburger', type: 'restoran', category: 'Burger',
+    allergens: ['gluten', 'laktoz', 'susam'],
     price: 145, rating: '4.6', reviews: '1.2K', bookmarks: '3.4K', prepTime: '5dk', cookTime: '12dk', difficulty: 'Kolay',
     desc: 'Nefis ızgara köfte, cheddar peyniri, taze marul, domates, turşu ve özel burger sosu ile servis edilir.',
     ing: [{name:'Dana Köfte',amount:'150g'},{name:'Cheddar Peyniri',amount:'1 dilim'},{name:'Marul',amount:'2 yaprak'},{name:'Domates',amount:'2 dilim'}],
@@ -446,7 +456,7 @@ const COMMUNITY_FEED = [
     img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop',
     recipe: { name: 'Truffle Burger', menuIdx: 0, cookTime: '25dk', difficulty: 'Orta', kalori: 340 },
     likes: 234, comments: 18, shares: 12,
-    liked: false, saved: false,
+    liked: false, saved: true,
     tags: ['burger', 'truffle', 'evyapımı'],
     filter: 'popular',
   },
@@ -471,7 +481,7 @@ const COMMUNITY_FEED = [
     likes: 189, comments: 31, shares: 8,
     liked: false, saved: false,
     tags: ['tatlı', 'yardım', 'sufle'],
-    filter: 'discover',
+    filter: 'academy',
   },
   {
     id: 4, postType: 'chef_tip',
@@ -480,9 +490,9 @@ const COMMUNITY_FEED = [
     text: 'Adana kebap yapmanın 3 altın kuralı:\n1. Kıymayı en az 10 kez yoğurun\n2. Kuyruk yağı oranı %20 olmalı\n3. Közün ısısı sabit tutulmalı',
     img: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=400&fit=crop',
     likes: 892, comments: 67, shares: 145,
-    liked: false, saved: false,
+    liked: false, saved: true,
     tags: ['kebap', 'adana', 'ipucu'],
-    filter: 'chefs',
+    filter: 'academy',
   },
   {
     id: 5, postType: 'recipe',
@@ -494,7 +504,7 @@ const COMMUNITY_FEED = [
     likes: 445, comments: 38, shares: 22,
     liked: true, saved: false,
     tags: ['pizza', 'italyan', 'sanmarzano'],
-    filter: 'chefs',
+    filter: 'academy',
   },
   {
     id: 6, postType: 'normal',
@@ -516,7 +526,7 @@ const COMMUNITY_FEED = [
     likes: 678, comments: 52, shares: 167,
     liked: false, saved: false,
     tags: ['burger', 'yenimenu', 'kampanya'],
-    filter: 'discover',
+    filter: 'academy',
   },
   {
     id: 8, postType: 'ask',
@@ -528,7 +538,7 @@ const COMMUNITY_FEED = [
     likes: 45, comments: 12, shares: 2,
     liked: false, saved: false,
     tags: ['künefe', 'ilkdeneme', 'tatlı'],
-    filter: 'discover',
+    filter: 'academy',
   },
   {
     id: 9, postType: 'recipe',
@@ -540,7 +550,7 @@ const COMMUNITY_FEED = [
     likes: 321, comments: 24, shares: 15,
     liked: false, saved: false,
     tags: ['salata', 'sağlıklı', 'avokado'],
-    filter: 'chefs',
+    filter: 'academy',
   },
   {
     id: 10, postType: 'ask',
@@ -552,7 +562,7 @@ const COMMUNITY_FEED = [
     likes: 78, comments: 15, shares: 3,
     liked: false, saved: false,
     tags: ['ekmek', 'hamur', 'yardım'],
-    filter: 'discover',
+    filter: 'academy',
   },
   {
     id: 11, postType: 'chef_tip',
@@ -563,7 +573,7 @@ const COMMUNITY_FEED = [
     likes: 1420, comments: 95, shares: 234,
     liked: false, saved: true,
     tags: ['ipucu', 'et', 'pişirme'],
-    filter: 'chefs',
+    filter: 'academy',
   },
 ];
 
@@ -573,6 +583,100 @@ const TOP_CHEFS = [
   { name: 'Kebapçı Mehmet', handle: '@kebapci_mehmet', avatar: 'https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?w=80&h=80&fit=crop&crop=face', followers: '23.1K', recipes: 134, specialty: 'Kebap & Izgara' },
   { name: 'Ayşe Mutfak', handle: '@aysemutfak', avatar: 'https://i.pravatar.cc/80?img=5', followers: '5.3K', recipes: 78, specialty: 'Ev Yemekleri' },
   { name: 'Şef Isabella', handle: '@chef_isabella', avatar: 'https://i.pravatar.cc/80?img=5', followers: '8.7K', recipes: 52, specialty: 'İtalyan Mutfağı' },
+];
+
+/* ── Akademi Videoları ── */
+const ACADEMY_VIDEOS = [
+  {
+    id: 'av1',
+    user: { name: 'Chef Ahmet', avatar: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=80&h=80&fit=crop&crop=face', handle: '@chefahmet', verified: true, followers: '12.4K' },
+    title: 'Mükemmel Smash Burger Tekniği',
+    description: 'Evde restoran kalitesinde smash burger nasıl yapılır? Etin seçiminden pişirme sıcaklığına tüm detaylar bu videoda.',
+    category: 'teknik',
+    thumbnail: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=340&fit=crop',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    aspect: '16:9',
+    duration: '12:34',
+    views: 24500,
+    time: '2g önce',
+    likes: 1890, comments: 142, shares: 234, saved: false, liked: false,
+    tags: ['burger', 'teknik', 'ızgara'],
+  },
+  {
+    id: 'av2',
+    user: { name: 'Kebapçı Mehmet', avatar: 'https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?w=80&h=80&fit=crop&crop=face', handle: '@kebapci_mehmet', verified: true, followers: '23.1K' },
+    title: 'Adana Kebap: Şişe Geçirme Sanatı',
+    description: 'Kıymanın yoğrulmasından şişe sarma tekniğine, ustadan adım adım Adana kebap yapım rehberi.',
+    category: 'tarif',
+    thumbnail: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=340&fit=crop',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    aspect: '9:16',
+    duration: '8:45',
+    views: 67800,
+    time: '4g önce',
+    likes: 4520, comments: 389, shares: 567, saved: true, liked: false,
+    tags: ['kebap', 'adana', 'geleneksel'],
+  },
+  {
+    id: 'av3',
+    user: { name: 'Şef Isabella', avatar: 'https://i.pravatar.cc/80?img=5', handle: '@chef_isabella', verified: true, followers: '8.7K' },
+    title: 'Napoli Pizza Hamuru – 72 Saat Fermantasyon',
+    description: 'Gerçek Napoli pizzası için 72 saatlik soğuk fermantasyon tekniği. Hamur elastikiyeti ve lezzet derinliği garantili.',
+    category: 'tarif',
+    thumbnail: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&h=340&fit=crop',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    aspect: '16:9',
+    duration: '18:20',
+    views: 31200,
+    time: '1h önce',
+    likes: 2340, comments: 198, shares: 312, saved: false, liked: true,
+    tags: ['pizza', 'hamur', 'fermantasyon'],
+  },
+  {
+    id: 'av4',
+    user: { name: 'Ayşe Mutfak', avatar: 'https://i.pravatar.cc/80?img=5', handle: '@aysemutfak', verified: true, followers: '5.3K' },
+    title: 'Bıçak Teknikleri: Julienne, Brunoise, Chiffonade',
+    description: 'Profesyonel mutfak bıçak kesim teknikleri. Hızlı ve güvenli doğrama için temel beceriler.',
+    category: 'teknik',
+    thumbnail: 'https://images.unsplash.com/photo-1590412200988-a436970781fa?w=600&h=340&fit=crop',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    aspect: '16:9',
+    duration: '14:55',
+    views: 18900,
+    time: '1h önce',
+    likes: 1560, comments: 87, shares: 145, saved: false, liked: false,
+    tags: ['teknik', 'bıçak', 'temel'],
+  },
+  {
+    id: 'av5',
+    user: { name: 'Chef Ahmet', avatar: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=80&h=80&fit=crop&crop=face', handle: '@chefahmet', verified: true, followers: '12.4K' },
+    title: 'Sos Yapımının 5 Altın Kuralı',
+    description: 'Béchamel\'den demi-glace\'a, sos dünyasının temelleri. Kıvam, sıcaklık ve malzeme dengeleri.',
+    category: 'püf',
+    thumbnail: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&h=340&fit=crop',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    aspect: '9:16',
+    duration: '10:12',
+    views: 9400,
+    time: '2h önce',
+    likes: 876, comments: 64, shares: 98, saved: false, liked: false,
+    tags: ['sos', 'teknik', 'temel'],
+  },
+  {
+    id: 'av6',
+    user: { name: 'Kebapçı Mehmet', avatar: 'https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?w=80&h=80&fit=crop&crop=face', handle: '@kebapci_mehmet', verified: true, followers: '23.1K' },
+    title: 'Et Dinlendirme: Neden ve Nasıl?',
+    description: 'Pişirme sonrası et dinlendirmenin bilimsel açıklaması. Doğru süre, sıcaklık ve teknikler.',
+    category: 'püf',
+    thumbnail: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=340&fit=crop',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+    aspect: '16:9',
+    duration: '7:30',
+    views: 41200,
+    time: '3h önce',
+    likes: 3210, comments: 245, shares: 410, saved: false, liked: false,
+    tags: ['et', 'pişirme', 'ipucu'],
+  },
 ];
 
 /* ── Notifications ── */
@@ -608,10 +712,76 @@ const USER_PROFILE = {
     { img:'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=300&h=300&fit=crop', likes:78, type:'recipe' },
     { img:'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300&h=300&fit=crop', likes:41, type:'post' },
   ],
-  // Saved recipes (tarif defteri)
-  savedRecipes: [0, 2, 4, 6, 9, 10], // menuItems indexes
-  // Liked posts from community
-  likedPosts: [2, 5], // COMMUNITY_FEED ids
+  // ── Haftalık Yemek Planı ──
+  weeklyPlan: {
+    // key = 'YYYY-MM-DD', value = { meals: { sabah:[], ogle:[], aksam:[], ara:[] }, notes:[] }
+    '2026-04-13': {
+      meals: {
+        sabah: [{ type:'recipe', sourceType:'menu', idx:8, note:'' }],
+        ogle:  [{ type:'restoran', sourceType:'restoran', idx:1, note:'Kebapçı Hacı\'dan al' }],
+        aksam: [{ type:'recipe', sourceType:'menu', idx:0, note:'' }],
+        ara:   []
+      },
+      notes: ['Akşam yemeğinde misafir var, porsiyon 4 kişilik olsun']
+    },
+    '2026-04-14': {
+      meals: {
+        sabah: [],
+        ogle:  [{ type:'recipe', sourceType:'menu', idx:5, note:'' }],
+        aksam: [{ type:'recipe', sourceType:'myRecipe', id:1, note:'' }],
+        ara:   [{ type:'note', text:'Meyve tabağı hazırla' }]
+      },
+      notes: ['Bugün hafif beslenme günü']
+    },
+    '2026-04-15': {
+      meals: {
+        sabah: [{ type:'recipe', sourceType:'menu', idx:2, note:'' }],
+        ogle:  [],
+        aksam: [{ type:'restoran', sourceType:'restoran', idx:0, note:'Burger Lab sipariş' }],
+        ara:   []
+      },
+      notes: []
+    }
+  },
+  // ── Alışveriş Listesi ──
+  shoppingList: [],
+  // ── Kullanıcının Oluşturduğu Tarifler ──
+  myRecipes: [
+    {
+      id: 1, name: 'Ev Yapımı Mantı', category: 'Ana Yemek',
+      img: 'https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=400&h=400&fit=crop',
+      prepTime: '45dk', cookTime: '30dk', difficulty: 'Zor', servings: 4,
+      desc: 'Kayseri usulü el açması mantı, sarımsaklı yoğurt ve tereyağlı sos ile.',
+      ingredients: ['Un 3 su bardağı', 'Kıyma 300g', 'Soğan 2 adet', 'Yoğurt 500g', 'Sarımsak 3 diş', 'Tereyağı 50g', 'Pul biber'],
+      steps: ['Hamuru yoğurun ve 30dk dinlendirin', 'İç harcını hazırlayın', 'Hamuru ince açıp küçük kareler kesin', 'Kıymayı karelere koyup kapatın', 'Kaynayan suda 15-20dk haşlayın', 'Sarımsaklı yoğurt ve tereyağlı sos ile servis edin'],
+      date: '2025-03-15'
+    },
+    {
+      id: 2, name: 'Fırında Sebzeli Tavuk', category: 'Ana Yemek',
+      img: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&h=400&fit=crop',
+      prepTime: '15dk', cookTime: '45dk', difficulty: 'Kolay', servings: 3,
+      desc: 'Marine edilmiş tavuk but, renkli sebzeler ile fırında.',
+      ingredients: ['Tavuk but 4 adet', 'Patates 3 adet', 'Havuç 2 adet', 'Biber 2 adet', 'Zeytinyağı', 'Kekik, tuz, karabiber'],
+      steps: ['Tavukları marine edin', 'Sebzeleri doğrayıp tepsiye dizin', 'Tavukları üzerine yerleştirin', '200°C fırında 45dk pişirin'],
+      date: '2025-04-02'
+    },
+  ],
+  // ── Alerjen & İntoleranslar ──
+  allergens: ['gluten', 'laktoz'],  // aktif alerjen id'leri
+  // ── Tarif Defteri (Bookmark — detay sayfası) ──
+  savedRecipes: [0, 2, 4, 6, 9, 10],           // menuItems indexes
+  // ── Favoriler (Kalp — Kişisel/Gizli, Hesabım > Favorilerim) ──
+  favoriteRecipes: [0, 2, 4, 6, 9, 10],       // menuItems indexes
+  favoriteRestaurants: [1, 3],                  // restaurantItems indexes
+  // ── Beğeniler (Kaşık — Sosyal/Açık, Topluluk > Menü > Beğendiklerim) ──
+  likedPosts: [2, 5],                           // COMMUNITY_FEED ids
+  // ── Kaydedilenler (Topluluk > Menü > Kaydedilenler) ──
+  savedPosts: [1, 4],                           // COMMUNITY_FEED ids
+  // ── Yorumlarım (Topluluk > Menü > Yorumlar) ──
+  userComments: [
+    { postId: 2, text: 'Bu tarifi denedim, harika oldu!', date: '2025-04-08' },
+    { postId: 5, text: 'San Marzano domatesler gerçekten fark yaratıyor.', date: '2025-04-10' },
+  ],
   // Order history
   orders: [
     { id:'#1042', name:'Truffle Burger x2', date:'5 Nisan', price:370, status:'Teslim Edildi' },

@@ -23,32 +23,76 @@
           </div>
           <div class="g-pill" style="padding:8px 14px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);cursor:pointer" onclick="openProfileEdit()">Düzenle</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div class="g-card" style="padding:14px;text-align:center">
-            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:var(--primary)">23</div>
-            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:4px">Sipariş</div>
-          </div>
-          <div class="g-card" style="padding:14px;text-align:center">
-            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:var(--primary)">8</div>
-            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:4px">Favori</div>
-          </div>
-          <div class="g-card" style="padding:14px;text-align:center">
-            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:var(--primary)">350</div>
-            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:4px">Puan</div>
-          </div>
-        </div>
-        <div class="g-card-strong" style="padding:16px;display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <iconify-icon icon="solar:gift-bold" style="font-size:24px;color:var(--primary)"></iconify-icon>
+
+        <!-- ═══ Premium Banner ═══ -->
+        <div style="background:linear-gradient(135deg,#F97316 0%,#F59E0B 100%);border-radius:var(--r-xl);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.12)"></div>
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <iconify-icon icon="solar:crown-bold" style="font-size:22px;color:#fff"></iconify-icon>
           </div>
           <div style="flex:1">
-            <div style="font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:var(--text-primary)">150 puana ücretsiz teslimat!</div>
-            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary)">350 / 500 puan</div>
-            <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--glass-card)">
-              <div style="height:100%;width:70%;border-radius:2px;background:var(--primary)"></div>
+            <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:#fff">Premium'a Geç</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:rgba(255,255,255,.85);margin-top:3px">Reklamsız deneyim, özel tarifler ve daha fazlası</div>
+          </div>
+          <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:#fff;flex-shrink:0"></iconify-icon>
+        </div>
+
+        <!-- ═══ Planlarım & Destek Tile'ları ═══ -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="g-card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;border-radius:var(--r-xl);cursor:pointer" onclick="openPlansPage()">
+            <div style="width:42px;height:42px;border-radius:50%;background:#3B82F615;display:flex;align-items:center;justify-content:center">
+              <iconify-icon icon="solar:calendar-bold" style="font-size:22px;color:#3B82F6"></iconify-icon>
+            </div>
+            <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);text-align:center">Planlarım</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-muted);text-align:center">Yemek Takvimi</div>
+          </div>
+          <div class="g-card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;border-radius:var(--r-xl);cursor:pointer">
+            <div style="width:42px;height:42px;border-radius:50%;background:#8B5CF615;display:flex;align-items:center;justify-content:center">
+              <iconify-icon icon="solar:chat-round-dots-bold" style="font-size:22px;color:#8B5CF6"></iconify-icon>
+            </div>
+            <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);text-align:center">Destek</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-muted);text-align:center">Yardım & İletişim</div>
+          </div>
+        </div>
+
+        <!-- ═══ Sağlık & Beslenme ═══ -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <iconify-icon icon="solar:health-bold" style="font-size:18px;color:#EC4899"></iconify-icon>
+            <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Sağlık & Beslenme</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openBMICalculator()">
+              <iconify-icon icon="solar:ruler-angular-bold" style="font-size:22px;color:#EC4899"></iconify-icon>
+              <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Boy / Kilo Endeksi</div>
+              <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+            </div>
+            <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openAllergenPage()">
+              <iconify-icon icon="solar:shield-warning-bold" style="font-size:22px;color:#F59E0B"></iconify-icon>
+              <div style="flex:1">
+                <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Alerjen & İntoleranslar</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px" id="profAllergenSummary">Belirtilmedi</div>
+              </div>
+              <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
             </div>
           </div>
         </div>
+
+        <!-- ═══ İşletme ═══ -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <iconify-icon icon="solar:case-round-bold" style="font-size:18px;color:#06B6D4"></iconify-icon>
+            <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">İşletme</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openBizEmployeeLogin()">
+              <iconify-icon icon="solar:buildings-2-bold" style="font-size:22px;color:#06B6D4"></iconify-icon>
+              <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Bir İşletmede Çalışıyorum</div>
+              <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+            </div>
+          </div>
+        </div>
+
         <div style="display:flex;flex-direction:column;gap:4px">
           <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)" onclick="openOrderHistory()">
             <iconify-icon icon="solar:bag-check-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
@@ -67,9 +111,18 @@
             <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Ödeme Yöntemlerim</div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)">
-            <iconify-icon icon="solar:heart-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openFavoritesPage()">
+            <iconify-icon icon="solar:heart-bold" style="font-size:22px;color:#EF4444"></iconify-icon>
             <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Favorilerim</div>
+            <span id="favCountBadge" style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-right:4px"></span>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openMyRecipesPage()">
+            <iconify-icon icon="solar:chef-hat-bold" style="font-size:22px;color:#F59E0B"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Tariflerim</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px" id="profMyRecipeCount">0 tarif</div>
+            </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
           <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)" onclick="openNotifications()">

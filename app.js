@@ -236,6 +236,55 @@ function handleHeaderScroll() {
 window.addEventListener('scroll', handleHeaderScroll, { passive: true });
 handleHeaderScroll();
 
+/* ═══ LOCATION PICKER ═══ */
+function toggleLocationPicker() {
+  var overlay = document.getElementById('locOverlay');
+  var picker = document.getElementById('locPicker');
+  if (!overlay || !picker) return;
+  var isOpen = overlay.classList.contains('open');
+  if (isOpen) { closeLocationPicker(); return; }
+  overlay.classList.add('open');
+  picker.classList.add('open');
+  renderSavedAddresses();
+}
+
+function closeLocationPicker() {
+  var overlay = document.getElementById('locOverlay');
+  var picker = document.getElementById('locPicker');
+  if (overlay) overlay.classList.remove('open');
+  if (picker) picker.classList.remove('open');
+}
+
+function renderSavedAddresses() {
+  var list = document.getElementById('locSavedList');
+  if (!list || typeof USER_ADDRESSES === 'undefined') return;
+  var html = '';
+  USER_ADDRESSES.forEach(function(addr) {
+    var isActive = addr.id === SELECTED_ADDRESS_ID;
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r-lg);cursor:pointer;background:' + (isActive ? 'var(--glass-card-strong)' : 'transparent') + ';border:1.5px solid ' + (isActive ? 'var(--primary)' : 'transparent') + '" onclick="selectAddress(\'' + addr.id + '\')">';
+    html += '<iconify-icon icon="' + addr.icon + '" style="font-size:20px;color:' + (isActive ? 'var(--primary)' : 'var(--text-muted)') + '"></iconify-icon>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + addr.label + '</div>';
+    html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + addr.address + '</div>';
+    html += '</div>';
+    if (isActive) html += '<iconify-icon icon="solar:check-circle-bold" style="font-size:18px;color:var(--primary)"></iconify-icon>';
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function selectAddress(id) {
+  SELECTED_ADDRESS_ID = id;
+  var addr = USER_ADDRESSES.find(function(a) { return a.id === id; });
+  if (!addr) return;
+  // Update main header
+  var label = document.getElementById('locationLabel');
+  if (label) label.textContent = addr.label;
+  var addrEl = document.getElementById('locationAddress');
+  if (addrEl) addrEl.textContent = addr.address;
+  closeLocationPicker();
+}
+
 /* ═══ UTILITY ═══ */
 function escHtml(s) {
   const d = document.createElement('div');

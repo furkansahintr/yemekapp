@@ -15,12 +15,15 @@
             </div>
           </div>
           <div class="comm-topbar-right">
+            <div class="btn-icon comm-topbar-btn" onclick="openCommSearch()">
+              <iconify-icon icon="solar:magnifer-linear" style="font-size:22px"></iconify-icon>
+            </div>
             <div class="btn-icon comm-topbar-btn" onclick="openNotifications()" id="commNotifBtn">
               <iconify-icon icon="solar:bell-linear" style="font-size:22px"></iconify-icon>
               <span class="comm-notif-dot" id="commNotifDot"></span>
             </div>
-            <div class="btn-icon comm-topbar-btn" onclick="openSettingsPanel()">
-              <iconify-icon icon="solar:settings-linear" style="font-size:22px"></iconify-icon>
+            <div class="btn-icon comm-topbar-btn" onclick="openCommMenu()">
+              <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:22px"></iconify-icon>
             </div>
           </div>
         </div>
@@ -36,16 +39,10 @@
           <div class="comm-filter-tab" data-filter="popular" onclick="setCommFilter('popular')">
             <iconify-icon icon="solar:fire-linear" style="font-size:15px"></iconify-icon> Popüler
           </div>
-          <div class="comm-filter-tab" data-filter="discover" onclick="setCommFilter('discover')">
-            <iconify-icon icon="solar:compass-linear" style="font-size:15px"></iconify-icon> Keşfet
-          </div>
-          <div class="comm-filter-tab" data-filter="chefs" onclick="setCommFilter('chefs')">
-            <iconify-icon icon="solar:chef-hat-linear" style="font-size:15px"></iconify-icon> Şefler
+          <div class="comm-filter-tab" data-filter="academy" onclick="setCommFilter('academy')">
+            <iconify-icon icon="solar:square-academic-cap-linear" style="font-size:15px"></iconify-icon> Akademi
           </div>
         </div>
-
-        <!-- ═══ Top Chefs Banner (only on chefs filter) ═══ -->
-        <div class="comm-chefs-banner" id="commChefsBanner" style="display:none"></div>
 
         <!-- ═══ Task 7.2 & 7.3: Feed ═══ -->
         <div class="community-feed" id="communityFeed"></div>

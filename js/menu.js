@@ -118,9 +118,16 @@ function renderMenu(){
   renderSections(document.getElementById('tabTarifler'), menuItems, 'menu', recentlyVisitedTarif, TARIF_SECTIONS);
 }
 
+function _cardAllergenBadge(item){
+  if(typeof _getMatchingAllergens!=='function') return '';
+  var m=_getMatchingAllergens(item);
+  if(!m.length) return '';
+  return '<div style="position:absolute;top:8px;right:8px;background:rgba(239,68,68,.9);color:#fff;padding:3px 8px;border-radius:12px;display:flex;align-items:center;gap:4px;z-index:2"><iconify-icon icon="solar:shield-warning-bold" style="font-size:12px"></iconify-icon><span style="font:var(--fw-semibold) 9px/1 var(--font)">Alerjen</span></div>';
+}
+
 function renderMenuCard(item,idx){
   return `<div class="kesfet-item" onclick="showDetail(${idx})" style="cursor:pointer">
-    <div class="img-wrap"><img src="${item.img}" alt="${item.name}"></div>
+    <div class="img-wrap" style="position:relative">${_cardAllergenBadge(item)}<img src="${item.img}" alt="${item.name}"></div>
     <div class="ki-content">
       <div class="ki-title">${item.name}</div>
       <div class="ki-meta">
@@ -136,7 +143,7 @@ function renderMenuCard(item,idx){
 
 function renderRestCard(item,idx){
   return `<div class="kesfet-item" onclick="showDetail(${idx},'restoran')" style="cursor:pointer">
-    <div class="img-wrap"><img src="${item.img}" alt="${item.name}"></div>
+    <div class="img-wrap" style="position:relative">${_cardAllergenBadge(item)}<img src="${item.img}" alt="${item.name}"></div>
     <div class="ki-content">
       <div class="ki-title">${item.name}</div>
       <div class="ki-meta">
@@ -179,7 +186,7 @@ function renderKesfetItem(item,idx){
         <span class="ki-dot">·</span>
         <div class="ki-meta-group"><iconify-icon class="ki-meta-icon" icon="solar:alarm-linear"></iconify-icon><span class="ki-meta-text">${item.cookTime}</span></div>`;
   return `<div class="kesfet-item" onclick="showDetail(${idx},'kesfet')" style="${isRestoran?'padding-bottom:10px':''};cursor:pointer">
-    <div class="img-wrap"><img src="${item.img}" alt="${item.name}"></div>
+    <div class="img-wrap" style="position:relative">${_cardAllergenBadge(item)}<img src="${item.img}" alt="${item.name}"></div>
     <div class="ki-content">
       <div class="ki-title">${item.name}</div>
       <div class="ki-meta">${metaContent}</div>
