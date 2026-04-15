@@ -5,9 +5,15 @@ function renderBizMyBusiness() {
   if (!container) return;
 
   const biz = BIZ_BUSINESS;
-  const branches = BIZ_BRANCHES;
   const staff = BIZ_STAFF;
   const rolePerms = BIZ_ROLE_PERMISSIONS[bizCurrentRole];
+
+  // Şube müdürü yalnızca atandığı şubeyi görebilir — diğer roller için tüm şubeler.
+  const isManager = bizCurrentRole === 'manager';
+  const branches = isManager
+    ? BIZ_BRANCHES.filter(b => b.id === bizActiveBranch)
+    : BIZ_BRANCHES;
+  const branchesLabel = isManager ? 'Şubem' : 'Şubelerim';
 
   container.innerHTML = `
     <div style="padding:max(env(safe-area-inset-top),48px) var(--app-px) var(--app-px);display:flex;flex-direction:column;gap:16px">
@@ -56,7 +62,7 @@ function renderBizMyBusiness() {
 
       <!-- Şubelerim -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
-        <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Şubelerim</div>
+        <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">${branchesLabel}</div>
         ${bizCurrentRole === 'owner' ? `<div onclick="openBizAddBranch()" style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:3px"><iconify-icon icon="solar:add-circle-linear" style="font-size:14px"></iconify-icon> Şube Ekle</div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -80,6 +86,21 @@ function renderBizMyBusiness() {
           </div>`;
         }).join('')}
       </div>
+
+      ${bizCurrentRole !== 'owner' ? `
+      <!-- Vardiyam (çalışan görünümü) -->
+      <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:4px 0">Benim Çalışma Programım</div>
+      <div onclick="openMyShifts()" style="background:linear-gradient(135deg, var(--primary-soft), var(--bg-phone));border-radius:var(--r-xl);border:1px solid var(--primary-soft);box-shadow:var(--shadow-md);padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+        <div style="width:44px;height:44px;border-radius:var(--r-lg);background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="solar:calendar-mark-bold" style="font-size:22px;color:#fff"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font:var(--fw-semibold) var(--fs-md)/1.1 var(--font);color:var(--text-primary)">Vardiyam</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">Çalışma programım, izin durumum ve değişiklikler</div>
+        </div>
+        <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:var(--primary)"></iconify-icon>
+      </div>
+      ` : ''}
 
       <!-- Abonelik -->
       <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:4px 0">Abonelik & Plan</div>

@@ -30,7 +30,7 @@
         <div style="flex:1" id="headerTitle"></div>
         <div id="headerTitleCenter" style="display:none;flex:1;text-align:left;font:var(--fw-semibold) 22px/1 var(--font);color:var(--text-primary)"></div>
         <div id="headerIcons" style="display:flex;align-items:center;gap:8px">
-          <div class="btn-icon" style="position:relative" onclick="showFavorites()">
+          <div class="btn-icon" style="position:relative" onclick="openFavoritesPage()" title="Favorilerim">
             <iconify-icon icon="solar:heart-linear"></iconify-icon>
           </div>
           <div class="btn-icon" style="position:relative" onclick="openCartOverlay()" id="headerCartBtn">
@@ -82,7 +82,7 @@
         <div style="flex:1" id="stickyTitle"></div>
         <div id="stickyTitleCenter" style="display:none;flex:1;text-align:left;font:var(--fw-semibold) 22px/1 var(--font);color:var(--text-primary)"></div>
         <div id="stickyIcons" style="display:flex;align-items:center;gap:8px">
-          <div class="btn-icon" style="position:relative" onclick="showFavorites()">
+          <div class="btn-icon" style="position:relative" onclick="openFavoritesPage()" title="Favorilerim">
             <iconify-icon icon="solar:heart-linear"></iconify-icon>
           </div>
           <div class="btn-icon" style="position:relative" onclick="openCartOverlay()" id="stickyCartBtn">
@@ -259,7 +259,7 @@
         </div>
       </div>
       <button class="btn-primary" style="flex:1;text-align:center" id="detailStartBtn">Tarife Başla</button>
-      <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-btn);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+      <div id="detailPlanBtn" onclick="openPlanPicker()" title="Plana Ekle" style="width:40px;height:40px;border-radius:50%;background:var(--bg-btn);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
         <iconify-icon icon="solar:calendar-add-outline" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>
       </div>
     </div>
@@ -389,14 +389,22 @@
     'js/notifications.js',
     'js/new-post.js',
     'js/plans.js',
+    'js/qr-scan.js',
+    'js/post-report.js',
+    'js/premium.js',
+    'js/support.js',
+    'js/orders.js',
+    'js/payments.js',
     // Business-side components
     'js/biz-home.js',
     'js/biz-dashboard.js',
     'js/biz-orders.js',
     'js/biz-tables.js',
     'js/biz-community.js',
+    'js/biz-new-post.js',
     'js/biz-my-business.js',
     'js/biz-staff.js',
+    'js/biz-shifts.js',
     'js/biz-menu.js',
     'js/biz-waiter-calls.js',
     'js/biz-reviews.js',
@@ -405,6 +413,7 @@
     'js/biz-table-order.js',
     'js/biz-profile.js',
     'js/biz-branch-detail.js',
+    'js/biz-commission.js',
     'js/biz-delivery-settings.js',
     'js/biz-notifications.js',
     'js/biz-kitchen.js',

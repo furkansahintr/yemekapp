@@ -107,6 +107,12 @@ function closeFavoritesPage() {
   if (el) el.remove();
 }
 
+/* Ana sayfadaki kalp ikonu eski çağrı uyumluluğu — Hesabım > Favorilerim ile aynı sayfayı açar */
+function showFavorites() { openFavoritesPage(); }
+window.showFavorites = showFavorites;
+window.openFavoritesPage = openFavoritesPage;
+window.closeFavoritesPage = closeFavoritesPage;
+
 function renderFavoritesPageContent() {
   var container = document.getElementById('favPageContent');
   if (!container) return;
@@ -570,14 +576,311 @@ function openAllergenPage() {
 
   html += '</div>';
 
+  /* Custom allergens section */
+  html += '<div id="customAllergenSection" style="margin-top:18px">' + _renderCustomAllergensHtml() + '</div>';
+
+  /* "Farklı Alerjim Var" button */
+  html += '<div onclick="openCustomAllergenModal()" style="margin-top:14px;padding:14px;border-radius:var(--r-xl);border:1.5px dashed var(--border-subtle);background:transparent;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor=\'var(--primary)\';this.style.background=\'var(--primary-soft)\'" onmouseout="this.style.borderColor=\'var(--border-subtle)\';this.style.background=\'transparent\'">';
+  html += '<iconify-icon icon="solar:add-circle-bold" style="font-size:20px;color:var(--primary)"></iconify-icon>';
+  html += '<span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--primary)">Farklı Alerjim Var</span>';
+  html += '</div>';
+  html += '<div style="font:var(--fw-regular) 11px/1.4 var(--font);color:var(--text-muted);text-align:center;margin-top:8px;padding:0 24px">Listede yer almayan nadir hassasiyetlerinizi manuel olarak ekleyin</div>';
+
   /* Active count */
-  html += '<div style="text-align:center;padding:16px 0 24px;font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted)" id="allergenActiveCount">' + userAllergens.length + ' alerjen seçili</div>';
+  html += '<div style="text-align:center;padding:20px 0 24px;font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted)" id="allergenActiveCount">' + _allergenTotalCount() + ' madde seçili</div>';
   html += '</div>';
   html += '</div>';
 
   overlay.innerHTML = html;
   document.getElementById('phone').appendChild(overlay);
 }
+
+/* ═══ CUSTOM ALLERGEN DATA ═══ */
+function _ensureCustomAllergensArr() {
+  if (!USER_PROFILE.customAllergens) USER_PROFILE.customAllergens = [];
+  return USER_PROFILE.customAllergens;
+}
+
+function _allergenTotalCount() {
+  var std = (USER_PROFILE.allergens || []).length;
+  var cst = (USER_PROFILE.customAllergens || []).length;
+  return std + cst;
+}
+
+var _CA_SEVERITY = [
+  { id: 'low',      label: 'Düşük',           color: '#22C55E', desc: 'Hafif rahatsızlık' },
+  { id: 'medium',   label: 'Orta',            color: '#F59E0B', desc: 'Belirgin semptomlar' },
+  { id: 'high',     label: 'Yüksek',          color: '#EF4444', desc: 'Ciddi reaksiyon' },
+  { id: 'critical', label: 'Hayati',          color: '#B91C1C', desc: 'Anafilaktik risk' }
+];
+
+function _renderCustomAllergensHtml() {
+  var arr = USER_PROFILE.customAllergens || [];
+  if (!arr.length) return '';
+
+  var html = '';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin:0 4px 10px">';
+  html += '<iconify-icon icon="solar:shield-user-bold" style="font-size:16px;color:var(--primary)"></iconify-icon>';
+  html += '<span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Kişisel Hassasiyetlerim</span>';
+  html += '<span style="margin-left:auto;font:var(--fw-medium) 11px/1 var(--font);color:var(--text-muted);background:var(--bg-btn);padding:3px 8px;border-radius:var(--r-full)">' + arr.length + '</span>';
+  html += '</div>';
+
+  html += '<div style="display:flex;flex-direction:column;gap:6px">';
+  arr.forEach(function(c, idx) {
+    var sev = _CA_SEVERITY.find(function(s) { return s.id === c.severity; }) || _CA_SEVERITY[1];
+    var typeLabel = c.type === 'alerji' ? 'Alerji' : 'İntolerans';
+    var typeColor = c.type === 'alerji' ? '#EF4444' : '#8B5CF6';
+    var typeIcon  = c.type === 'alerji' ? 'solar:danger-triangle-bold' : 'solar:info-circle-bold';
+
+    html += '<div class="g-card" style="padding:14px;border-radius:var(--r-lg);border-left:4px solid ' + sev.color + ';display:flex;align-items:flex-start;gap:12px">';
+    html += '<div style="width:38px;height:38px;border-radius:50%;background:' + typeColor + '15;display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+    html += '<iconify-icon icon="' + typeIcon + '" style="font-size:18px;color:' + typeColor + '"></iconify-icon></div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+    html += '<span style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + _escHtmlCA(c.name) + '</span>';
+    html += '<span style="font:var(--fw-semibold) 10px/1 var(--font);color:' + typeColor + ';background:' + typeColor + '15;padding:3px 7px;border-radius:var(--r-full)">' + typeLabel + '</span>';
+    html += '<span style="font:var(--fw-semibold) 10px/1 var(--font);color:#fff;background:' + sev.color + ';padding:3px 7px;border-radius:var(--r-full)">' + sev.label + '</span>';
+    html += '</div>';
+    if (c.note) {
+      html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary);margin-top:6px">' + _escHtmlCA(c.note) + '</div>';
+    }
+    html += '</div>';
+    html += '<div onclick="removeCustomAllergen(' + idx + ')" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0" title="Sil"><iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:18px;color:var(--text-muted)"></iconify-icon></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function _escHtmlCA(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function removeCustomAllergen(idx) {
+  var arr = _ensureCustomAllergensArr();
+  arr.splice(idx, 1);
+  _refreshCustomAllergenSection();
+  _updateAllergenSummary();
+}
+
+function _refreshCustomAllergenSection() {
+  var section = document.getElementById('customAllergenSection');
+  if (section) section.innerHTML = _renderCustomAllergensHtml();
+  var countEl = document.getElementById('allergenActiveCount');
+  if (countEl) countEl.textContent = _allergenTotalCount() + ' madde seçili';
+}
+
+/* ═══ CUSTOM ALLERGEN MODAL ═══ */
+var _caDraft = { name: '', type: 'alerji', severity: 'medium', note: '' };
+
+function openCustomAllergenModal() {
+  _caDraft = { name: '', type: 'alerji', severity: 'medium', note: '' };
+
+  var overlay = document.createElement('div');
+  overlay.className = 'prof-overlay open';
+  overlay.id = 'customAllergenOverlay';
+  overlay.style.display = 'flex';
+  overlay.style.zIndex = '200';
+
+  overlay.innerHTML =
+    '<div class="prof-container" style="background:var(--bg-page)">' +
+      '<div class="prof-topbar">' +
+        '<div class="btn-icon" onclick="closeCustomAllergenModal()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>' +
+        '<span class="prof-topbar-name">Yeni Hassasiyet Ekle</span>' +
+        '<div style="width:36px"></div>' +
+      '</div>' +
+      '<div id="caModalBody" style="padding:4px 16px 24px"></div>' +
+    '</div>';
+
+  document.getElementById('phone').appendChild(overlay);
+  _caRenderModal();
+
+  setTimeout(function() {
+    var inp = document.getElementById('caNameInput');
+    if (inp) inp.focus();
+  }, 200);
+}
+
+function closeCustomAllergenModal() {
+  var overlay = document.getElementById('customAllergenOverlay');
+  if (overlay) overlay.remove();
+}
+
+function _caRenderModal() {
+  var body = document.getElementById('caModalBody');
+  if (!body) return;
+
+  var sevIdx = _CA_SEVERITY.findIndex(function(s) { return s.id === _caDraft.severity; });
+  if (sevIdx < 0) sevIdx = 1;
+  var currentSev = _CA_SEVERITY[sevIdx];
+
+  var html = '';
+
+  /* Info banner */
+  html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px;background:#F59E0B12;border:1px solid #F59E0B25;border-radius:var(--r-xl);margin-bottom:20px">';
+  html += '<iconify-icon icon="solar:info-circle-bold" style="font-size:18px;color:#F59E0B;flex-shrink:0;margin-top:1px"></iconify-icon>';
+  html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary)">Listede yer almayan nadir veya spesifik bir hassasiyet ekleyin. Girdikleriniz tarif ve menü önerilerinizde dikkate alınacaktır.</div>';
+  html += '</div>';
+
+  /* 1. Madde Adı */
+  html += '<div style="margin-bottom:20px">';
+  html += '<label style="display:block;font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:8px">Madde Adı <span style="color:var(--primary)">*</span></label>';
+  html += '<input type="text" id="caNameInput" placeholder="Örn: Çilek, Kivi, Sarımsak" value="' + _escHtmlCA(_caDraft.name) + '" oninput="_caOnNameInput(this.value)" maxlength="40" ';
+  html += 'style="width:100%;padding:14px 16px;border:1.5px solid var(--border-subtle);border-radius:var(--r-xl);background:var(--bg-phone);font:var(--fw-medium) var(--fs-md)/1.2 var(--font);color:var(--text-primary);outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor=\'var(--primary)\'" onblur="this.style.borderColor=\'var(--border-subtle)\'">';
+  html += '<div style="font:var(--fw-regular) 11px/1 var(--font);color:var(--text-muted);margin-top:6px;text-align:right"><span id="caNameCount">' + _caDraft.name.length + '</span>/40</div>';
+  html += '</div>';
+
+  /* 2. Tür Seçimi */
+  html += '<div style="margin-bottom:22px">';
+  html += '<label style="display:block;font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:10px">Tür</label>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  /* Alerji */
+  var alerjiActive = _caDraft.type === 'alerji';
+  html += '<div onclick="_caSetType(\'alerji\')" style="padding:14px;border-radius:var(--r-xl);border:2px solid ' + (alerjiActive ? '#EF4444' : 'var(--border-subtle)') + ';background:' + (alerjiActive ? '#EF444410' : 'var(--bg-phone)') + ';cursor:pointer;transition:all .2s;text-align:center">';
+  html += '<iconify-icon icon="solar:danger-triangle-bold" style="font-size:26px;color:#EF4444"></iconify-icon>';
+  html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:' + (alerjiActive ? '#EF4444' : 'var(--text-primary)') + ';margin-top:6px">Alerji</div>';
+  html += '<div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-top:3px">Bağışıklık reaksiyonu</div>';
+  html += '</div>';
+  /* İntolerans */
+  var intAct = _caDraft.type === 'intolerans';
+  html += '<div onclick="_caSetType(\'intolerans\')" style="padding:14px;border-radius:var(--r-xl);border:2px solid ' + (intAct ? '#8B5CF6' : 'var(--border-subtle)') + ';background:' + (intAct ? '#8B5CF610' : 'var(--bg-phone)') + ';cursor:pointer;transition:all .2s;text-align:center">';
+  html += '<iconify-icon icon="solar:info-circle-bold" style="font-size:26px;color:#8B5CF6"></iconify-icon>';
+  html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:' + (intAct ? '#8B5CF6' : 'var(--text-primary)') + ';margin-top:6px">İntolerans</div>';
+  html += '<div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-top:3px">Sindirim güçlüğü</div>';
+  html += '</div>';
+  html += '</div>';
+  if (alerjiActive) {
+    html += '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 12px;background:#EF444410;border-radius:var(--r-lg)">';
+    html += '<iconify-icon icon="solar:shield-warning-bold" style="font-size:14px;color:#EF4444"></iconify-icon>';
+    html += '<span style="font:var(--fw-medium) 11px/1.3 var(--font);color:#EF4444">Alerji seçimi yüksek uyarı seviyesi etkinleştirir</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  /* 3. Kritiklik Seviyesi */
+  html += '<div style="margin-bottom:22px">';
+  html += '<label style="display:flex;align-items:center;justify-content:space-between;font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:12px">';
+  html += '<span>Kritiklik Seviyesi</span>';
+  html += '<span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:' + currentSev.color + '">' + currentSev.label + '</span>';
+  html += '</label>';
+  /* Step slider */
+  html += '<div style="position:relative;padding:6px 0 0">';
+  /* Track */
+  html += '<div style="position:relative;height:6px;background:var(--bg-btn);border-radius:3px;margin:0 12px 14px">';
+  /* Progress */
+  var pct = (sevIdx / 3) * 100;
+  html += '<div style="position:absolute;left:0;top:0;height:100%;width:' + pct + '%;background:linear-gradient(90deg,#22C55E 0%,#F59E0B 50%,#EF4444 80%,#B91C1C 100%);border-radius:3px;transition:width .25s"></div>';
+  html += '</div>';
+  /* Steps */
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+  _CA_SEVERITY.forEach(function(s, i) {
+    var active = i === sevIdx;
+    html += '<div onclick="_caSetSeverity(\'' + s.id + '\')" style="padding:10px 6px;border-radius:var(--r-lg);border:1.5px solid ' + (active ? s.color : 'var(--border-subtle)') + ';background:' + (active ? s.color + '12' : 'transparent') + ';cursor:pointer;transition:all .2s;text-align:center">';
+    html += '<div style="width:10px;height:10px;border-radius:50%;background:' + s.color + ';margin:0 auto 6px;box-shadow:' + (active ? '0 0 0 3px ' + s.color + '30' : 'none') + '"></div>';
+    html += '<div style="font:var(--fw-semibold) 11px/1 var(--font);color:' + (active ? s.color : 'var(--text-primary)') + '">' + s.label + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div style="font:var(--fw-regular) 11px/1.3 var(--font);color:var(--text-muted);text-align:center;margin-top:10px">' + currentSev.desc + '</div>';
+  html += '</div>';
+  html += '</div>';
+
+  /* 4. Açıklama */
+  html += '<div style="margin-bottom:24px">';
+  html += '<label style="display:flex;align-items:center;justify-content:space-between;font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:8px">';
+  html += '<span>Açıklama</span>';
+  html += '<span style="font:var(--fw-regular) 11px/1 var(--font);color:var(--text-muted)">Opsiyonel</span>';
+  html += '</label>';
+  html += '<textarea id="caNoteInput" placeholder="Örn: Eser miktarda bile olsa sorun yaratır" oninput="_caOnNoteInput(this.value)" maxlength="160" ';
+  html += 'style="width:100%;min-height:80px;padding:14px 16px;border:1.5px solid var(--border-subtle);border-radius:var(--r-xl);background:var(--bg-phone);font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-primary);outline:none;resize:none;box-sizing:border-box;font-family:var(--font);transition:border-color .2s" onfocus="this.style.borderColor=\'var(--primary)\'" onblur="this.style.borderColor=\'var(--border-subtle)\'">' + _escHtmlCA(_caDraft.note) + '</textarea>';
+  html += '<div style="font:var(--fw-regular) 11px/1 var(--font);color:var(--text-muted);margin-top:6px;text-align:right"><span id="caNoteCount">' + _caDraft.note.length + '</span>/160</div>';
+  html += '</div>';
+
+  /* Submit button */
+  var canSubmit = _caDraft.name.trim().length > 0;
+  html += '<button onclick="_caSubmit()" ' + (canSubmit ? '' : 'disabled') + ' id="caSubmitBtn" ';
+  html += 'style="width:100%;padding:16px;border:none;border-radius:var(--r-xl);background:' + (canSubmit ? 'var(--primary)' : 'var(--border-subtle)') + ';color:#fff;font:var(--fw-semibold) var(--fs-md)/1 var(--font);cursor:' + (canSubmit ? 'pointer' : 'not-allowed') + ';transition:all .2s;box-shadow:' + (canSubmit ? '0 4px 12px rgba(246,80,19,0.25)' : 'none') + '">Kaydet</button>';
+
+  body.innerHTML = html;
+}
+
+function _caOnNameInput(val) {
+  _caDraft.name = val;
+  var c = document.getElementById('caNameCount');
+  if (c) c.textContent = val.length;
+  /* Enable/disable submit without full re-render */
+  var btn = document.getElementById('caSubmitBtn');
+  if (btn) {
+    var can = val.trim().length > 0;
+    btn.disabled = !can;
+    btn.style.background = can ? 'var(--primary)' : 'var(--border-subtle)';
+    btn.style.cursor = can ? 'pointer' : 'not-allowed';
+    btn.style.boxShadow = can ? '0 4px 12px rgba(246,80,19,0.25)' : 'none';
+  }
+}
+
+function _caOnNoteInput(val) {
+  _caDraft.note = val;
+  var c = document.getElementById('caNoteCount');
+  if (c) c.textContent = val.length;
+}
+
+function _caSetType(t) {
+  _caDraft.type = t;
+  _caRenderModal();
+  /* Restore focus to name if needed */
+  var inp = document.getElementById('caNameInput');
+  if (inp && document.activeElement !== inp) {
+    /* Don't auto-focus on type switch */
+  }
+}
+
+function _caSetSeverity(s) {
+  _caDraft.severity = s;
+  _caRenderModal();
+}
+
+function _caSubmit() {
+  var name = (_caDraft.name || '').trim();
+  if (!name) return;
+
+  var arr = _ensureCustomAllergensArr();
+  arr.push({
+    id: 'custom_' + Date.now(),
+    name: name,
+    type: _caDraft.type,
+    severity: _caDraft.severity,
+    note: (_caDraft.note || '').trim(),
+    addedAt: Date.now()
+  });
+
+  closeCustomAllergenModal();
+  _refreshCustomAllergenSection();
+  _updateAllergenSummary();
+
+  /* Toast */
+  var msg = name + ' eklendi';
+  if (typeof showToast === 'function') { showToast(msg); }
+  else {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:20px;font:var(--fw-medium) var(--fs-sm)/1 var(--font);z-index:999;transition:opacity .3s';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; }, 2000);
+    setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 2500);
+  }
+}
+
+/* Window exports */
+window.openCustomAllergenModal = openCustomAllergenModal;
+window.closeCustomAllergenModal = closeCustomAllergenModal;
+window.removeCustomAllergen = removeCustomAllergen;
+window._caOnNameInput = _caOnNameInput;
+window._caOnNoteInput = _caOnNoteInput;
+window._caSetType = _caSetType;
+window._caSetSeverity = _caSetSeverity;
+window._caSubmit = _caSubmit;
 
 function toggleAllergen(id) {
   if (!USER_PROFILE.allergens) USER_PROFILE.allergens = [];
@@ -609,12 +912,14 @@ function _updateAllergenSummary() {
   var el = document.getElementById('profAllergenSummary');
   if (!el) return;
   var arr = USER_PROFILE.allergens || [];
-  if (arr.length === 0) { el.textContent = 'Belirtilmedi'; return; }
+  var custom = USER_PROFILE.customAllergens || [];
+  if (arr.length === 0 && custom.length === 0) { el.textContent = 'Belirtilmedi'; return; }
   var names = [];
   arr.forEach(function(id) {
     var found = ALLERGEN_LIST.find(function(a) { return a.id === id; });
     if (found) names.push(found.label);
   });
+  custom.forEach(function(c) { if (c && c.name) names.push(c.name); });
   el.textContent = names.length <= 3 ? names.join(', ') : names.slice(0, 3).join(', ') + ' +' + (names.length - 3);
 }
 

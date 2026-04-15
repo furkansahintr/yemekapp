@@ -2,11 +2,10 @@
 
 let commActiveFilter = 'all';
 
-/* ── Topluluk Menü (Beğendiklerim / Kaydedilenler / Yorumlar) ── */
-let _commMenuTab = 'liked';
+/* ── Topluluk Menü — Tile layout (Beğendiklerim / Kaydedilenler / Yorumlar / Engellediklerim) ── */
+let _commBlockedSubTab = 'users';  // 'users' | 'content'
 
 function openCommMenu() {
-  _commMenuTab = 'liked';
   var existing = document.getElementById('commMenuOverlay');
   if (existing) existing.remove();
 
@@ -15,19 +14,17 @@ function openCommMenu() {
   overlay.className = 'prof-overlay open';
   overlay.style.display = 'flex';
 
-  overlay.innerHTML = '<div class="prof-container">'
+  overlay.innerHTML = '<div class="prof-container" id="commMenuContainer">'
     + '<div class="prof-topbar">'
     + '<div class="btn-icon" onclick="closeCommMenu()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>'
     + '<span class="prof-topbar-name">Menü</span>'
     + '<div style="width:32px"></div>'
     + '</div>'
-    + '<div id="commMenuTabs" style="display:flex;border-bottom:1px solid var(--border-subtle)"></div>'
     + '<div id="commMenuContent" style="flex:1;overflow-y:auto"></div>'
     + '</div>';
 
   document.getElementById('phone').appendChild(overlay);
-  _renderCommMenuTabs();
-  _renderCommMenuContent();
+  _renderCommMenuHome();
 }
 
 function closeCommMenu() {
@@ -35,36 +32,316 @@ function closeCommMenu() {
   if (el) el.remove();
 }
 
-function _setCommMenuTab(tab) {
-  _commMenuTab = tab;
-  _renderCommMenuTabs();
-  _renderCommMenuContent();
-}
-
-function _renderCommMenuTabs() {
-  var tabsEl = document.getElementById('commMenuTabs');
-  if (!tabsEl) return;
-  var tabs = [
-    { id: 'liked', icon: 'solar:like-bold', label: 'Beğendiklerim' },
-    { id: 'saved', icon: 'solar:bookmark-bold', label: 'Kaydedilenler' },
-    { id: 'comments', icon: 'solar:chat-round-dots-bold', label: 'Yorumlar' },
-  ];
-  tabsEl.innerHTML = tabs.map(function(t) {
-    var active = _commMenuTab === t.id;
-    return '<div onclick="_setCommMenuTab(\'' + t.id + '\')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;cursor:pointer;border-bottom:2px solid ' + (active ? 'var(--primary)' : 'transparent') + ';transition:all .2s">'
-      + '<iconify-icon icon="' + t.icon + '" style="font-size:20px;color:' + (active ? 'var(--primary)' : 'var(--text-muted)') + '"></iconify-icon>'
-      + '<span style="font:var(--fw-medium) 10px/1 var(--font);color:' + (active ? 'var(--primary)' : 'var(--text-muted)') + '">' + t.label + '</span>'
-      + '</div>';
-  }).join('');
-}
-
-function _renderCommMenuContent() {
+/* ═══ HOME — Tile layout ═══ */
+function _renderCommMenuHome() {
   var container = document.getElementById('commMenuContent');
   if (!container) return;
-  if (_commMenuTab === 'liked') _renderCommMenuLiked(container);
-  else if (_commMenuTab === 'saved') _renderCommMenuSaved(container);
-  else _renderCommMenuComments(container);
+
+  var likedCount    = (USER_PROFILE.likedPosts   || []).length;
+  var savedCount    = (USER_PROFILE.savedPosts   || []).length;
+  var commentsCount = (USER_PROFILE.userComments || []).length;
+  var blockedUsersCount = (typeof _commBlockedHandles !== 'undefined' ? _commBlockedHandles.length : 0);
+  var blurredCount      = (typeof _commBlurredPosts    !== 'undefined' ? _commBlurredPosts.length    : 0);
+  var blockedTotal = blockedUsersCount + blurredCount;
+
+  var html = '';
+
+  /* Greeting */
+  html += '<div style="padding:16px 16px 8px">';
+  html += '<div style="font:var(--fw-bold) 22px/1.2 var(--font);color:var(--text-primary)">Topluluk Merkezi</div>';
+  html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:4px">Beğendiğin, kaydettiğin ve yorum yaptığın tüm içerikleri tek yerde yönet.</div>';
+  html += '</div>';
+
+  /* Ana Tile'lar 2x2 grid */
+  html += '<div style="padding:10px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+
+  html += _commMenuTile({
+    key: 'liked',
+    title: 'Beğendiklerim',
+    desc: 'Kalp bıraktığın gönderiler',
+    icon: 'solar:heart-bold',
+    color: '#EF4444',
+    count: likedCount
+  });
+
+  html += _commMenuTile({
+    key: 'saved',
+    title: 'Kaydedilenler',
+    desc: 'Daha sonra bakmak için',
+    icon: 'solar:bookmark-bold',
+    color: '#F59E0B',
+    count: savedCount
+  });
+
+  html += _commMenuTile({
+    key: 'comments',
+    title: 'Yorumlarım',
+    desc: 'Tüm yorumların kronolojik',
+    icon: 'solar:chat-round-dots-bold',
+    color: '#8B5CF6',
+    count: commentsCount
+  });
+
+  html += _commMenuTile({
+    key: 'activity',
+    title: 'Aktivitem',
+    desc: 'Son etkileşim özeti',
+    icon: 'solar:pulse-bold',
+    color: '#22C55E',
+    count: null,
+    soon: true
+  });
+
+  html += '</div>';
+
+  /* Engellediklerim — ayrı, farklı görsel vurgu */
+  html += '<div style="padding:18px 16px 8px">';
+  html += '<div style="font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:0 4px 10px">Güvenlik ve Denetim</div>';
+  html += '<div onclick="_openCommMenuItem(\'blocked\')" style="padding:16px;border-radius:var(--r-xl);border:1.5px dashed #EF444450;background:#EF444408;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s" onmouseover="this.style.background=\'#EF444412\'" onmouseout="this.style.background=\'#EF444408\'">';
+  html += '<div style="width:44px;height:44px;border-radius:12px;background:#EF444420;display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+  html += '<iconify-icon icon="solar:shield-cross-bold" style="font-size:22px;color:#EF4444"></iconify-icon>';
+  html += '</div>';
+  html += '<div style="flex:1;min-width:0">';
+  html += '<div style="display:flex;align-items:center;gap:6px"><span style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">Engellediklerim</span>';
+  if (blockedTotal > 0) {
+    html += '<span style="font:var(--fw-bold) 10px/1 var(--font);color:#fff;background:#EF4444;padding:3px 8px;border-radius:var(--r-full)">' + blockedTotal + '</span>';
+  }
+  html += '</div>';
+  html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">' + (blockedTotal > 0 ? (blockedUsersCount + ' kişi · ' + blurredCount + ' içerik') : 'Henüz engellediğin kimse yok') + '</div>';
+  html += '</div>';
+  html += '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:var(--text-muted);flex-shrink:0"></iconify-icon>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div style="height:24px"></div>';
+
+  container.innerHTML = html;
 }
+
+function _commMenuTile(o) {
+  var countHtml = '';
+  if (typeof o.count === 'number') {
+    countHtml = '<span style="font:var(--fw-bold) 10px/1 var(--font);color:' + o.color + ';background:' + o.color + '18;padding:3px 8px;border-radius:var(--r-full);margin-left:auto">' + o.count + '</span>';
+  } else if (o.soon) {
+    countHtml = '<span style="font:var(--fw-semibold) 9px/1 var(--font);color:var(--text-muted);background:var(--bg-btn);padding:3px 7px;border-radius:var(--r-full);margin-left:auto;letter-spacing:.3px">YAKINDA</span>';
+  }
+  var disabled = o.soon ? 'opacity:.65;cursor:default' : 'cursor:pointer';
+  var onclick = o.soon ? '' : 'onclick="_openCommMenuItem(\'' + o.key + '\')"';
+  return '' +
+    '<div class="g-card" ' + onclick + ' style="padding:14px;border-radius:var(--r-xl);display:flex;flex-direction:column;gap:10px;border:1px solid var(--border-subtle);min-height:118px;' + disabled + '">' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<div style="width:38px;height:38px;border-radius:10px;background:' + o.color + '15;display:flex;align-items:center;justify-content:center">' +
+          '<iconify-icon icon="' + o.icon + '" style="font-size:20px;color:' + o.color + '"></iconify-icon>' +
+        '</div>' +
+        countHtml +
+      '</div>' +
+      '<div style="margin-top:auto">' +
+        '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + o.title + '</div>' +
+        '<div style="font:var(--fw-regular) 11px/1.3 var(--font);color:var(--text-muted);margin-top:3px">' + o.desc + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+/* ═══ SUB-PAGE OPENER ═══ */
+function _openCommMenuItem(key) {
+  var container = document.getElementById('commMenuContent');
+  var topbarName = document.querySelector('#commMenuContainer .prof-topbar-name');
+  if (!container) return;
+
+  /* Replace topbar back button to go back to home */
+  var topbar = document.querySelector('#commMenuContainer .prof-topbar');
+  if (topbar) {
+    topbar.innerHTML =
+      '<div class="btn-icon" onclick="_renderCommMenuHomeWithTopbar()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>'
+      + '<span class="prof-topbar-name">' + _commMenuTitleFor(key) + '</span>'
+      + '<div style="width:32px"></div>';
+  }
+
+  if (key === 'liked')         _renderCommMenuLiked(container);
+  else if (key === 'saved')    _renderCommMenuSaved(container);
+  else if (key === 'comments') _renderCommMenuComments(container);
+  else if (key === 'blocked')  _renderCommMenuBlocked(container);
+}
+
+function _renderCommMenuHomeWithTopbar() {
+  var topbar = document.querySelector('#commMenuContainer .prof-topbar');
+  if (topbar) {
+    topbar.innerHTML =
+      '<div class="btn-icon" onclick="closeCommMenu()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>'
+      + '<span class="prof-topbar-name">Menü</span>'
+      + '<div style="width:32px"></div>';
+  }
+  _renderCommMenuHome();
+}
+
+function _commMenuTitleFor(key) {
+  return ({
+    liked: 'Beğendiklerim',
+    saved: 'Kaydedilenler',
+    comments: 'Yorumlarım',
+    blocked: 'Engellediklerim'
+  })[key] || 'Menü';
+}
+
+/* ═══ ENGELLEDİKLERİM — Kişiler / İçerikler sekmeli sayfa ═══ */
+function _renderCommMenuBlocked(container) {
+  var html = '';
+
+  /* Sub tabs */
+  var blockedUsers = (typeof _commBlockedHandles !== 'undefined') ? _commBlockedHandles : [];
+  var blurredIds   = (typeof _commBlurredPosts    !== 'undefined') ? _commBlurredPosts    : [];
+
+  html += '<div style="padding:12px 16px 0">';
+  html += '<div style="display:flex;background:var(--bg-btn);border-radius:var(--r-full);padding:4px;gap:4px">';
+  var tabs = [
+    { id: 'users',   label: 'Kişiler',    icon: 'solar:users-group-two-rounded-bold', count: blockedUsers.length },
+    { id: 'content', label: 'İçerikler',  icon: 'solar:eye-closed-bold',              count: blurredIds.length }
+  ];
+  tabs.forEach(function(t) {
+    var active = _commBlockedSubTab === t.id;
+    html += '<div onclick="_setCommBlockedSubTab(\'' + t.id + '\')" style="flex:1;padding:11px 10px;border-radius:var(--r-full);background:' + (active ? '#fff' : 'transparent') + ';box-shadow:' + (active ? '0 2px 8px rgba(0,0,0,.08)' : 'none') + ';cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s">';
+    html += '<iconify-icon icon="' + t.icon + '" style="font-size:15px;color:' + (active ? 'var(--text-primary)' : 'var(--text-muted)') + '"></iconify-icon>';
+    html += '<span style="font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:' + (active ? 'var(--text-primary)' : 'var(--text-muted)') + '">' + t.label + '</span>';
+    if (t.count > 0) {
+      html += '<span style="font:var(--fw-bold) 9px/1 var(--font);color:#fff;background:' + (active ? '#EF4444' : 'var(--text-muted)') + ';padding:2px 6px;border-radius:var(--r-full)">' + t.count + '</span>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+
+  /* Info banner */
+  html += '<div style="padding:12px 16px 0">';
+  html += '<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:#3B82F608;border:1px solid #3B82F620;border-radius:var(--r-lg)">';
+  html += '<iconify-icon icon="solar:info-circle-bold" style="font-size:16px;color:#3B82F6;flex-shrink:0;margin-top:1px"></iconify-icon>';
+  if (_commBlockedSubTab === 'users') {
+    html += '<div style="font:var(--fw-regular) 11px/1.4 var(--font);color:var(--text-secondary)">Engeli kaldırdığınızda bu kişinin gönderileri topluluk akışında tekrar görünür hale gelir.</div>';
+  } else {
+    html += '<div style="font:var(--fw-regular) 11px/1.4 var(--font);color:var(--text-secondary)">Gizlemekten vazgeçtiğinizde bu içerik bulanıklaştırılmadan tekrar görüntülenir.</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  /* List */
+  html += '<div id="commBlockedList">';
+  if (_commBlockedSubTab === 'users') html += _renderBlockedUsersList(blockedUsers);
+  else html += _renderBlurredContentList(blurredIds);
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function _setCommBlockedSubTab(tab) {
+  _commBlockedSubTab = tab;
+  var container = document.getElementById('commMenuContent');
+  if (container) _renderCommMenuBlocked(container);
+}
+
+function _renderBlockedUsersList(handles) {
+  if (!handles.length) {
+    return _commEmptyState('solar:users-group-rounded-linear', 'Henüz engellediğiniz kimse yok', 'Bir gönderiyi şikayet ettiğinizde kullanıcıyı engelleme seçeneği sunulur.');
+  }
+  var html = '<div style="padding:14px 16px 24px;display:flex;flex-direction:column;gap:8px">';
+  handles.forEach(function(handle) {
+    var sample = (typeof COMMUNITY_FEED !== 'undefined') ? COMMUNITY_FEED.find(function(p) { return p.user && p.user.handle === handle; }) : null;
+    var name = sample && sample.user ? sample.user.name : handle.replace(/^@/, '');
+    var avatar = sample && sample.user ? sample.user.avatar : null;
+    html += '<div class="g-card" style="padding:12px 14px;border-radius:var(--r-lg);display:flex;align-items:center;gap:12px;border:1px solid var(--border-subtle)">';
+    if (avatar) {
+      html += '<img src="' + avatar + '" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;filter:grayscale(.4)">';
+    } else {
+      html += '<div style="width:42px;height:42px;border-radius:50%;background:var(--bg-btn);display:flex;align-items:center;justify-content:center;flex-shrink:0;font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-muted)">' + _cmEsc(name.charAt(0).toUpperCase()) + '</div>';
+    }
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + _cmEsc(name) + '</div>';
+    html += '<div style="font:var(--fw-regular) 11px/1 var(--font);color:var(--text-muted);margin-top:3px">' + _cmEsc(handle) + '</div>';
+    html += '</div>';
+    html += '<button onclick="_unblockUser(\'' + _cmEsc(handle) + '\')" style="padding:7px 14px;border:1px solid var(--primary);background:transparent;color:var(--primary);font:var(--fw-semibold) 11px/1 var(--font);border-radius:var(--r-full);cursor:pointer;flex-shrink:0;transition:all .15s" onmouseover="this.style.background=\'var(--primary)\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'var(--primary)\'">Engeli Kaldır</button>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function _renderBlurredContentList(ids) {
+  if (!ids.length) {
+    return _commEmptyState('solar:eye-closed-linear', 'Henüz gizlediğiniz içerik yok', 'Bir gönderiyi şikayet ederek blurladığınızda burada görünür.');
+  }
+  var html = '<div style="padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px">';
+  ids.forEach(function(pid) {
+    var post = (typeof COMMUNITY_FEED !== 'undefined') ? COMMUNITY_FEED.find(function(x) { return x.id === pid; }) : null;
+    if (!post) return;
+    html += '<div class="g-card" style="padding:12px;border-radius:var(--r-lg);border:1px solid var(--border-subtle);display:flex;gap:12px">';
+    if (post.img) {
+      html += '<img src="' + post.img + '" alt="" style="width:56px;height:56px;border-radius:var(--r-lg);object-fit:cover;flex-shrink:0;filter:blur(6px);opacity:.7">';
+    } else {
+      html += '<div style="width:56px;height:56px;border-radius:var(--r-lg);background:var(--bg-btn);display:flex;align-items:center;justify-content:center;flex-shrink:0"><iconify-icon icon="solar:eye-closed-bold" style="font-size:22px;color:var(--text-muted)"></iconify-icon></div>';
+    }
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font:var(--fw-semibold) var(--fs-xs)/1.2 var(--font);color:var(--text-primary)">' + _cmEsc(post.user.name) + '</div>';
+    html += '<div style="font:var(--fw-regular) 11px/1.3 var(--font);color:var(--text-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + _cmEsc((post.text || '').slice(0, 120)) + '</div>';
+    html += '<div style="display:flex;gap:8px;margin-top:8px">';
+    html += '<button onclick="_unblurPost(' + pid + ')" style="padding:6px 12px;border:1px solid var(--primary);background:transparent;color:var(--primary);font:var(--fw-semibold) 11px/1 var(--font);border-radius:var(--r-full);cursor:pointer">Gizlemeyi Kaldır</button>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function _commEmptyState(icon, title, desc) {
+  return '<div style="text-align:center;padding:48px 24px">'
+    + '<iconify-icon icon="' + icon + '" style="font-size:48px;color:var(--text-muted);opacity:.5;display:block;margin-bottom:12px"></iconify-icon>'
+    + '<div style="font:var(--fw-semibold) var(--fs-sm)/1.3 var(--font);color:var(--text-primary)">' + title + '</div>'
+    + '<div style="font:var(--fw-regular) var(--fs-xs)/1.5 var(--font);color:var(--text-muted);margin-top:6px;max-width:260px;margin-left:auto;margin-right:auto">' + desc + '</div>'
+    + '</div>';
+}
+
+function _unblockUser(handle) {
+  if (typeof _commBlockedHandles === 'undefined') return;
+  var idx = _commBlockedHandles.indexOf(handle);
+  if (idx !== -1) _commBlockedHandles.splice(idx, 1);
+  /* Refresh menu */
+  var container = document.getElementById('commMenuContent');
+  if (container) _renderCommMenuBlocked(container);
+  /* Refresh community feed so posts become visible again */
+  if (typeof renderCommFeed === 'function') renderCommFeed();
+  _commMenuToast(handle + ' engellemesi kaldırıldı');
+}
+
+function _unblurPost(pid) {
+  if (typeof _commBlurredPosts === 'undefined') return;
+  var idx = _commBlurredPosts.indexOf(pid);
+  if (idx !== -1) _commBlurredPosts.splice(idx, 1);
+  var container = document.getElementById('commMenuContent');
+  if (container) _renderCommMenuBlocked(container);
+  if (typeof renderCommFeed === 'function') renderCommFeed();
+  _commMenuToast('İçerik gizlemesi kaldırıldı');
+}
+
+function _cmEsc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _commMenuToast(msg) {
+  if (typeof showToast === 'function') { showToast(msg); return; }
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:20px;font:var(--fw-medium) var(--fs-sm)/1 var(--font);z-index:9999';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 2500);
+}
+
+/* Window exports for new features */
+window.openCommMenu = openCommMenu;
+window.closeCommMenu = closeCommMenu;
+window._openCommMenuItem = _openCommMenuItem;
+window._renderCommMenuHomeWithTopbar = _renderCommMenuHomeWithTopbar;
+window._setCommBlockedSubTab = _setCommBlockedSubTab;
+window._unblockUser = _unblockUser;
+window._unblurPost = _unblurPost;
 
 /* ── helper: find any liked/saved item from both feeds + academy ── */
 function _findAnyPost(id) {
@@ -185,6 +462,10 @@ function renderCommFeed(){
   if(commActiveFilter!=='all'){
     posts = posts.filter(p=>p.filter===commActiveFilter);
   }
+  /* Senaryo A: şikayet edilen kullanıcıların içerikleri tamamen gizlenir */
+  if (typeof _commBlockedHandles !== 'undefined' && _commBlockedHandles.length) {
+    posts = posts.filter(function(p) { return _commBlockedHandles.indexOf(p.user.handle) === -1; });
+  }
 
   if(!posts.length){
     feed.innerHTML='<div style="text-align:center;padding:40px var(--app-px)"><iconify-icon icon="solar:ghost-linear" style="font-size:48px;color:var(--text-muted)"></iconify-icon><div style="font:var(--fw-medium) var(--fs-md)/1.3 var(--font);color:var(--text-secondary);margin-top:12px">Bu filtrede henüz gönderi yok</div></div>';
@@ -239,7 +520,7 @@ function renderCommFeed(){
           <span class="feed-username">${post.user.name}${verified}${chefBadge}</span>
           <span class="feed-handle">${post.user.handle} · ${post.time}</span>
         </div>
-        <div class="btn-icon feed-more"><iconify-icon icon="solar:menu-dots-bold" style="font-size:18px"></iconify-icon></div>
+        <div class="btn-icon feed-more" onclick="openPostMenu(event, ${post.id})"><iconify-icon icon="solar:menu-dots-bold" style="font-size:18px"></iconify-icon></div>
       </div>
       ${typeBadge}
       <div class="feed-text">${post.text.replace(/\n/g,'<br>')}</div>
@@ -264,6 +545,18 @@ function renderCommFeed(){
           <iconify-icon icon="${post.saved?'solar:bookmark-bold':'solar:bookmark-linear'}" class="feed-action-icon"></iconify-icon>
         </div>
       </div>
+      ${(typeof _commBlurredPosts !== 'undefined' && _commBlurredPosts.indexOf(post.id) !== -1) ? `
+      <div class="post-blur-overlay" data-post-id="${post.id}">
+        <div class="post-blur-card">
+          <iconify-icon icon="solar:eye-closed-bold" style="font-size:32px;color:#fff"></iconify-icon>
+          <div class="post-blur-title">Bu gönderi şikayet edildi</div>
+          <div class="post-blur-desc">İçerik sizin isteğinizle gizlendi. Görüntülemek için butona basın.</div>
+          <div class="post-blur-btn" onclick="_commUnblurPost(${post.id})">
+            <iconify-icon icon="solar:eye-bold" style="font-size:16px"></iconify-icon>
+            <span>Görüntüle</span>
+          </div>
+        </div>
+      </div>` : ''}
     </div>`;
   }).join('');
 }

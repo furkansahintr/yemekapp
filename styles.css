@@ -135,8 +135,14 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 
 /* ═══ Community Feed ═══ */
 .community-feed{display:flex;flex-direction:column}
-.feed-post{padding:14px var(--app-px);border-bottom:1px solid var(--border-subtle)}
+.feed-post{padding:14px var(--app-px);border-bottom:1px solid var(--border-subtle);position:relative}
 .feed-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.post-blur-overlay{position:absolute;inset:0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0}
+.post-blur-card{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:20px 28px;max-width:280px}
+.post-blur-title{font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:#fff;margin-top:4px}
+.post-blur-desc{font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:rgba(255,255,255,.8)}
+.post-blur-btn{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:9px 18px;border-radius:var(--r-full);background:#fff;color:#0f172a;font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.post-blur-btn:active{transform:scale(.97)}
 .feed-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0}
 .feed-user-info{flex:1;min-width:0;display:flex;flex-direction:column}
 .feed-username{font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)}
@@ -340,6 +346,10 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 .cooking-tts-btn:active,.cooking-repeat-btn:active{transform:scale(.97);background:var(--glass-card-strong)}
 .cooking-tts-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
 .cooking-tts-btn.active iconify-icon{color:#fff !important}
+.cooking-repeat-btn.active{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);animation:repeatPulse .5s ease}
+.cooking-repeat-btn.active iconify-icon{animation:repeatSpin .5s ease}
+@keyframes repeatPulse{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes repeatSpin{from{transform:rotate(0)}to{transform:rotate(-360deg)}}
 .tts-icon-wrap{display:flex;align-items:center;position:relative}
 .tts-icon-wrap.speaking::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--primary);animation:ttsPulse 1s infinite}
 .cooking-tts-btn.active .tts-icon-wrap.speaking::after{border-color:rgba(255,255,255,.5)}

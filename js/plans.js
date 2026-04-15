@@ -181,7 +181,12 @@ function _plRenderMain() {
     } else {
       items.forEach(function(item, ii) {
         var info = _plItemInfo(item);
-        html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--glass-card);border-radius:var(--r-xl);margin-bottom:6px">';
+        var isRestPlan = item.type === 'restoran' && item.sourceType === 'restoran';
+        var today = _plFmt(_plToday());
+        var isDueOrPast = _plSelectedDate <= today; /* string compare works for ISO YYYY-MM-DD */
+
+        html += '<div style="padding:10px;background:var(--glass-card);border-radius:var(--r-xl);margin-bottom:6px' + (isRestPlan ? ';border-left:3px solid #F59E0B' : '') + '">';
+        html += '<div style="display:flex;align-items:center;gap:10px">';
         if (info.img) {
           html += '<img src="'+info.img+'" style="width:48px;height:48px;border-radius:var(--r-lg);object-fit:cover;flex-shrink:0">';
         } else {
@@ -190,8 +195,20 @@ function _plRenderMain() {
         html += '<div style="flex:1;min-width:0">';
         html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+info.name+'</div>';
         html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-muted);margin-top:2px">'+info.meta+'</div>';
+        if (isRestPlan) {
+          html += '<div style="display:inline-flex;align-items:center;gap:3px;margin-top:4px;padding:2px 7px;border-radius:999px;background:#F59E0B15;color:#F59E0B;font:600 9px/1 var(--font)"><iconify-icon icon="solar:fork-spoon-bold" style="font-size:10px"></iconify-icon>Dışarıda Yemek Planı</div>';
+        }
         html += '</div>';
-        html += '<div onclick="_plRemoveMealItem(\''+meal.key+'\','+ii+')" style="cursor:pointer;color:var(--text-muted);flex-shrink:0"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:16px"></iconify-icon></div>';
+        html += '<div onclick="_plRemoveMealItem(\''+meal.key+'\','+ii+')" style="cursor:pointer;color:var(--text-muted);flex-shrink:0;padding:4px"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:16px"></iconify-icon></div>';
+        html += '</div>';
+
+        /* Restoran planı + bugün/geçmiş → aksiyon butonları */
+        if (isRestPlan && isDueOrPast) {
+          html += '<div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border-subtle)">';
+          html += '<div onclick="_plOpenRestaurantMenu('+item.idx+')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border-radius:999px;background:var(--primary-soft);color:var(--primary);font:600 11px/1 var(--font);cursor:pointer"><iconify-icon icon="solar:menu-dots-bold" style="font-size:13px"></iconify-icon>Menüyü Görüntüle</div>';
+          html += '<div onclick="_plGoToRestaurant('+item.idx+')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border-radius:999px;background:#F59E0B;color:#fff;font:600 11px/1 var(--font);cursor:pointer"><iconify-icon icon="solar:shop-bold" style="font-size:13px"></iconify-icon>İşletmeye Git</div>';
+          html += '</div>';
+        }
         html += '</div>';
       });
     }
@@ -600,3 +617,360 @@ function _plImportIngredients() {
   if (typeof showToast === 'function') showToast(added+' malzeme eklendi!');
   _plRenderShopping();
 }
+
+/* ═══════════════════════════════════════════════════════
+   PLAN PICKER — Detay sayfasındaki "Plana Ekle" butonu
+   Hem tarif hem restoran menü öğesi için kullanılır
+   ═══════════════════════════════════════════════════════ */
+
+var _plPicker = {
+  source: null,    // 'menu' | 'restoran' | 'myRecipe'
+  idx: null,       // integer index
+  id: null,        // myRecipe id
+  date: null,      // 'YYYY-MM-DD'
+  meal: null       // sabah|ogle|aksam|ara
+};
+
+function openPlanPicker() {
+  /* currentItem + currentSource detail.js'den geliyor */
+  if (typeof currentItem === 'undefined' || currentItem == null) return;
+
+  var list = (typeof getListBySource === 'function') ? getListBySource(currentSource) : null;
+  var item = list ? list[currentItem] : null;
+  if (!item) return;
+
+  _plPicker = {
+    source: currentSource || 'menu',
+    idx: currentItem,
+    id: null,
+    date: _plFmt(_plToday()),
+    meal: null,
+    item: item
+  };
+
+  _plRenderPickerModal();
+}
+
+function closePlanPicker() {
+  var el = document.getElementById('planPickerOverlay');
+  if (el) el.remove();
+}
+
+function _plRenderPickerModal() {
+  var existing = document.getElementById('planPickerOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'planPickerOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:250;display:flex;align-items:flex-end;justify-content:center;animation:pickerFadeIn .2s ease';
+
+  var backdrop = document.createElement('div');
+  backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.55)';
+  backdrop.onclick = closePlanPicker;
+  overlay.appendChild(backdrop);
+
+  var sheet = document.createElement('div');
+  sheet.id = 'planPickerSheet';
+  sheet.style.cssText = 'position:relative;z-index:1;background:var(--bg-page,#fff);border-radius:22px 22px 0 0;width:100%;max-width:430px;max-height:88vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,.25);animation:pickerSlideUp .25s cubic-bezier(.4,0,.2,1)';
+  sheet.innerHTML = '<div id="planPickerInner"></div>';
+  overlay.appendChild(sheet);
+
+  var host = document.getElementById('phone') || document.body;
+  host.appendChild(overlay);
+  _plPickerInject();
+  _plRenderPickerInner();
+}
+
+function _plPickerInject() {
+  if (document.getElementById('planPickerStyles')) return;
+  var s = document.createElement('style');
+  s.id = 'planPickerStyles';
+  s.textContent =
+    '@keyframes pickerFadeIn{from{opacity:0}to{opacity:1}}' +
+    '@keyframes pickerSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}' +
+    '.pp-day{flex:1;min-width:44px;text-align:center;padding:10px 0;border-radius:14px;cursor:pointer;transition:all .15s;border:1.5px solid transparent}' +
+    '.pp-day:active{transform:scale(.96)}' +
+    '.pp-day.sel{background:var(--primary);color:#fff;border-color:var(--primary)}' +
+    '.pp-day.today:not(.sel){background:var(--glass-card-strong);border-color:var(--primary)}' +
+    '.pp-meal{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:16px;cursor:pointer;border:1.5px solid var(--border-subtle);background:var(--glass-card);transition:all .15s}' +
+    '.pp-meal:active{transform:scale(.97)}' +
+    '.pp-meal.sel{border-color:var(--primary);background:var(--primary-soft)}';
+  document.head.appendChild(s);
+}
+
+function _plRenderPickerInner() {
+  var c = document.getElementById('planPickerInner');
+  if (!c) return;
+
+  var item = _plPicker.item;
+  var isRestoran = item && (item.type === 'restoran' || _plPicker.source === 'restoran');
+  var itemImg = item ? item.img : '';
+  var itemName = item ? item.name : '';
+  var restName = (item && item.restaurant) ? item.restaurant.name : '';
+
+  var h = '';
+
+  /* drag handle */
+  h += '<div style="display:flex;justify-content:center;padding:10px 0 4px"><div style="width:40px;height:4px;border-radius:3px;background:var(--border-subtle)"></div></div>';
+
+  /* başlık */
+  h += '<div style="padding:8px 20px 14px">' +
+    '<div style="font:700 19px/1.3 var(--font);color:var(--text-primary);margin-bottom:4px">Plana Ekle</div>' +
+    '<div style="font:400 12px/1.4 var(--font);color:var(--text-muted)">' +
+      (isRestoran ? 'Bu yemeği hangi gün ve öğünde yemeyi planlıyorsun?' : 'Bu tarifi hangi gün ve öğünde hazırlamayı planlıyorsun?') +
+    '</div>' +
+    '</div>';
+
+  /* seçilen ürün kartı */
+  h += '<div style="margin:0 16px 16px;display:flex;gap:10px;padding:10px;background:var(--glass-card);border:1px solid var(--border-subtle);border-radius:14px">';
+  if (itemImg) {
+    h += '<img src="' + itemImg + '" style="width:54px;height:54px;border-radius:12px;object-fit:cover;flex-shrink:0">';
+  } else {
+    h += '<div style="width:54px;height:54px;border-radius:12px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0"><iconify-icon icon="solar:chef-hat-bold" style="font-size:24px;color:var(--primary)"></iconify-icon></div>';
+  }
+  h += '<div style="flex:1;min-width:0">' +
+    '<div style="font:600 14px/1.2 var(--font);color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + itemName + '</div>';
+  if (isRestoran && restName) {
+    h += '<div style="font:500 11px/1.2 var(--font);color:var(--primary);margin-top:3px;display:flex;align-items:center;gap:4px"><iconify-icon icon="solar:shop-bold" style="font-size:12px"></iconify-icon>' + restName + '</div>';
+  }
+  if (isRestoran) {
+    h += '<span style="display:inline-flex;align-items:center;gap:3px;margin-top:4px;padding:2px 8px;background:#F59E0B15;color:#F59E0B;border-radius:999px;font:600 10px/1 var(--font)"><iconify-icon icon="solar:fork-spoon-bold" style="font-size:10px"></iconify-icon>Dışarıda Yemek</span>';
+  } else {
+    h += '<span style="display:inline-flex;align-items:center;gap:3px;margin-top:4px;padding:2px 8px;background:#10B98115;color:#10B981;border-radius:999px;font:600 10px/1 var(--font)"><iconify-icon icon="solar:chef-hat-bold" style="font-size:10px"></iconify-icon>Tarif</span>';
+  }
+  h += '</div></div>';
+
+  /* Haftalık takvim çizelgesi */
+  h += '<div style="padding:0 16px 14px">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+      '<div style="font:600 12px/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Gün Seç</div>' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
+        '<div onclick="_plPickerPrevWeek()" style="width:28px;height:28px;border-radius:50%;background:var(--glass-card);display:flex;align-items:center;justify-content:center;cursor:pointer"><iconify-icon icon="solar:alt-arrow-left-linear" style="font-size:14px"></iconify-icon></div>' +
+        '<div onclick="_plPickerNextWeek()" style="width:28px;height:28px;border-radius:50%;background:var(--glass-card);display:flex;align-items:center;justify-content:center;cursor:pointer"><iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:14px"></iconify-icon></div>' +
+      '</div>' +
+    '</div>' +
+    '<div id="planPickerDays"></div>' +
+  '</div>';
+
+  /* Öğün seçimi (2x2 grid) */
+  h += '<div style="padding:0 16px 14px">' +
+    '<div style="font:600 12px/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Öğün Seç</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px" id="planPickerMealsRow1"></div>' +
+    '<div style="display:flex;gap:8px" id="planPickerMealsRow2"></div>' +
+  '</div>';
+
+  /* Aksiyon butonları */
+  h += '<div style="padding:14px 16px 24px;display:flex;gap:10px;border-top:1px solid var(--border-subtle);background:var(--bg-page);position:sticky;bottom:0">' +
+    '<button onclick="closePlanPicker()" style="flex:1;padding:13px;border:1.5px solid var(--border-subtle);border-radius:999px;background:transparent;color:var(--text-secondary);font:600 14px/1 var(--font);cursor:pointer">Vazgeç</button>' +
+    '<button id="planPickerSubmit" onclick="_plPickerSubmit()" style="flex:2;padding:13px;border:none;border-radius:999px;background:var(--border-subtle);color:var(--text-muted);font:600 14px/1 var(--font);cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:6px;pointer-events:none">' +
+      '<iconify-icon icon="solar:calendar-add-bold" style="font-size:16px"></iconify-icon><span>Plana Ekle</span>' +
+    '</button>' +
+  '</div>';
+
+  c.innerHTML = h;
+  _plRenderPickerDays();
+  _plRenderPickerMeals();
+}
+
+/* Picker haftası state */
+var _plPickerWeekStart = null;
+function _plRenderPickerDays() {
+  var el = document.getElementById('planPickerDays');
+  if (!el) return;
+  if (!_plPickerWeekStart) _plPickerWeekStart = _plGetMonday(_plToday());
+
+  var today = _plFmt(_plToday());
+  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+    '<span style="font:600 12px/1 var(--font);color:var(--text-primary)">';
+  var wEnd = new Date(_plPickerWeekStart); wEnd.setDate(wEnd.getDate() + 6);
+  h += _plPickerWeekStart.getDate() + ' ' + PL_MONTHS_TR[_plPickerWeekStart.getMonth()] + ' – ' + wEnd.getDate() + ' ' + PL_MONTHS_TR[wEnd.getMonth()];
+  h += '</span></div>';
+
+  h += '<div style="display:flex;gap:4px">';
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(_plPickerWeekStart); d.setDate(d.getDate() + i);
+    var ds = _plFmt(d);
+    var cls = 'pp-day';
+    if (ds === _plPicker.date) cls += ' sel';
+    else if (ds === today) cls += ' today';
+
+    var isSel = ds === _plPicker.date;
+    var isToday = ds === today;
+    h += '<div class="' + cls + '" onclick="_plPickerSelectDay(\'' + ds + '\')">' +
+      '<div style="font:500 9px/1 var(--font);color:' + (isSel ? 'rgba(255,255,255,.75)' : 'var(--text-muted)') + ';margin-bottom:4px">' + PL_DAYS_TR[d.getDay()] + '</div>' +
+      '<div style="font:700 15px/1 var(--font);color:' + (isSel ? '#fff' : 'var(--text-primary)') + '">' + d.getDate() + '</div>' +
+      (isToday && !isSel ? '<div style="font:600 8px/1 var(--font);color:var(--primary);margin-top:3px">Bugün</div>' : '') +
+      '</div>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function _plPickerPrevWeek() {
+  if (!_plPickerWeekStart) _plPickerWeekStart = _plGetMonday(_plToday());
+  _plPickerWeekStart.setDate(_plPickerWeekStart.getDate() - 7);
+  _plRenderPickerDays();
+}
+function _plPickerNextWeek() {
+  if (!_plPickerWeekStart) _plPickerWeekStart = _plGetMonday(_plToday());
+  _plPickerWeekStart.setDate(_plPickerWeekStart.getDate() + 7);
+  _plRenderPickerDays();
+}
+function _plPickerSelectDay(ds) {
+  _plPicker.date = ds;
+  _plRenderPickerDays();
+  _plPickerUpdateSubmit();
+}
+
+function _plRenderPickerMeals() {
+  var row1 = document.getElementById('planPickerMealsRow1');
+  var row2 = document.getElementById('planPickerMealsRow2');
+  if (!row1 || !row2) return;
+
+  var render = function(m) {
+    var isSel = _plPicker.meal === m.key;
+    return '<div class="pp-meal' + (isSel ? ' sel' : '') + '" onclick="_plPickerSelectMeal(\'' + m.key + '\')">' +
+      '<div style="width:36px;height:36px;border-radius:10px;background:' + m.color + (isSel ? '2a' : '18') + ';display:flex;align-items:center;justify-content:center">' +
+        '<iconify-icon icon="' + m.icon + '" style="font-size:20px;color:' + m.color + '"></iconify-icon>' +
+      '</div>' +
+      '<span style="font:' + (isSel ? '600' : '500') + ' 12px/1.2 var(--font);color:' + (isSel ? 'var(--text-primary)' : 'var(--text-secondary)') + '">' + m.label + '</span>' +
+      (isSel ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:14px;color:var(--primary);position:absolute;top:-6px;right:-6px;background:var(--bg-page);border-radius:50%"></iconify-icon>' : '') +
+    '</div>';
+  };
+  /* positioning relative */
+  row1.innerHTML = PL_MEALS.slice(0, 2).map(function(m) {
+    return '<div style="flex:1;position:relative">' + render(m) + '</div>';
+  }).join('');
+  row2.innerHTML = PL_MEALS.slice(2, 4).map(function(m) {
+    return '<div style="flex:1;position:relative">' + render(m) + '</div>';
+  }).join('');
+}
+
+function _plPickerSelectMeal(key) {
+  _plPicker.meal = key;
+  _plRenderPickerMeals();
+  _plPickerUpdateSubmit();
+}
+
+function _plPickerUpdateSubmit() {
+  var btn = document.getElementById('planPickerSubmit');
+  if (!btn) return;
+  var ready = _plPicker.date && _plPicker.meal;
+  if (ready) {
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    btn.style.cursor = 'pointer';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    btn.style.background = 'var(--border-subtle)';
+    btn.style.color = 'var(--text-muted)';
+    btn.style.cursor = 'not-allowed';
+    btn.style.pointerEvents = 'none';
+  }
+}
+
+function _plPickerSubmit() {
+  if (!_plPicker.date || !_plPicker.meal) return;
+
+  var day = _plDayData(_plPicker.date);
+  if (!day.meals[_plPicker.meal]) day.meals[_plPicker.meal] = [];
+
+  var newItem;
+  if (_plPicker.source === 'restoran') {
+    /* Dışarıdan Yemek Planı — sepete eklemez, sadece dijital not */
+    newItem = { type: 'restoran', sourceType: 'restoran', idx: _plPicker.idx, note: '', addedAt: Date.now() };
+  } else if (_plPicker.source === 'kesfet') {
+    /* Keşfet de tarif olarak davranır */
+    newItem = { type: 'recipe', sourceType: 'menu', idx: _plPicker.idx, note: '', addedAt: Date.now() };
+  } else {
+    newItem = { type: 'recipe', sourceType: 'menu', idx: _plPicker.idx, note: '', addedAt: Date.now() };
+  }
+  day.meals[_plPicker.meal].push(newItem);
+
+  /* Başarı animasyonu */
+  var meal = PL_MEALS.find(function(m) { return m.key === _plPicker.meal; });
+  var date = _plParse(_plPicker.date);
+  var today = _plFmt(_plToday());
+  var dayLabel;
+  if (_plPicker.date === today) dayLabel = 'Bugün';
+  else {
+    var tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
+    if (_plPicker.date === _plFmt(tmr)) dayLabel = 'Yarın';
+    else dayLabel = date.getDate() + ' ' + PL_MONTHS_TR[date.getMonth()] + ' ' + PL_DAYS_FULL[date.getDay()];
+  }
+
+  _plRenderPickerSuccess(dayLabel, meal ? meal.label : '', meal ? meal.color : 'var(--primary)');
+}
+
+function _plRenderPickerSuccess(dayLabel, mealLabel, mealColor) {
+  var c = document.getElementById('planPickerInner');
+  if (!c) return;
+  var item = _plPicker.item;
+
+  var h = '<div style="display:flex;justify-content:center;padding:10px 0 4px"><div style="width:40px;height:4px;border-radius:3px;background:var(--border-subtle)"></div></div>';
+
+  h += '<div style="padding:28px 24px 16px;text-align:center">' +
+    '<div style="width:80px;height:80px;margin:0 auto 16px;border-radius:50%;background:linear-gradient(135deg,#10B981 0%,#059669 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(16,185,129,.3);animation:pickerSuccessPop .4s cubic-bezier(.2,1.2,.5,1)">' +
+      '<iconify-icon icon="solar:check-read-bold" style="font-size:42px;color:#fff"></iconify-icon>' +
+    '</div>' +
+    '<div style="font:700 19px/1.3 var(--font);color:var(--text-primary);margin-bottom:6px">Planına eklendi!</div>' +
+    '<div style="font:400 13px/1.5 var(--font);color:var(--text-secondary)">' +
+      '<b>' + (item ? item.name : '') + '</b> · <span style="color:' + mealColor + ';font-weight:600">' + mealLabel + '</span> · <b>' + dayLabel + '</b>' +
+    '</div>' +
+    '</div>';
+
+  /* Bilgi notu */
+  h += '<div style="margin:4px 16px 16px;padding:12px 14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.18);border-radius:12px;display:flex;gap:10px;align-items:flex-start">' +
+    '<iconify-icon icon="solar:info-circle-bold" style="font-size:18px;color:#3B82F6;flex-shrink:0;margin-top:1px"></iconify-icon>' +
+    '<div style="font:400 11px/1.45 var(--font);color:var(--text-secondary)">Bu bir sipariş değil, sadece dijital asistanına bir not. Sepete ürün eklenmedi.</div>' +
+  '</div>';
+
+  h += '<div style="padding:10px 16px 24px;display:flex;gap:10px">' +
+    '<button onclick="closePlanPicker()" style="flex:1;padding:13px;border:1.5px solid var(--border-subtle);border-radius:999px;background:transparent;color:var(--text-secondary);font:600 14px/1 var(--font);cursor:pointer">Kapat</button>' +
+    '<button onclick="closePlanPicker();closeDetail();openPlansPage()" style="flex:2;padding:13px;border:none;border-radius:999px;background:var(--primary);color:#fff;font:600 14px/1 var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">' +
+      '<iconify-icon icon="solar:calendar-bold" style="font-size:16px"></iconify-icon><span>Planlarım\'a Git</span>' +
+    '</button>' +
+  '</div>';
+
+  c.innerHTML = h;
+
+  /* success animasyon style (tek sefer) */
+  if (!document.getElementById('pickerSuccessStyles')) {
+    var s = document.createElement('style');
+    s.id = 'pickerSuccessStyles';
+    s.textContent = '@keyframes pickerSuccessPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1);opacity:1}}';
+    document.head.appendChild(s);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PLANLAR DETAY — Restoran planı için aksiyon butonları
+   Planlanan gün geldiğinde "Menüyü Görüntüle" / "İşletmeye Git"
+   ═══════════════════════════════════════════════════════ */
+function _plOpenRestaurantMenu(idx) {
+  closePlansPage();
+  if (typeof showDetail === 'function') {
+    showDetail(idx, 'restoran');
+  }
+}
+
+function _plGoToRestaurant(idx) {
+  var item = restaurantItems[idx];
+  if (!item) return;
+  var name = item.restaurant ? item.restaurant.name : item.name;
+  if (typeof showToast === 'function') showToast(name + ' sayfasına yönlendiriliyor...');
+  closePlansPage();
+  /* Restoranlar sekmesine geç */
+  if (typeof setHomeTab === 'function') setHomeTab('restoranlar');
+}
+
+/* Window exports */
+window.openPlanPicker       = openPlanPicker;
+window.closePlanPicker      = closePlanPicker;
+window._plPickerPrevWeek    = _plPickerPrevWeek;
+window._plPickerNextWeek    = _plPickerNextWeek;
+window._plPickerSelectDay   = _plPickerSelectDay;
+window._plPickerSelectMeal  = _plPickerSelectMeal;
+window._plPickerSubmit      = _plPickerSubmit;
+window._plOpenRestaurantMenu = _plOpenRestaurantMenu;
+window._plGoToRestaurant     = _plGoToRestaurant;

@@ -25,7 +25,7 @@
         </div>
 
         <!-- ═══ Premium Banner ═══ -->
-        <div style="background:linear-gradient(135deg,#F97316 0%,#F59E0B 100%);border-radius:var(--r-xl);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;overflow:hidden">
+        <div onclick="openPremiumPage()" style="background:linear-gradient(135deg,#F97316 0%,#F59E0B 100%);border-radius:var(--r-xl);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;overflow:hidden">
           <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.12)"></div>
           <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <iconify-icon icon="solar:crown-bold" style="font-size:22px;color:#fff"></iconify-icon>
@@ -37,6 +37,23 @@
           <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:#fff;flex-shrink:0"></iconify-icon>
         </div>
 
+        <!-- ═══ QR Menü Tile (Restoranda Ye) ═══ -->
+        <div onclick="openQrScanner()" style="position:relative;border-radius:var(--r-xl);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;overflow:hidden;background:linear-gradient(135deg,#1f2937 0%,#0f172a 100%);box-shadow:0 6px 18px rgba(15,23,42,.18)">
+          <div style="position:absolute;top:-22px;right:-22px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.18) 0%,rgba(34,211,238,0) 70%)"></div>
+          <div style="position:absolute;bottom:-30px;left:-20px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.14) 0%,rgba(168,85,247,0) 70%)"></div>
+          <div style="position:relative;width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <iconify-icon icon="solar:qr-code-bold" style="font-size:24px;color:#22D3EE"></iconify-icon>
+          </div>
+          <div style="flex:1;position:relative">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:#fff">QR ile Masaya Bağlan</span>
+              <span style="font:var(--fw-semibold) 9px/1 var(--font);color:#0f172a;background:#22D3EE;padding:3px 6px;border-radius:var(--r-full);letter-spacing:.4px">YENİ</span>
+            </div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:rgba(255,255,255,.7);margin-top:4px">Restoranda QR'ı okut, dijital menüden sipariş ver</div>
+          </div>
+          <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:rgba(255,255,255,.5);flex-shrink:0;position:relative"></iconify-icon>
+        </div>
+
         <!-- ═══ Planlarım & Destek Tile'ları ═══ -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div class="g-card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;border-radius:var(--r-xl);cursor:pointer" onclick="openPlansPage()">
@@ -46,7 +63,7 @@
             <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);text-align:center">Planlarım</div>
             <div style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-muted);text-align:center">Yemek Takvimi</div>
           </div>
-          <div class="g-card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;border-radius:var(--r-xl);cursor:pointer">
+          <div class="g-card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;border-radius:var(--r-xl);cursor:pointer" onclick="openSupportPage()">
             <div style="width:42px;height:42px;border-radius:50%;background:#8B5CF615;display:flex;align-items:center;justify-content:center">
               <iconify-icon icon="solar:chat-round-dots-bold" style="font-size:22px;color:#8B5CF6"></iconify-icon>
             </div>
@@ -94,19 +111,19 @@
         </div>
 
         <div style="display:flex;flex-direction:column;gap:4px">
-          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)" onclick="openOrderHistory()">
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)" onclick="openMyOrders()">
             <iconify-icon icon="solar:bag-check-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
             <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Siparişlerim</div>
             <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-right:4px">3 aktif</span>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)">
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="toggleLocationPicker()">
             <iconify-icon icon="solar:map-point-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
             <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Adreslerim</div>
             <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-right:4px">2 adres</span>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg)">
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openPayments()">
             <iconify-icon icon="solar:card-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
             <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Ödeme Yöntemlerim</div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>

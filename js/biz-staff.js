@@ -396,6 +396,20 @@ function _renderStaffDetail(s, color) {
       ${stationsHtml}
       ${shiftsHtml}
 
+      ${(bizCurrentRole === 'owner' || bizCurrentRole === 'manager') ? `
+      <!-- Vardiya ve İzin Yönet -->
+      <div onclick="openBizStaffShiftsEditor('${s.id}')" style="background:linear-gradient(135deg, var(--primary-soft), var(--bg-phone));border-radius:var(--r-xl);border:1px solid var(--primary-soft);box-shadow:var(--shadow-md);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform 0.15s ease">
+        <div style="width:42px;height:42px;border-radius:var(--r-lg);background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="solar:calendar-mark-linear" style="font-size:22px;color:#fff"></iconify-icon>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+          <span style="font:var(--fw-semibold) var(--fs-md)/1.1 var(--font);color:var(--text-primary)">Vardiyalar ve İzinler</span>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted)">Rutin program, ek vardiya ve izin yönetimi</span>
+        </div>
+        <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:20px;color:var(--text-muted)"></iconify-icon>
+      </div>
+      ` : ''}
+
       <!-- Status -->
       <div style="background:var(--bg-phone);border-radius:var(--r-xl);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
         <span style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Durum</span>

@@ -43,6 +43,17 @@ function openBizMenuMgmt() {
   bizMenuActiveTab = 'single';
   const overlay = createBizOverlay('bizMenuOverlay', 'Menü Yönetimi', renderBizMenuContent());
   document.getElementById('bizPhone').appendChild(overlay);
+  /* Topbar'a Ayarlar (çark) butonu enjekte et — createBizOverlay varsayılan olarak
+     sağ aksiyon butonu sunmuyor, bu yüzden son child olarak ekliyoruz. */
+  const topbar = overlay.firstElementChild;
+  if (topbar) {
+    const gear = document.createElement('div');
+    gear.className = 'btn-icon';
+    gear.title = 'Menü Ayarları';
+    gear.onclick = openBizMenuSettings;
+    gear.innerHTML = '<iconify-icon icon="solar:settings-linear" style="font-size:20px"></iconify-icon>';
+    topbar.appendChild(gear);
+  }
 }
 
 /* ═══ SWITCH CATEGORY ═══ */
@@ -1938,4 +1949,352 @@ function bizEditMenuItem(itemId) {
 
 function bizOpenAddMenuItem() {
   openProductCreationWizard();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MENÜ AYARLARI (Menu Settings)
+   — Menü Yönetimi topbar'ındaki çark ikonundan açılır.
+   — İki ana tile: Online Sipariş & Masa Siparişi.
+   — Masa Siparişi 4 moddan birini seçtirir + koşullu online ödeme toggle.
+   — Kalıcı state: _bizMenuSettings (aynı session içinde korunur).
+   ─────────────────────────────────────────────────────────────────── */
+let _bizMenuSettings = {
+  tableOrderMode: 'full',      // 'menu_only' | 'waiter_only' | 'order_only' | 'full'
+  tableOnlinePayment: true,    // Koşullu: mode !== 'menu_only' iken görünür/anlamlı
+  onlineOrderingEnabled: true, // Online Sipariş modülü placeholder
+  onlineDelivery: true,
+  onlinePickup: true
+};
+
+const _BIZ_TABLE_ORDER_MODES = [
+  {
+    id: 'menu_only',
+    label: 'Sadece QR Menü Görüntüle',
+    desc: 'Müşteriler yalnızca ürünleri inceler, hiçbir etkileşim butonu görünmez.',
+    icon: 'solar:eye-bold',
+    color: '#6B7280'
+  },
+  {
+    id: 'waiter_only',
+    label: 'Sadece Garson Çağır',
+    desc: 'Menü ile birlikte "Garson Çağır" butonu aktifleşir.',
+    icon: 'solar:bell-bold',
+    color: '#F59E0B'
+  },
+  {
+    id: 'order_only',
+    label: 'Sadece Sipariş Ver',
+    desc: 'Menü ile birlikte sepete ekleme ve sipariş verme aktifleşir.',
+    icon: 'solar:cart-large-bold',
+    color: '#22C55E'
+  },
+  {
+    id: 'full',
+    label: 'Tam Hizmet (Sipariş + Garson)',
+    desc: 'Hem sipariş verme hem garson çağırma aynı anda aktifleşir.',
+    icon: 'solar:medal-ribbon-star-bold',
+    color: '#8B5CF6'
+  }
+];
+
+/* ─── Ana Menü Ayarları Sayfası ─── */
+function openBizMenuSettings() {
+  if (!bizRoleGuard('menu')) return;
+  const content = _renderBizMenuSettingsHome();
+  const overlay = createBizOverlay('bizMenuSettingsOverlay', 'Menü Ayarları', content);
+  document.getElementById('bizPhone').appendChild(overlay);
+}
+
+function _renderBizMenuSettingsHome() {
+  const mode = _BIZ_TABLE_ORDER_MODES.find(m => m.id === _bizMenuSettings.tableOrderMode) || _BIZ_TABLE_ORDER_MODES[3];
+  const onlineBadge = _bizMenuSettings.onlineOrderingEnabled
+    ? '<span style="font:var(--fw-semibold) 10px/1 var(--font);color:#22C55E;background:rgba(34,197,94,0.12);padding:4px 8px;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:#22C55E"></span>Aktif</span>'
+    : '<span style="font:var(--fw-semibold) 10px/1 var(--font);color:var(--text-muted);background:var(--glass-card);padding:4px 8px;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:var(--text-muted)"></span>Pasif</span>';
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <!-- Açıklama kartı -->
+      <div style="background:linear-gradient(135deg,rgba(239,68,68,0.06) 0%,rgba(239,68,68,0) 100%);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r-xl);padding:14px;display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="solar:info-circle-bold" style="font-size:20px;color:var(--primary)"></iconify-icon>
+        </div>
+        <div>
+          <div style="font:var(--fw-semibold) var(--fs-sm)/1.3 var(--font);color:var(--text-primary)">Menü Satış Kanallarını Yönet</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary);margin-top:4px">Restoranınızın hangi sipariş kanallarını açık tutacağını buradan yönetin.</div>
+        </div>
+      </div>
+
+      <!-- Online Sipariş Tile -->
+      <div onclick="openBizOnlineOrderSettings()" style="background:var(--glass-card);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-18px;right:-18px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,0.12) 0%,rgba(34,211,238,0) 70%)"></div>
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(34,211,238,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
+          <iconify-icon icon="solar:scooter-bold" style="font-size:26px;color:#0891B2"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0;position:relative">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Online Sipariş</span>
+            ${onlineBadge}
+          </div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:4px">Paket servis ve gel-al ayarları</div>
+        </div>
+        <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:var(--text-tertiary);flex-shrink:0;position:relative"></iconify-icon>
+      </div>
+
+      <!-- Masa Siparişi Tile -->
+      <div onclick="openBizTableOrderSettings()" style="background:var(--glass-card);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-18px;right:-18px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,0.14) 0%,rgba(139,92,246,0) 70%)"></div>
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(139,92,246,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
+          <iconify-icon icon="solar:qr-code-bold" style="font-size:26px;color:#7C3AED"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0;position:relative">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Masa Siparişi</span>
+            <span style="font:var(--fw-semibold) 10px/1 var(--font);color:${mode.color};background:${mode.color}18;padding:4px 8px;border-radius:var(--r-full)">${mode.label.replace('Sadece ','').replace('Tam Hizmet (','').replace(')','')}</span>
+          </div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:4px">QR menü, garson ve ödeme modu</div>
+        </div>
+        <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:var(--text-tertiary);flex-shrink:0;position:relative"></iconify-icon>
+      </div>
+    </div>
+  `;
+}
+
+/* ─── Masa Siparişi Ayarları Sayfası ─── */
+function openBizTableOrderSettings() {
+  if (!bizRoleGuard('menu')) return;
+  const overlay = createBizOverlay('bizTableOrderSettingsOverlay', 'Masa Siparişi Ayarları', _renderBizTableOrderSettings());
+  document.getElementById('bizPhone').appendChild(overlay);
+}
+
+function _renderBizTableOrderSettings() {
+  const current = _bizMenuSettings.tableOrderMode;
+  const showPayment = current !== 'menu_only';
+  const payOn = !!_bizMenuSettings.tableOnlinePayment;
+
+  /* Bilgilendirme notu */
+  let html = `
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-radius:var(--r-xl);padding:14px;display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-24px;right:-24px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,0.15) 0%,rgba(34,211,238,0) 70%)"></div>
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(34,211,238,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
+        <iconify-icon icon="solar:notification-lines-remove-bold" style="font-size:20px;color:#22D3EE"></iconify-icon>
+      </div>
+      <div style="position:relative">
+        <div style="font:var(--fw-semibold) var(--fs-sm)/1.3 var(--font);color:#fff">Kullanıcılar yaptığınız seçimlere göre menüleri görüntüleyecektir.</div>
+        <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:rgba(255,255,255,0.65);margin-top:4px">Her QR okutan müşteri bu modda hizmet alır. Değişiklik anında yansır.</div>
+      </div>
+    </div>
+  `;
+
+  /* Başlık */
+  html += `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <iconify-icon icon="solar:widget-4-bold" style="font-size:18px;color:var(--primary)"></iconify-icon>
+      <span style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Çalışma Modunu Seç</span>
+    </div>
+    <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-bottom:14px">Aynı anda yalnızca bir mod aktif olabilir.</div>
+  `;
+
+  /* Radio kartlar */
+  html += '<div style="display:flex;flex-direction:column;gap:10px">';
+  _BIZ_TABLE_ORDER_MODES.forEach(m => {
+    const active = m.id === current;
+    html += `
+      <div onclick="_bizSetTableOrderMode('${m.id}')" style="background:${active ? 'rgba(239,68,68,0.05)' : 'var(--glass-card)'};border:1.5px solid ${active ? 'var(--primary)' : 'var(--border-subtle)'};border-radius:var(--r-xl);padding:14px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;transition:all .2s">
+        <!-- Radio -->
+        <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${active ? 'var(--primary)' : 'var(--border-strong,#94a3b8)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+          ${active ? '<div style="width:10px;height:10px;border-radius:50%;background:var(--primary)"></div>' : ''}
+        </div>
+        <!-- Icon -->
+        <div style="width:38px;height:38px;border-radius:10px;background:${m.color}18;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="${m.icon}" style="font-size:20px;color:${m.color}"></iconify-icon>
+        </div>
+        <!-- Text -->
+        <div style="flex:1;min-width:0">
+          <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">${m.label}</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:4px">${m.desc}</div>
+          ${_bizRenderModeButtonPreview(m.id)}
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+
+  /* Koşullu Online Ödeme Alanı */
+  html += `
+    <div id="bizTableOnlinePayBlock" style="margin-top:20px;display:${showPayment ? 'block' : 'none'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <iconify-icon icon="solar:wallet-money-bold" style="font-size:18px;color:#22C55E"></iconify-icon>
+        <span style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Ödeme Tercihleri</span>
+      </div>
+      <div style="background:var(--glass-card);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:rgba(34,197,94,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="solar:qr-code-bold" style="font-size:22px;color:#16A34A"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">Masada Online Ödeme</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:3px" id="bizTableOnlinePayHint">${payOn
+            ? 'Müşteri, hesabını uygulamadan (QR ödeme) kapatabilir.'
+            : 'Ödeme sadece kasada veya masada fiziksel olarak alınır.'}</div>
+        </div>
+        <!-- Toggle -->
+        <div id="bizTableOnlinePayToggle" onclick="_bizToggleTableOnlinePayment()" style="width:46px;height:26px;border-radius:13px;background:${payOn ? 'var(--primary)' : 'var(--border-strong,#94a3b8)'};position:relative;transition:background .2s;flex-shrink:0;cursor:pointer">
+          <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;left:${payOn ? '23px' : '3px'};box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  /* Müşteri Önizleme Kartı */
+  html += _bizRenderCustomerPreview(current, showPayment && payOn);
+  return html;
+}
+
+function _bizRenderModeButtonPreview(modeId) {
+  /* Her mod kartının alt kısmında hangi butonların gözükeceğini chip olarak göster */
+  const chips = [];
+  if (modeId === 'menu_only') {
+    chips.push({ label: 'Sadece Menü', color: '#6B7280', icon: 'solar:eye-linear' });
+  }
+  if (modeId === 'waiter_only' || modeId === 'full') {
+    chips.push({ label: 'Garson Çağır', color: '#F59E0B', icon: 'solar:bell-linear' });
+  }
+  if (modeId === 'order_only' || modeId === 'full') {
+    chips.push({ label: 'Sipariş Ver', color: '#22C55E', icon: 'solar:cart-large-linear' });
+  }
+  if (!chips.length) return '';
+  return '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">'
+    + chips.map(c => `<span style="display:inline-flex;align-items:center;gap:4px;font:var(--fw-medium) 10px/1 var(--font);color:${c.color};background:${c.color}15;padding:5px 9px;border-radius:var(--r-full)"><iconify-icon icon="${c.icon}" style="font-size:11px"></iconify-icon>${c.label}</span>`).join('')
+    + '</div>';
+}
+
+function _bizRenderCustomerPreview(modeId, payActive) {
+  const showWaiter = (modeId === 'waiter_only' || modeId === 'full');
+  const showOrder  = (modeId === 'order_only'  || modeId === 'full');
+  const btns = [];
+  if (!showWaiter && !showOrder) {
+    btns.push('<div style="flex:1;padding:11px;text-align:center;font:var(--fw-medium) 11px/1 var(--font);color:var(--text-muted);background:var(--bg-phone);border-radius:var(--r-md);border:1px dashed var(--border-subtle)">Sadece Görüntüleme</div>');
+  }
+  if (showWaiter) btns.push('<div style="flex:1;padding:11px;text-align:center;font:var(--fw-semibold) 11px/1 var(--font);color:#fff;background:#F59E0B;border-radius:var(--r-md)"><iconify-icon icon="solar:bell-bold" style="font-size:12px;vertical-align:-2px"></iconify-icon> Garson</div>');
+  if (showOrder)  btns.push('<div style="flex:1;padding:11px;text-align:center;font:var(--fw-semibold) 11px/1 var(--font);color:#fff;background:var(--primary);border-radius:var(--r-md)"><iconify-icon icon="solar:cart-large-bold" style="font-size:12px;vertical-align:-2px"></iconify-icon> Sipariş</div>');
+  if (payActive)  btns.push('<div style="flex:1;padding:11px;text-align:center;font:var(--fw-semibold) 11px/1 var(--font);color:#fff;background:#0f172a;border-radius:var(--r-md)"><iconify-icon icon="solar:wallet-money-bold" style="font-size:12px;vertical-align:-2px"></iconify-icon> Öde</div>');
+
+  return `
+    <div style="margin-top:24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <iconify-icon icon="solar:smartphone-linear" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>
+        <span style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Müşteri Önizlemesi</span>
+      </div>
+      <div style="background:linear-gradient(180deg,rgba(15,23,42,0.02) 0%,rgba(15,23,42,0) 100%);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:14px">
+        <div style="background:linear-gradient(135deg,#0f766e 0%,#0d9488 60%,#22d3ee 100%);border-radius:var(--r-lg);padding:10px 12px;display:flex;align-items:center;gap:10px;color:#fff;margin-bottom:10px">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center"><span style="font:var(--fw-bold) 13px/1 var(--font)">12</span></div>
+          <div style="flex:1">
+            <div style="font:var(--fw-bold) 12px/1.1 var(--font)">Lezzet Mutfak — Masa 12</div>
+            <div style="font:var(--fw-regular) 10px/1.2 var(--font);opacity:.85">Kadıköy Şubesi • Canlı</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">${btns.join('')}</div>
+        <div style="margin-top:10px;font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);text-align:center">Müşterinin göreceği alt eylem çubuğu</div>
+      </div>
+    </div>
+  `;
+}
+
+function _bizSetTableOrderMode(modeId) {
+  _bizMenuSettings.tableOrderMode = modeId;
+  /* Mod seçimi değiştiğinde, "menu_only"e geçerse ödeme bloğu gizlenir.
+     Ödeme state'i korunur; tekrar açıldığında aynı değer yansır. */
+  const content = document.querySelector('#bizTableOrderSettingsOverlay > div:nth-child(2)');
+  if (content) content.innerHTML = _renderBizTableOrderSettings();
+}
+
+function _bizToggleTableOnlinePayment() {
+  _bizMenuSettings.tableOnlinePayment = !_bizMenuSettings.tableOnlinePayment;
+  const content = document.querySelector('#bizTableOrderSettingsOverlay > div:nth-child(2)');
+  if (content) content.innerHTML = _renderBizTableOrderSettings();
+}
+
+/* ─── Online Sipariş Ayarları (placeholder) ─── */
+function openBizOnlineOrderSettings() {
+  if (!bizRoleGuard('menu')) return;
+  const enabled = !!_bizMenuSettings.onlineOrderingEnabled;
+  const delivery = !!_bizMenuSettings.onlineDelivery;
+  const pickup = !!_bizMenuSettings.onlinePickup;
+
+  const content = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Ana Toggle -->
+      <div style="background:linear-gradient(135deg,rgba(8,145,178,0.08) 0%,rgba(8,145,178,0) 100%);border:1px solid rgba(8,145,178,0.2);border-radius:var(--r-xl);padding:16px;display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(8,145,178,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="solar:scooter-bold" style="font-size:24px;color:#0891B2"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Online Sipariş</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:3px">Restoranınız dijital sipariş almaya ${enabled ? 'açık' : 'kapalı'}</div>
+        </div>
+        <div onclick="_bizToggleOnlineOrdering()" style="width:46px;height:26px;border-radius:13px;background:${enabled ? '#0891B2' : 'var(--border-strong,#94a3b8)'};position:relative;transition:background .2s;flex-shrink:0;cursor:pointer">
+          <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;left:${enabled ? '23px' : '3px'};box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s"></div>
+        </div>
+      </div>
+
+      <!-- Alt seçenekler -->
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <iconify-icon icon="solar:tuning-2-bold" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>
+        <span style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Teslimat Kanalları</span>
+      </div>
+
+      <div style="background:var(--glass-card);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:14px;display:flex;align-items:center;gap:12px;${enabled ? '' : 'opacity:0.5;pointer-events:none'}">
+        <div style="width:40px;height:40px;border-radius:12px;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="solar:delivery-bold" style="font-size:22px;color:#F59E0B"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">Paket Servis</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">Kuryeyle müşteri adresine gönderim</div>
+        </div>
+        <div onclick="_bizToggleOnlineSub('onlineDelivery')" style="width:46px;height:26px;border-radius:13px;background:${delivery ? '#F59E0B' : 'var(--border-strong,#94a3b8)'};position:relative;transition:background .2s;flex-shrink:0;cursor:pointer">
+          <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;left:${delivery ? '23px' : '3px'};box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--glass-card);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:14px;display:flex;align-items:center;gap:12px;${enabled ? '' : 'opacity:0.5;pointer-events:none'}">
+        <div style="width:40px;height:40px;border-radius:12px;background:rgba(139,92,246,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <iconify-icon icon="solar:bag-4-bold" style="font-size:22px;color:#7C3AED"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">Gel-Al</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">Müşteri siparişini restoran üzerinden alır</div>
+        </div>
+        <div onclick="_bizToggleOnlineSub('onlinePickup')" style="width:46px;height:26px;border-radius:13px;background:${pickup ? '#7C3AED' : 'var(--border-strong,#94a3b8)'};position:relative;transition:background .2s;flex-shrink:0;cursor:pointer">
+          <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;left:${pickup ? '23px' : '3px'};box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s"></div>
+        </div>
+      </div>
+
+      <div style="padding:12px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.15);border-radius:var(--r-lg);display:flex;gap:10px;align-items:flex-start">
+        <iconify-icon icon="solar:info-circle-linear" style="font-size:18px;color:#06B6D4;flex-shrink:0;margin-top:2px"></iconify-icon>
+        <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary)">Online sipariş detayları (min. tutar, teslimat alanı, mutfak kapatma saatleri) için ayrı bir ayar ekranı hazırlanacaktır.</div>
+      </div>
+    </div>
+  `;
+
+  const overlay = createBizOverlay('bizOnlineOrderSettingsOverlay', 'Online Sipariş Ayarları', content);
+  document.getElementById('bizPhone').appendChild(overlay);
+}
+
+function _bizToggleOnlineOrdering() {
+  _bizMenuSettings.onlineOrderingEnabled = !_bizMenuSettings.onlineOrderingEnabled;
+  openBizOnlineOrderSettings(); /* yeniden çiz */
+}
+function _bizToggleOnlineSub(key) {
+  _bizMenuSettings[key] = !_bizMenuSettings[key];
+  openBizOnlineOrderSettings();
+}
+
+/* ═══ BACKWARD COMPATIBILITY — expose globally ═══ */
+if (typeof window !== 'undefined') {
+  window.openBizMenuSettings = openBizMenuSettings;
+  window.openBizTableOrderSettings = openBizTableOrderSettings;
+  window.openBizOnlineOrderSettings = openBizOnlineOrderSettings;
+  window._bizSetTableOrderMode = _bizSetTableOrderMode;
+  window._bizToggleTableOnlinePayment = _bizToggleTableOnlinePayment;
+  window._bizToggleOnlineOrdering = _bizToggleOnlineOrdering;
+  window._bizToggleOnlineSub = _bizToggleOnlineSub;
 }

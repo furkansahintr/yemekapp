@@ -280,11 +280,22 @@ function openBizBranchDetail(branchId) {
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="alert('QR menü — yakında!')">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="alert('QR menü — yakında!')">
             <iconify-icon icon="solar:qr-code-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
             <div style="flex:1">
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">QR Menü</div>
               <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Masalara özel QR kodları</div>
+            </div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openBizCommissionSettings('${branch.id}')">
+            <iconify-icon icon="solar:wallet-money-bold" style="font-size:20px;color:#A855F7"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary);display:flex;align-items:center;gap:6px">
+                Komisyon Ayarları
+                ${(function(){ const r = Number(branch.rating || 0); const tier = _commTier(r); return `<span style="font:var(--fw-semibold) 9px/1 var(--font);color:${tier.color};background:${tier.color}22;padding:3px 7px;border-radius:var(--r-full)">%${_commRate(r)}</span>`; })()}
+              </div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px">${Number(branch.rating || 0).toFixed(1)} puan · Performansa dayalı oran</div>
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>

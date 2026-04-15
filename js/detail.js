@@ -128,13 +128,14 @@ function showDetail(i,source){
 
   const servingArea=document.getElementById('detailServing').parentElement;
   const startBtn=document.getElementById('detailStartBtn');
-  const calendarBtn=startBtn.nextElementSibling;
+  const calendarBtn=document.getElementById('detailPlanBtn') || startBtn.nextElementSibling;
   if(isRestoran){
     document.getElementById('detailServing').textContent='1 Adet';
     detailServing=1;
     startBtn.textContent='Sepete Ekle — ₺'+item.price;
     startBtn.onclick=function(){addToCart(currentItem,currentSource);closeDetail();};
-    calendarBtn.style.display='none';
+    /* Restaurants da Plana Ekle butonu görür (Tarife Başla ile birebir aynı davranış) */
+    calendarBtn.style.display='flex';
   }else{
     document.getElementById('detailServing').textContent=detailServing+' Kişi';
     startBtn.textContent='Tarife Başla';
@@ -440,6 +441,114 @@ function stopTTS() {
   ttsSpeaking = false;
   updateTTSUI();
 }
+
+/* ═══════════════════════════════════════════════════════
+   COOKING MODE — HTML uyumluluk için ek alias/wrapper'lar
+   (cooking-steps.html + hands-free.html içindeki onclick'ler)
+   ═══════════════════════════════════════════════════════ */
+
+/* Sol üst geri — tarifin genel görünümüne döner (detay overlay açık kalır) */
+function closeCooking() {
+  closeCookingSteps();
+}
+
+/* Alt navigasyon */
+function cookingPrev() { prevStep(); }
+function cookingNext() { nextStep(); }
+
+/* Eller Serbest Modu — mikrofon dinleme moduna geçer */
+function toggleHandsfreeMode() { toggleHandsFree(); }
+function closeHandsfreeMode()  { closeHandsFree(); }
+
+/* Tekrarla — mevcut adımı yeniden sesli okur */
+function repeatTTS() {
+  if (!cookingSteps.length) return;
+  /* sesli okuma animasyonunu yeniden başlat */
+  ttsActive = true;
+  ttsSpeaking = true;
+  updateTTSUI();
+
+  /* hands-free overlay açıksa TTS animasyonunu da tetikle */
+  var anim = document.getElementById('handsfreeTtsAnim');
+  var status = document.getElementById('handsfreeTtsStatus');
+  if (anim) anim.classList.add('speaking');
+  if (status) status.textContent = 'Tekrar okunuyor...';
+
+  /* Repeat butonuna görsel feedback */
+  var btn = document.getElementById('cookingRepeatBtn');
+  if (btn) {
+    btn.classList.add('active');
+    setTimeout(function() { btn.classList.remove('active'); }, 600);
+  }
+
+  _cookingToast('Adım tekrar okunuyor', 'solar:repeat-bold');
+
+  setTimeout(function() {
+    ttsSpeaking = false;
+    updateTTSUI();
+    if (anim) anim.classList.remove('speaking');
+    if (status) status.textContent = 'Hazır';
+  }, 3200);
+}
+
+/* Mikrofon butonu — sesli komut dinleme aç/kapa (UI simülasyonu) */
+function toggleVoiceCommand() {
+  micActive = !micActive;
+  var micArea  = document.getElementById('handsfreeMicArea');
+  var micBtn   = document.getElementById('handsfreeMicBtn');
+  var micIcon  = document.getElementById('handsfreeMicIcon');
+  var micStat  = document.getElementById('handsfreeMicStatus');
+
+  if (micActive) {
+    if (micArea) micArea.classList.add('listening');
+    if (micBtn)  micBtn.classList.add('active');
+    if (micIcon) micIcon.setAttribute('icon', 'solar:microphone-3-bold');
+    if (micStat) micStat.textContent = 'Dinleniyor...';
+    _cookingToast('Sesli komut aktif — "Sonraki" veya "Tekrarla" diyebilirsin', 'solar:microphone-3-bold');
+
+    /* Simülasyon: 3sn sonra örnek bir komut algılanmış gibi göster */
+    clearTimeout(window._voiceSimTimer);
+    window._voiceSimTimer = setTimeout(function() {
+      if (!micActive) return;
+      if (micStat) micStat.textContent = '"Sonraki" komutu algılandı';
+    }, 3500);
+  } else {
+    if (micArea) micArea.classList.remove('listening');
+    if (micBtn)  micBtn.classList.remove('active');
+    if (micIcon) micIcon.setAttribute('icon', 'solar:microphone-3-linear');
+    if (micStat) micStat.textContent = 'Mikrofon kapalı';
+    clearTimeout(window._voiceSimTimer);
+  }
+}
+
+/* Malzeme panelini aç/kapa (cooking-steps.html alt kısım) */
+function toggleCookingIngredients() {
+  var panel = document.getElementById('cookingIngredientsPanel');
+  var arrow = document.getElementById('cookingIngArrow');
+  if (!panel) return;
+  var isOpen = panel.classList.toggle('open');
+  if (arrow) arrow.setAttribute('icon', isOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear');
+}
+
+/* Küçük toast helper */
+function _cookingToast(msg, icon) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.95);color:#fff;padding:10px 18px;border-radius:999px;font:500 13px/1.2 var(--font);z-index:9999;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:90vw;text-align:center';
+  t.innerHTML = '<iconify-icon icon="' + (icon || 'solar:info-circle-bold') + '" style="font-size:16px;flex-shrink:0"></iconify-icon><span>' + msg + '</span>';
+  document.body.appendChild(t);
+  setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 2400);
+  setTimeout(function() { t.remove(); }, 2800);
+}
+
+/* Window exports — inline onclick'lerin görmesi için */
+window.closeCooking             = closeCooking;
+window.cookingPrev              = cookingPrev;
+window.cookingNext              = cookingNext;
+window.toggleHandsfreeMode      = toggleHandsfreeMode;
+window.closeHandsfreeMode       = closeHandsfreeMode;
+window.repeatTTS                = repeatTTS;
+window.toggleVoiceCommand       = toggleVoiceCommand;
+window.toggleCookingIngredients = toggleCookingIngredients;
 
 /* ═══ TARİF DEFTERİ — Bookmark ═══ */
 function toggleDetailBookmark() {

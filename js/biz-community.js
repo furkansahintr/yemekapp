@@ -135,8 +135,6 @@ function renderBizCommFeed(filter) {
   }).join('');
 }
 
-function openBizNewPost() {
-  // Placeholder - will be implemented
-  alert('Yeni gönderi oluşturma — yakında!');
-}
+// openBizNewPost() is defined in js/biz-new-post.js — aynı akış,
+// kullanıcı tarafındaki openNewPost() ile birebir paralel.
 
