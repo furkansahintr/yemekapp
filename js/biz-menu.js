@@ -1,15 +1,14 @@
-/* ═══ BIZ MENU COMPONENT ═══ */
+/* ═══ BIZ MENU COMPONENT — Full Product Creation Module ═══ */
 
 let bizMenuActiveCategory = 'all';
+let bizMenuActiveTab = 'single'; // 'single' | 'combo'
 
 /* ═══ ROLE-BASED MENU HELPERS ═══ */
 function _menuCanEdit() {
-  // owner, manager, chef can edit; cashier cannot
   return bizCurrentRole === 'owner' || bizCurrentRole === 'manager' || bizCurrentRole === 'chef';
 }
 
 function _menuGetChefKitchenIds() {
-  // Reuse the same logic from biz-orders/biz-kitchen
   if (bizCurrentEmployment && bizCurrentEmployment.kitchenCategories) {
     return bizCurrentEmployment.kitchenCategories;
   }
@@ -21,7 +20,6 @@ function _menuGetChefKitchenIds() {
 
 function _menuGetFilteredItems() {
   let items = BIZ_MENU_ITEMS.filter(m => m.branchId === bizActiveBranch);
-  // Chef only sees items from their kitchen stations
   if (bizCurrentRole === 'chef') {
     const myStations = _menuGetChefKitchenIds();
     items = items.filter(i => myStations.includes(i.kitchenCategory));
@@ -38,17 +36,20 @@ function _menuCanEditItem(item) {
   return false;
 }
 
+/* ═══ OPEN MENU MANAGEMENT ═══ */
 function openBizMenuMgmt() {
   if (!bizRoleGuard('menu')) return;
   bizMenuActiveCategory = 'all';
+  bizMenuActiveTab = 'single';
   const overlay = createBizOverlay('bizMenuOverlay', 'Menü Yönetimi', renderBizMenuContent());
   document.getElementById('bizPhone').appendChild(overlay);
 }
 
+/* ═══ SWITCH CATEGORY ═══ */
 function switchBizMenuCategory(cat) {
   bizMenuActiveCategory = cat;
   const list = document.getElementById('bizMenuItemsList');
-  if (list) list.innerHTML = renderBizMenuItems();
+  if (list) list.innerHTML = bizMenuActiveTab === 'single' ? renderBizMenuItems() : renderBizComboItems();
 
   document.querySelectorAll('.biz-menu-cat-tab').forEach(el => {
     const isActive = el.dataset.cat === cat;
@@ -58,12 +59,24 @@ function switchBizMenuCategory(cat) {
   });
 }
 
+/* ═══ SWITCH SINGLE/COMBO TAB ═══ */
+function switchBizMenuTab(tab) {
+  bizMenuActiveTab = tab;
+  bizMenuActiveCategory = 'all';
+  const content = document.getElementById('bizMenuContentArea');
+  if (content) content.innerHTML = renderBizMenuInnerContent();
+
+  document.querySelectorAll('.biz-menu-type-tab').forEach(el => {
+    const isActive = el.dataset.tab === tab;
+    el.style.background = isActive ? 'var(--primary)' : 'transparent';
+    el.style.color = isActive ? '#fff' : 'var(--text-secondary)';
+  });
+}
+
+/* ═══ RENDER MENU CONTENT ═══ */
 function renderBizMenuContent() {
-  const items = _menuGetFilteredItems();
-  const categories = BIZ_MENU_CATEGORIES;
   const canEdit = _menuCanEdit();
 
-  // Role banner for chef
   let roleBanner = '';
   if (bizCurrentRole === 'chef') {
     const myStations = _menuGetChefKitchenIds();
@@ -87,6 +100,34 @@ function renderBizMenuContent() {
 
   return `
     ${roleBanner}
+    <!-- Single / Combo Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--glass-card);border-radius:var(--r-full);padding:3px">
+      <div class="biz-menu-type-tab" data-tab="single" onclick="switchBizMenuTab('single')" style="flex:1;text-align:center;padding:8px;border-radius:var(--r-full);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer;background:var(--primary);color:#fff;transition:all .2s">
+        <iconify-icon icon="solar:box-minimalistic-bold" style="font-size:13px;vertical-align:-2px"></iconify-icon> Tekil Ürünler
+      </div>
+      <div class="biz-menu-type-tab" data-tab="combo" onclick="switchBizMenuTab('combo')" style="flex:1;text-align:center;padding:8px;border-radius:var(--r-full);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer;background:transparent;color:var(--text-secondary);transition:all .2s">
+        <iconify-icon icon="solar:layers-bold" style="font-size:13px;vertical-align:-2px"></iconify-icon> Grup Ürünler
+      </div>
+    </div>
+
+    <div id="bizMenuContentArea">
+      ${renderBizMenuInnerContent()}
+    </div>
+  `;
+}
+
+function renderBizMenuInnerContent() {
+  if (bizMenuActiveTab === 'single') return renderBizMenuSingleTab();
+  return renderBizMenuComboTab();
+}
+
+/* ═══ SINGLE PRODUCTS TAB ═══ */
+function renderBizMenuSingleTab() {
+  const items = _menuGetFilteredItems();
+  const categories = BIZ_MENU_CATEGORIES;
+  const canEdit = _menuCanEdit();
+
+  return `
     <!-- Category Tabs -->
     <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none">
       <div class="biz-menu-cat-tab" data-cat="all" onclick="switchBizMenuCategory('all')" style="padding:8px 14px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-sm)/1 var(--font);white-space:nowrap;cursor:pointer;background:var(--primary);color:#fff;border:1px solid var(--primary)">Tümü (${items.length})</div>
@@ -102,15 +143,44 @@ function renderBizMenuContent() {
     </div>
 
     ${canEdit ? `
-    <!-- Add Item Button -->
-    <div onclick="bizOpenAddMenuItem()" style="margin-top:16px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+    <div onclick="openProductCreationWizard()" style="margin-top:16px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
       <iconify-icon icon="solar:add-circle-bold" style="font-size:18px;color:#fff"></iconify-icon>
-      <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Yeni Ürün Ekle</span>
-    </div>
-    ` : ''}
+      <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Ürün Oluştur</span>
+    </div>` : ''}
   `;
 }
 
+/* ═══ COMBO PRODUCTS TAB ═══ */
+function renderBizMenuComboTab() {
+  const canEdit = _menuCanEdit();
+  const combos = BIZ_COMBO_PRODUCTS.filter(c => c.branchId === bizActiveBranch);
+  const singleProducts = BIZ_PRODUCTS.filter(p => p.branchId === bizActiveBranch && p.type === 'single');
+
+  if (singleProducts.length === 0 && canEdit) {
+    return `
+    <div style="padding:40px 16px;text-align:center">
+      <iconify-icon icon="solar:danger-triangle-bold" style="font-size:40px;color:#F59E0B;display:block;margin:0 auto 12px"></iconify-icon>
+      <div style="font:var(--fw-semibold) var(--fs-md)/1.3 var(--font);color:var(--text-primary);margin-bottom:6px">Önce Tekil Ürün Oluşturun</div>
+      <div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-muted);max-width:260px;margin:0 auto">Grup ürün oluşturabilmek için en az bir tekil ürün tanımlanmış olmalıdır.</div>
+      <div onclick="switchBizMenuTab('single')" style="margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:var(--primary);color:#fff;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-sm)/1 var(--font);cursor:pointer">
+        <iconify-icon icon="solar:arrow-left-linear" style="font-size:14px"></iconify-icon> Tekil Ürünlere Git
+      </div>
+    </div>`;
+  }
+
+  return `
+    <div id="bizMenuItemsList" style="display:flex;flex-direction:column;gap:10px">
+      ${renderBizComboItems()}
+    </div>
+    ${canEdit ? `
+    <div onclick="openComboCreationWizard()" style="margin-top:16px;background:linear-gradient(135deg,#8B5CF6,#6366F1);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <iconify-icon icon="solar:layers-bold" style="font-size:18px;color:#fff"></iconify-icon>
+      <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Grup Ürün Oluştur</span>
+    </div>` : ''}
+  `;
+}
+
+/* ═══ RENDER SINGLE MENU ITEMS LIST ═══ */
 function renderBizMenuItems() {
   let items = _menuGetFilteredItems();
   if (bizMenuActiveCategory !== 'all') {
@@ -125,9 +195,12 @@ function renderBizMenuItems() {
 
   return items.map(item => {
     const kitchenCat = BIZ_KITCHEN_CATEGORIES.find(c => c.id === item.kitchenCategory);
+    const product = BIZ_PRODUCTS.find(p => p.menuItemId === item.id);
     const itemEditable = canEdit && _menuCanEditItem(item);
+    const hasDetail = !!product;
+
     return `
-    <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:12px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);display:flex;gap:12px;align-items:center">
+    <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:12px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);display:flex;gap:12px;align-items:center" ${hasDetail ? `onclick="openProductDetail('${product.id}')"` : ''}>
       <div style="width:48px;height:48px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border-subtle)">
         <iconify-icon icon="${kitchenCat ? kitchenCat.icon : 'solar:dish-bold'}" style="font-size:22px;color:${kitchenCat ? kitchenCat.color : 'var(--text-muted)'}"></iconify-icon>
       </div>
@@ -137,14 +210,18 @@ function renderBizMenuItems() {
           <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">${item.category}</span>
           ${kitchenCat ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:${kitchenCat.color};background:${kitchenCat.color}12">→ ${kitchenCat.name}</span>` : ''}
         </div>
-        <div style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:var(--primary);margin-top:4px">₺${item.price.toFixed(2)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:var(--primary)">₺${item.price.toFixed(2)}</span>
+          ${hasDetail && product.prepTime ? `<span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)"><iconify-icon icon="solar:clock-circle-linear" style="font-size:10px;vertical-align:-1px"></iconify-icon> ${product.prepTime} dk</span>` : ''}
+          ${hasDetail && product.allergens && product.allergens.length > 0 ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:#EF4444;background:rgba(239,68,68,0.1)"><iconify-icon icon="solar:danger-triangle-linear" style="font-size:9px;vertical-align:-1px"></iconify-icon> ${product.allergens.length} alerjen</span>` : ''}
+        </div>
       </div>
       ${itemEditable ? `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px" onclick="event.stopPropagation()">
         <div onclick="bizToggleMenuItem('${item.id}')" style="width:36px;height:20px;border-radius:10px;background:${item.status === 'active' ? 'var(--primary)' : 'var(--glass-card-strong)'};position:relative;cursor:pointer">
           <div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${item.status === 'active' ? 'right:2px' : 'left:2px'}"></div>
         </div>
-        <iconify-icon icon="solar:pen-linear" onclick="bizEditMenuItem('${item.id}')" style="font-size:16px;color:var(--text-muted);cursor:pointer"></iconify-icon>
+        <iconify-icon icon="solar:pen-linear" onclick="openProductCreationWizard('${item.id}')" style="font-size:16px;color:var(--text-muted);cursor:pointer"></iconify-icon>
       </div>` : `
       <div style="display:flex;align-items:center">
         <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 8px;border-radius:var(--r-full);color:${item.status === 'active' ? '#22C55E' : '#EF4444'};background:${item.status === 'active' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}">${item.status === 'active' ? 'Aktif' : 'Pasif'}</span>
@@ -153,166 +230,1712 @@ function renderBizMenuItems() {
   }).join('');
 }
 
+/* ═══ RENDER COMBO ITEMS LIST ═══ */
+function renderBizComboItems() {
+  let combos = BIZ_COMBO_PRODUCTS.filter(c => c.branchId === bizActiveBranch);
+
+  if (combos.length === 0) {
+    return `<div style="padding:32px 16px;text-align:center;font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-muted)">Henüz grup ürün oluşturulmadı</div>`;
+  }
+
+  return combos.map(combo => {
+    const discount = combo.originalTotalPrice > 0 ? Math.round((1 - combo.comboPrice / combo.originalTotalPrice) * 100) : 0;
+    const itemNames = _getComboItemNames(combo);
+
+    return `
+    <div onclick="openComboDetail('${combo.id}')" style="background:var(--bg-phone);border-radius:var(--r-xl);padding:14px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);cursor:pointer">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:42px;height:42px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(99,102,241,0.15))">
+          <iconify-icon icon="solar:layers-bold" style="font-size:20px;color:#8B5CF6"></iconify-icon>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">${escHtml(combo.name)}</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px">${itemNames}</div>
+        </div>
+        <div style="text-align:right">
+          ${discount > 0 ? `<div style="font:var(--fw-bold) var(--fs-xs)/1 var(--font);color:#22C55E;background:rgba(34,197,94,0.1);padding:3px 8px;border-radius:var(--r-full);margin-bottom:4px">%${discount} İndirim</div>` : ''}
+          <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--primary)">₺${combo.comboPrice.toFixed(2)}</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-decoration:line-through">₺${combo.originalTotalPrice.toFixed(2)}</div>
+        </div>
+      </div>
+      ${combo.allergens && combo.allergens.length > 0 ? `
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+        ${combo.allergens.map(aId => {
+          const al = BIZ_ALLERGEN_LIST.find(a => a.id === aId);
+          return al ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:${al.color};background:${al.color}12"><iconify-icon icon="${al.icon}" style="font-size:9px;vertical-align:-1px"></iconify-icon> ${al.label}</span>` : '';
+        }).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function _getComboItemNames(combo) {
+  const names = [];
+  if (combo.includedProductIds) {
+    combo.includedProductIds.forEach(pid => {
+      const p = BIZ_PRODUCTS.find(x => x.id === pid);
+      if (p) names.push(p.name);
+    });
+  }
+  if (combo.includedMenuItemIds) {
+    combo.includedMenuItemIds.forEach(mid => {
+      const m = BIZ_MENU_ITEMS.find(x => x.id === mid);
+      if (m) names.push(m.name);
+    });
+  }
+  return names.join(' + ') || 'Ürün yok';
+}
+
+/* ═══ TOGGLE MENU ITEM ═══ */
 function bizToggleMenuItem(itemId) {
   if (!_menuCanEdit()) return;
   const item = BIZ_MENU_ITEMS.find(i => i.id === itemId);
   if (item && _menuCanEditItem(item)) {
     item.status = item.status === 'active' ? 'inactive' : 'active';
+    // Sync combo stock
+    _syncComboStock();
     const list = document.getElementById('bizMenuItemsList');
     if (list) list.innerHTML = renderBizMenuItems();
   }
 }
 
-function bizEditMenuItem(itemId) {
-  if (!_menuCanEdit()) return;
-  const item = BIZ_MENU_ITEMS.find(i => i.id === itemId);
-  if (!item || !_menuCanEditItem(item)) return;
-  bizOpenMenuItemForm(item);
+/* ═══ STOCK SYNC: If a single product is out-of-stock, combos using it become unavailable ═══ */
+function _syncComboStock() {
+  BIZ_COMBO_PRODUCTS.forEach(combo => {
+    if (!combo.includedProductIds) return;
+    const anyInactive = combo.includedProductIds.some(pid => {
+      const p = BIZ_PRODUCTS.find(x => x.id === pid);
+      if (p && p.menuItemId) {
+        const mi = BIZ_MENU_ITEMS.find(m => m.id === p.menuItemId);
+        return mi && mi.status === 'inactive';
+      }
+      return p && p.status === 'inactive';
+    });
+    const anyMenuInactive = (combo.includedMenuItemIds || []).some(mid => {
+      const mi = BIZ_MENU_ITEMS.find(m => m.id === mid);
+      return mi && mi.status === 'inactive';
+    });
+    if (anyInactive || anyMenuInactive) {
+      combo.status = 'inactive';
+    }
+  });
 }
 
-function bizOpenAddMenuItem() {
+/* ══════════════════════════════════════════════════════════════
+   PRODUCT CREATION WIZARD — SINGLE ITEM
+   ══════════════════════════════════════════════════════════════ */
+
+let _wizardState = {};
+
+function openProductCreationWizard(editMenuItemId) {
   if (!_menuCanEdit()) return;
-  bizOpenMenuItemForm(null);
+
+  const isEdit = !!editMenuItemId;
+  let existingMenuItem = null;
+  let existingProduct = null;
+
+  if (isEdit) {
+    existingMenuItem = BIZ_MENU_ITEMS.find(i => i.id === editMenuItemId);
+    existingProduct = BIZ_PRODUCTS.find(p => p.menuItemId === editMenuItemId);
+  }
+
+  _wizardState = {
+    step: 1,
+    isEdit: isEdit,
+    editMenuItemId: editMenuItemId || null,
+    editProductId: existingProduct ? existingProduct.id : null,
+    // Step 1: Temel Bilgiler
+    name: existingMenuItem ? existingMenuItem.name : '',
+    description: existingProduct ? existingProduct.description : '',
+    prepTime: existingProduct ? existingProduct.prepTime : '',
+    category: existingMenuItem ? existingMenuItem.category : '',
+    kitchenCategory: existingMenuItem ? existingMenuItem.kitchenCategory : '',
+    // Step 2: Malzeme & Modifikasyon
+    ingredients: existingProduct ? JSON.parse(JSON.stringify(existingProduct.ingredients)) : [],
+    variations: existingProduct ? JSON.parse(JSON.stringify(existingProduct.variations)) : [],
+    // Step 3: AI Analiz & Fiyatlandırma
+    basePrice: existingMenuItem ? existingMenuItem.price : '',
+    allergens: existingProduct ? [...(existingProduct.allergens || [])] : [],
+    aiAnalysis: existingProduct ? { ...existingProduct.aiAnalysis } : null,
+    // Step 4: Yayınlama
+    publishType: 'now', // 'now' | 'scheduled'
+    publishDate: existingProduct ? existingProduct.publishDate : null
+  };
+
+  _renderWizard();
 }
 
-function bizOpenMenuItemForm(existingItem) {
-  const isEdit = !!existingItem;
-  const title = isEdit ? 'Ürün Düzenle' : 'Yeni Ürün Ekle';
+function _renderWizard() {
+  const existing = document.getElementById('bizProductWizard');
+  if (existing) existing.remove();
 
-  // Pre-set selections when editing
-  _menuItemSelectedCat = isEdit ? existingItem.category : '';
-  _menuItemSelectedKitchen = isEdit ? existingItem.kitchenCategory : '';
+  const overlay = document.createElement('div');
+  overlay.id = 'bizProductWizard';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-page);z-index:70;display:flex;flex-direction:column;overflow:hidden';
 
-  // Chef can only assign to their own kitchen stations
+  const steps = [
+    { num: 1, label: 'Temel Bilgiler', icon: 'solar:document-text-bold' },
+    { num: 2, label: 'Malzeme', icon: 'solar:list-check-bold' },
+    { num: 3, label: 'AI & Fiyat', icon: 'solar:star-circle-bold' },
+    { num: 4, label: 'Yayınla', icon: 'solar:rocket-bold' }
+  ];
+
+  const title = _wizardState.isEdit ? 'Ürün Düzenle' : 'Ürün Oluştur';
+
+  overlay.innerHTML = `
+    <!-- Header -->
+    <div style="padding:max(env(safe-area-inset-top),16px) var(--app-px) 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-subtle);background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);flex-shrink:0">
+      <div class="btn-icon" onclick="closeProductWizard()"><iconify-icon icon="solar:close-circle-linear" style="font-size:22px"></iconify-icon></div>
+      <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary);flex:1">${title}</span>
+      <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Adım ${_wizardState.step}/4</span>
+    </div>
+
+    <!-- Step Indicator -->
+    <div style="display:flex;gap:4px;padding:12px var(--app-px) 0">
+      ${steps.map(s => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="height:3px;width:100%;border-radius:2px;background:${s.num <= _wizardState.step ? 'var(--primary)' : 'var(--glass-card-strong)'};transition:background .3s"></div>
+          <div style="display:flex;align-items:center;gap:3px">
+            <iconify-icon icon="${s.icon}" style="font-size:10px;color:${s.num === _wizardState.step ? 'var(--primary)' : 'var(--text-muted)'}"></iconify-icon>
+            <span style="font:var(--fw-medium) 9px/1 var(--font);color:${s.num === _wizardState.step ? 'var(--primary)' : 'var(--text-muted)'}">${s.label}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Body -->
+    <div id="wizardBody" style="flex:1;overflow-y:auto;padding:16px var(--app-px) 100px">
+      ${_renderWizardStep()}
+    </div>
+
+    <!-- Footer Actions -->
+    <div style="position:fixed;bottom:0;left:0;right:0;padding:12px var(--app-px) max(env(safe-area-inset-bottom),16px);background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-top:1px solid var(--border-subtle);display:flex;gap:10px">
+      ${_wizardState.step > 1 ? `
+      <div onclick="wizardPrevStep()" style="flex:1;padding:14px;text-align:center;border-radius:var(--r-xl);border:1px solid var(--border-subtle);cursor:pointer;font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-secondary)">
+        <iconify-icon icon="solar:arrow-left-linear" style="font-size:14px;vertical-align:-2px"></iconify-icon> Geri
+      </div>` : ''}
+      <div onclick="wizardNextStep()" style="flex:2;padding:14px;text-align:center;border-radius:var(--r-xl);background:${_wizardState.step === 4 ? 'linear-gradient(135deg,#22C55E,#16A34A)' : 'var(--primary)'};cursor:pointer;font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">
+        ${_wizardState.step === 4 ? (_wizardState.publishType === 'now' ? '<iconify-icon icon="solar:rocket-bold" style="font-size:14px;vertical-align:-2px"></iconify-icon> Yayınla' : '<iconify-icon icon="solar:calendar-bold" style="font-size:14px;vertical-align:-2px"></iconify-icon> Planla') : 'Devam <iconify-icon icon="solar:arrow-right-linear" style="font-size:14px;vertical-align:-2px"></iconify-icon>'}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('bizPhone').appendChild(overlay);
+}
+
+function closeProductWizard() {
+  const el = document.getElementById('bizProductWizard');
+  if (el) el.remove();
+  _wizardState = {};
+}
+
+function wizardNextStep() {
+  if (_wizardState.step === 1 && !_validateStep1()) return;
+  if (_wizardState.step === 2) _collectStep2Data();
+  if (_wizardState.step === 3 && !_validateStep3()) return;
+  if (_wizardState.step === 4) { _saveProduct(); return; }
+  _wizardState.step++;
+  if (_wizardState.step === 3) _runAiAnalysis();
+  _renderWizard();
+}
+
+function wizardPrevStep() {
+  if (_wizardState.step > 1) {
+    if (_wizardState.step === 2) _collectStep2Data();
+    _wizardState.step--;
+    _renderWizard();
+  }
+}
+
+/* ═══ STEP 1: TEMEL BİLGİLER ═══ */
+function _renderWizardStep() {
+  switch (_wizardState.step) {
+    case 1: return _renderStep1();
+    case 2: return _renderStep2();
+    case 3: return _renderStep3();
+    case 4: return _renderStep4();
+    default: return '';
+  }
+}
+
+function _renderStep1() {
   const isChef = bizCurrentRole === 'chef';
   const chefStations = isChef ? _menuGetChefKitchenIds() : null;
   const availableKitchenCats = isChef
     ? BIZ_KITCHEN_CATEGORIES.filter(k => chefStations.includes(k.id))
     : BIZ_KITCHEN_CATEGORIES;
 
-  const modal = document.createElement('div');
-  modal.id = 'bizMenuItemModal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:80;display:flex;align-items:center;justify-content:center;padding:24px';
-  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
-
-  modal.innerHTML = `
-    <div style="background:var(--bg-phone);border-radius:var(--r-xl);padding:20px;width:100%;max-width:360px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <span style="font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">${title}</span>
-        <div onclick="document.getElementById('bizMenuItemModal').remove()" style="cursor:pointer"><iconify-icon icon="solar:close-circle-linear" style="font-size:24px;color:var(--text-muted)"></iconify-icon></div>
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Section Header -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:rgba(246,80,19,0.1)">
+          <iconify-icon icon="solar:document-text-bold" style="font-size:18px;color:var(--primary)"></iconify-icon>
+        </div>
+        <div>
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Temel Bilgiler</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Ürün adı, açıklama ve kategori</div>
+        </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div>
-          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Ürün Adı</label>
-          <input id="menuItemName" type="text" value="${isEdit ? escHtml(existingItem.name) : ''}" placeholder="Ürün adını girin" style="width:100%;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
-        </div>
+      <!-- Ürün Adı -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Ürün Adı *</label>
+        <input id="wiz_name" type="text" value="${escHtml(_wizardState.name)}" placeholder="Menüde görünecek ürün adı" style="width:100%;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+      </div>
 
-        <div>
-          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Fiyat (₺)</label>
-          <input id="menuItemPrice" type="number" step="0.50" value="${isEdit ? existingItem.price : ''}" placeholder="0.00" style="width:100%;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
-        </div>
+      <!-- Açıklama -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Açıklama</label>
+        <textarea id="wiz_desc" rows="3" placeholder="İştah kabartıcı kısa bir açıklama yazın..." style="width:100%;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;resize:none;box-sizing:border-box">${escHtml(_wizardState.description)}</textarea>
+      </div>
 
+      <!-- Teslimat Süresi -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Tahmini Hazırlanma Süresi (dk) *</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="wiz_prepTime" type="number" min="1" max="180" value="${_wizardState.prepTime}" placeholder="25" style="flex:1;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+          <span style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-muted)">dakika</span>
+        </div>
+        <div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-top:4px">
+          <iconify-icon icon="solar:info-circle-linear" style="font-size:10px;vertical-align:-1px"></iconify-icon> Teslimat ücreti mahalle bazlı ayarlarınızdan otomatik çekilir.
+        </div>
+      </div>
+
+      <!-- Menü Kategorisi -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:8px">Menü Kategorisi *</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${BIZ_MENU_CATEGORIES.map(c => {
+            const sel = _wizardState.category === c;
+            return `<div onclick="wizSelectCat('${c}')" style="padding:8px 14px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-sm)/1 var(--font);cursor:pointer;border:1px solid ${sel ? 'var(--primary)' : 'var(--border-subtle)'};background:${sel ? 'var(--primary)' : 'var(--bg-phone)'};color:${sel ? '#fff' : 'var(--text-secondary)'};transition:all .15s">${c}</div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Mutfak İstasyonu -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:4px">Mutfak İstasyonu *</label>
+        <div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-bottom:8px">Sipariş hangi mutfak istasyonuna düşsün?</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${availableKitchenCats.map(k => {
+            const sel = _wizardState.kitchenCategory === k.id;
+            return `<div onclick="wizSelectKitchen('${k.id}')" style="padding:8px 14px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-sm)/1 var(--font);cursor:pointer;display:flex;align-items:center;gap:5px;border:1px solid ${sel ? k.color : 'var(--border-subtle)'};background:${sel ? k.color + '15' : 'var(--bg-phone)'};color:${sel ? k.color : 'var(--text-secondary)'};transition:all .15s">
+              <iconify-icon icon="${k.icon}" style="font-size:13px;color:${k.color}"></iconify-icon>${k.name}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function wizSelectCat(cat) {
+  _wizardState.category = cat;
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep1();
+}
+
+function wizSelectKitchen(kid) {
+  _wizardState.kitchenCategory = kid;
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep1();
+}
+
+function _validateStep1() {
+  const name = document.getElementById('wiz_name');
+  const prepTime = document.getElementById('wiz_prepTime');
+  const desc = document.getElementById('wiz_desc');
+
+  _wizardState.name = name ? name.value.trim() : _wizardState.name;
+  _wizardState.description = desc ? desc.value.trim() : _wizardState.description;
+  _wizardState.prepTime = prepTime ? parseInt(prepTime.value) : _wizardState.prepTime;
+
+  if (!_wizardState.name) { alert('Ürün adı zorunludur.'); return false; }
+  if (!_wizardState.prepTime || _wizardState.prepTime < 1) { alert('Hazırlanma süresi giriniz.'); return false; }
+  if (!_wizardState.category) { alert('Menü kategorisi seçiniz.'); return false; }
+  if (!_wizardState.kitchenCategory) { alert('Mutfak istasyonu seçiniz.'); return false; }
+  return true;
+}
+
+/* ═══ STEP 2: MALZEME & MODİFİKASYON ═══ */
+function _renderStep2() {
+  const ings = _wizardState.ingredients;
+  const vars = _wizardState.variations;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Section Header -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:rgba(34,197,94,0.1)">
+          <iconify-icon icon="solar:list-check-bold" style="font-size:18px;color:#22C55E"></iconify-icon>
+        </div>
         <div>
-          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Menü Kategorisi</label>
-          <div style="display:flex;flex-wrap:wrap;gap:6px" id="menuItemCategoryPicker">
-            ${BIZ_MENU_CATEGORIES.map(c => `
-              <div onclick="bizSelectMenuCat(this,'${c}')" data-cat="${c}" style="padding:6px 12px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;border:1px solid ${isEdit && existingItem.category === c ? 'var(--primary)' : 'var(--border-subtle)'};background:${isEdit && existingItem.category === c ? 'var(--primary)' : 'var(--bg-phone)'};color:${isEdit && existingItem.category === c ? '#fff' : 'var(--text-secondary)'}">${c}</div>
-            `).join('')}
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Malzeme & Modifikasyon</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">İçerik listesi ve müşteri seçenekleri</div>
+        </div>
+      </div>
+
+      <!-- Malzeme Listesi -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Malzeme Listesi</label>
+          <div onclick="wizAddIngredient()" style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:var(--r-full);background:rgba(34,197,94,0.1);color:#22C55E;font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer">
+            <iconify-icon icon="solar:add-circle-linear" style="font-size:13px"></iconify-icon> Malzeme Ekle
           </div>
         </div>
 
-        <div>
-          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Mutfak İstasyonu</label>
-          <div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-bottom:8px">Bu ürünün siparişi hangi mutfak istasyonuna düşsün?</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px" id="menuItemKitchenPicker">
-            ${availableKitchenCats.map(k => `
-              <div onclick="bizSelectKitchenCat(this,'${k.id}')" data-kitchen="${k.id}" style="padding:6px 12px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;display:flex;align-items:center;gap:4px;border:1px solid ${isEdit && existingItem.kitchenCategory === k.id ? k.color : 'var(--border-subtle)'};background:${isEdit && existingItem.kitchenCategory === k.id ? k.color + '15' : 'var(--bg-phone)'};color:${isEdit && existingItem.kitchenCategory === k.id ? k.color : 'var(--text-secondary)'}">
-                <iconify-icon icon="${k.icon}" style="font-size:12px;color:${k.color}"></iconify-icon>${k.name}
+        <div id="wizIngList" style="display:flex;flex-direction:column;gap:8px">
+          ${ings.length === 0 ? `<div style="padding:20px;text-align:center;border:1px dashed var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1.3 var(--font);color:var(--text-muted)">Henüz malzeme eklenmedi.<br>Malzeme ekleyerek başlayın.</div>` : ''}
+          ${ings.map((ing, i) => `
+            <div style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <input data-ing-name="${i}" type="text" value="${escHtml(ing.name)}" placeholder="Malzeme adı" style="flex:1;padding:8px 10px;border:1px solid var(--border-subtle);border-radius:var(--r-md);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-surface-alt);outline:none;box-sizing:border-box">
+                <input data-ing-amount="${i}" type="text" value="${escHtml(ing.amount)}" placeholder="Miktar" style="width:60px;padding:8px;border:1px solid var(--border-subtle);border-radius:var(--r-md);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-surface-alt);outline:none;text-align:center;box-sizing:border-box">
+                <select data-ing-unit="${i}" style="padding:8px 6px;border:1px solid var(--border-subtle);border-radius:var(--r-md);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-surface-alt);outline:none">
+                  <option value="gr" ${ing.unit === 'gr' ? 'selected' : ''}>gr</option>
+                  <option value="ml" ${ing.unit === 'ml' ? 'selected' : ''}>ml</option>
+                  <option value="adet" ${ing.unit === 'adet' ? 'selected' : ''}>adet</option>
+                </select>
+                <div onclick="wizRemoveIngredient(${i})" style="cursor:pointer;flex-shrink:0">
+                  <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:16px;color:#EF4444"></iconify-icon>
+                </div>
               </div>
-            `).join('')}
+              <div style="display:flex;gap:12px;align-items:center">
+                <label style="display:flex;align-items:center;gap:4px;font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-secondary);cursor:pointer">
+                  <input type="checkbox" data-ing-removable="${i}" ${ing.removable ? 'checked' : ''} style="accent-color:var(--primary)"> Çıkarılabilir
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-secondary);cursor:pointer">
+                  <input type="checkbox" data-ing-customizable="${i}" ${ing.customizable ? 'checked' : ''} onchange="wizToggleCustomizable(${i}, this.checked)" style="accent-color:#8B5CF6"> Değiştirilebilir
+                </label>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Varyasyonlar -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div>
+            <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block">Varyasyonlar (Değişiklik Seçenekleri)</label>
+            <div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-top:2px">Müşterinin seçebileceği opsiyonlar ve ücret farkları</div>
+          </div>
+          <div onclick="wizAddVariation()" style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:var(--r-full);background:rgba(139,92,246,0.1);color:#8B5CF6;font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer">
+            <iconify-icon icon="solar:add-circle-linear" style="font-size:13px"></iconify-icon> Ekle
+          </div>
+        </div>
+
+        <div id="wizVarList" style="display:flex;flex-direction:column;gap:8px">
+          ${vars.length === 0 ? `<div style="padding:16px;text-align:center;border:1px dashed var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted)">Varyasyon eklenmedi</div>` : ''}
+          ${vars.map((v, vi) => `
+            <div style="background:var(--bg-phone);border:1px solid rgba(139,92,246,0.2);border-radius:var(--r-lg);padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <input data-var-label="${vi}" type="text" value="${escHtml(v.label)}" placeholder="Seçenek adı (Ekstra Et, Boyut...)" style="flex:1;padding:8px 10px;border:1px solid var(--border-subtle);border-radius:var(--r-md);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-surface-alt);outline:none;box-sizing:border-box">
+                <select data-var-type="${vi}" style="padding:8px 6px;border:1px solid var(--border-subtle);border-radius:var(--r-md);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-surface-alt);outline:none">
+                  ${BIZ_VARIATION_TYPES.map(vt => `<option value="${vt.id}" ${v.type === vt.id ? 'selected' : ''}>${vt.label}</option>`).join('')}
+                </select>
+                <div onclick="wizRemoveVariation(${vi})" style="cursor:pointer;flex-shrink:0">
+                  <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:16px;color:#EF4444"></iconify-icon>
+                </div>
+              </div>
+              <!-- Variation Options -->
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+                ${(v.options || []).map((opt, oi) => `
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input data-varopt-value="${vi}-${oi}" type="text" value="${escHtml(opt.value)}" placeholder="Seçenek (Örn: +50 gr)" style="flex:1;padding:6px 8px;border:1px solid var(--border-subtle);border-radius:var(--r-md);font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-primary);background:var(--bg-surface-alt);outline:none;box-sizing:border-box">
+                    <div style="display:flex;align-items:center;gap:2px">
+                      <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">₺</span>
+                      <input data-varopt-price="${vi}-${oi}" type="number" step="0.5" value="${opt.priceDiff}" placeholder="0" style="width:55px;padding:6px;border:1px solid var(--border-subtle);border-radius:var(--r-md);font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-primary);background:var(--bg-surface-alt);outline:none;text-align:center;box-sizing:border-box">
+                    </div>
+                    <div onclick="wizRemoveVarOption(${vi},${oi})" style="cursor:pointer"><iconify-icon icon="solar:close-circle-linear" style="font-size:14px;color:var(--text-muted)"></iconify-icon></div>
+                  </div>
+                `).join('')}
+                <div onclick="wizAddVarOption(${vi})" style="display:flex;align-items:center;gap:4px;padding:6px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:#8B5CF6;cursor:pointer">
+                  <iconify-icon icon="solar:add-circle-linear" style="font-size:12px"></iconify-icon> Seçenek Ekle
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function wizAddIngredient() {
+  _collectStep2Data();
+  const newId = 'ing_new_' + Date.now();
+  _wizardState.ingredients.push({ id: newId, name: '', amount: '', unit: 'gr', removable: false, customizable: false });
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep2();
+}
+
+function wizRemoveIngredient(idx) {
+  _collectStep2Data();
+  _wizardState.ingredients.splice(idx, 1);
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep2();
+}
+
+function wizToggleCustomizable(idx, checked) {
+  // Auto-prompt for variation creation
+}
+
+function wizAddVariation() {
+  _collectStep2Data();
+  const newId = 'var_new_' + Date.now();
+  _wizardState.variations.push({ id: newId, ingredientId: null, type: 'gr', label: '', options: [{ value: '', priceDiff: 0 }] });
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep2();
+}
+
+function wizRemoveVariation(idx) {
+  _collectStep2Data();
+  _wizardState.variations.splice(idx, 1);
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep2();
+}
+
+function wizAddVarOption(varIdx) {
+  _collectStep2Data();
+  if (!_wizardState.variations[varIdx].options) _wizardState.variations[varIdx].options = [];
+  _wizardState.variations[varIdx].options.push({ value: '', priceDiff: 0 });
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep2();
+}
+
+function wizRemoveVarOption(varIdx, optIdx) {
+  _collectStep2Data();
+  _wizardState.variations[varIdx].options.splice(optIdx, 1);
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep2();
+}
+
+function _collectStep2Data() {
+  // Collect ingredient data from DOM
+  _wizardState.ingredients.forEach((ing, i) => {
+    const nameEl = document.querySelector(`[data-ing-name="${i}"]`);
+    const amountEl = document.querySelector(`[data-ing-amount="${i}"]`);
+    const unitEl = document.querySelector(`[data-ing-unit="${i}"]`);
+    const removableEl = document.querySelector(`[data-ing-removable="${i}"]`);
+    const customEl = document.querySelector(`[data-ing-customizable="${i}"]`);
+    if (nameEl) ing.name = nameEl.value.trim();
+    if (amountEl) ing.amount = amountEl.value.trim();
+    if (unitEl) ing.unit = unitEl.value;
+    if (removableEl) ing.removable = removableEl.checked;
+    if (customEl) ing.customizable = customEl.checked;
+  });
+
+  // Collect variation data from DOM
+  _wizardState.variations.forEach((v, vi) => {
+    const labelEl = document.querySelector(`[data-var-label="${vi}"]`);
+    const typeEl = document.querySelector(`[data-var-type="${vi}"]`);
+    if (labelEl) v.label = labelEl.value.trim();
+    if (typeEl) v.type = typeEl.value;
+    (v.options || []).forEach((opt, oi) => {
+      const valEl = document.querySelector(`[data-varopt-value="${vi}-${oi}"]`);
+      const priceEl = document.querySelector(`[data-varopt-price="${vi}-${oi}"]`);
+      if (valEl) opt.value = valEl.value.trim();
+      if (priceEl) opt.priceDiff = parseFloat(priceEl.value) || 0;
+    });
+  });
+}
+
+/* ═══ STEP 3: AI ANALİZ & FİYATLANDIRMA ═══ */
+function _renderStep3() {
+  const ai = _wizardState.aiAnalysis;
+  const allergens = _wizardState.allergens;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Section Header -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.1)">
+          <iconify-icon icon="solar:star-circle-bold" style="font-size:18px;color:#8B5CF6"></iconify-icon>
+        </div>
+        <div>
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">AI Analiz & Fiyatlandırma</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Otomatik analiz, alerjen ve fiyat</div>
+        </div>
+      </div>
+
+      <!-- AI Analysis Card -->
+      ${ai ? `
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.05),rgba(99,102,241,0.05));border:1px solid rgba(139,92,246,0.15);border-radius:var(--r-xl);padding:14px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <iconify-icon icon="solar:magic-stick-3-bold" style="font-size:16px;color:#8B5CF6"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:#8B5CF6">AI Menü Analizi</span>
+        </div>
+        <!-- Nutrition -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">${ai.calories}</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">kcal</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#22C55E">${ai.protein}g</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">Protein</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#F59E0B">${ai.carbs}g</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">Karbonhidrat</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#EF4444">${ai.fat}g</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">Yağ</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#06B6D4">${ai.fiber}g</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">Lif</div>
+          </div>
+        </div>
+        <!-- Chef Note -->
+        <div style="padding:10px 12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:var(--r-lg);margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+            <iconify-icon icon="solar:chef-hat-bold" style="font-size:12px;color:#F59E0B"></iconify-icon>
+            <span style="font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:#F59E0B">Şefin Notu</span>
+          </div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary)">${escHtml(ai.chefNote)}</div>
+        </div>
+        <!-- Tags -->
+        ${ai.tags && ai.tags.length > 0 ? `
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${ai.tags.map(t => `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:3px 8px;border-radius:var(--r-full);color:#8B5CF6;background:rgba(139,92,246,0.1)">${escHtml(t)}</span>`).join('')}
+        </div>` : ''}
+      </div>` : `
+      <div style="padding:24px;text-align:center;background:var(--glass-card);border-radius:var(--r-xl)">
+        <iconify-icon icon="solar:magic-stick-3-bold" style="font-size:32px;color:var(--text-muted);display:block;margin:0 auto 8px"></iconify-icon>
+        <div style="font:var(--fw-medium) var(--fs-sm)/1.3 var(--font);color:var(--text-muted)">Malzeme eklendikten sonra AI analiz otomatik oluşturulur</div>
+      </div>`}
+
+      <!-- Allergen Warning Check -->
+      ${_wizardState._allergenWarning ? `
+      <div style="padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:var(--r-lg);display:flex;align-items:flex-start;gap:8px">
+        <iconify-icon icon="solar:danger-triangle-bold" style="font-size:18px;color:#EF4444;flex-shrink:0;margin-top:1px"></iconify-icon>
+        <div>
+          <div style="font:var(--fw-semibold) var(--fs-xs)/1.2 var(--font);color:#EF4444;margin-bottom:3px">AI Uyarısı: Tutarsızlık Tespit Edildi</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-secondary)">${_wizardState._allergenWarning}</div>
+        </div>
+      </div>` : ''}
+
+      <!-- Alerjen Seçimi -->
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <iconify-icon icon="solar:danger-triangle-bold" style="font-size:14px;color:#EF4444"></iconify-icon>
+          <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Alerjen & İntolerans Maddeleri *</label>
+        </div>
+        <div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-bottom:10px">Ürünün içeriğinde bulunan maddeleri işaretleyin</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${BIZ_ALLERGEN_LIST.map(al => {
+            const selected = allergens.includes(al.id);
+            return `<div onclick="wizToggleAllergen('${al.id}')" style="padding:7px 12px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;display:flex;align-items:center;gap:5px;border:1px solid ${selected ? al.color : 'var(--border-subtle)'};background:${selected ? al.color + '15' : 'var(--bg-phone)'};color:${selected ? al.color : 'var(--text-secondary)'};transition:all .15s">
+              <iconify-icon icon="${al.icon}" style="font-size:12px;color:${al.color}"></iconify-icon>${al.label}
+              ${selected ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:12px"></iconify-icon>' : ''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Taban Fiyat -->
+      <div>
+        <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block;margin-bottom:6px">Taban Fiyat (₺) *</label>
+        <div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-bottom:8px">Değişiklikler hariç başlangıç fiyatı</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:var(--primary)">₺</span>
+          <input id="wiz_price" type="number" step="0.50" min="0" value="${_wizardState.basePrice}" placeholder="0.00" style="flex:1;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function wizToggleAllergen(alId) {
+  const idx = _wizardState.allergens.indexOf(alId);
+  if (idx >= 0) _wizardState.allergens.splice(idx, 1);
+  else _wizardState.allergens.push(alId);
+  // Re-run AI allergen check
+  _checkAllergenConsistency();
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep3();
+}
+
+function _runAiAnalysis() {
+  const ings = _wizardState.ingredients.filter(i => i.name);
+  if (ings.length === 0) {
+    _wizardState.aiAnalysis = null;
+    return;
+  }
+
+  // Simulated AI analysis based on ingredients
+  let cal = 0, protein = 0, carbs = 0, fat = 0, fiber = 0;
+  const tags = [];
+  const warnings = [];
+
+  ings.forEach(ing => {
+    const amt = parseFloat(ing.amount) || 50;
+    const n = ing.name.toLowerCase();
+    if (n.includes('et') || n.includes('kuzu') || n.includes('tavuk') || n.includes('köfte')) { cal += amt * 2.1; protein += amt * 0.2; fat += amt * 0.12; tags.push('Yüksek Protein'); }
+    else if (n.includes('ekmek') || n.includes('lavaş') || n.includes('pirinç') || n.includes('un')) { cal += amt * 2.5; carbs += amt * 0.5; fiber += amt * 0.02; }
+    else if (n.includes('yağ') || n.includes('tereyağ')) { cal += amt * 8; fat += amt * 0.8; }
+    else if (n.includes('sebze') || n.includes('domates') || n.includes('biber') || n.includes('soğan') || n.includes('havuç') || n.includes('marul')) { cal += amt * 0.3; fiber += amt * 0.03; carbs += amt * 0.05; tags.push('Sebzeli'); }
+    else if (n.includes('peynir') || n.includes('süt') || n.includes('yoğurt')) { cal += amt * 1.5; protein += amt * 0.1; fat += amt * 0.1; }
+    else if (n.includes('mercimek') || n.includes('nohut') || n.includes('fasulye')) { cal += amt * 1.2; protein += amt * 0.08; carbs += amt * 0.2; fiber += amt * 0.05; tags.push('Baklagil'); }
+    else { cal += amt * 1; carbs += amt * 0.1; }
+  });
+
+  // Chef note generation
+  let chefNote = `${_wizardState.name} — `;
+  if (protein > 20) chefNote += 'Protein açısından zengin bir seçim. ';
+  if (fiber > 5) chefNote += 'Lifli içeriğiyle sağlıklı bir opsiyon. ';
+  if (cal < 300) { chefNote += 'Hafif ve düşük kalorili. '; tags.push('Düşük Kalorili'); }
+  if (cal > 500) { chefNote += 'Doyurucu bir porsiyon. '; tags.push('Doyurucu'); }
+  chefNote += `${_wizardState.prepTime || 20} dakikada hazırlanır.`;
+
+  // Allergen warnings from ingredients
+  ings.forEach(ing => {
+    const n = ing.name.toLowerCase();
+    if ((n.includes('süt') || n.includes('peynir') || n.includes('yoğurt')) && !_wizardState.allergens.includes('laktoz')) {
+      warnings.push('İçerikte süt ürünü var ancak Laktoz işaretlenmemiş.');
+    }
+    if ((n.includes('un') || n.includes('ekmek') || n.includes('lavaş') || n.includes('börek')) && !_wizardState.allergens.includes('gluten')) {
+      warnings.push('İçerikte gluten kaynağı var ancak Gluten işaretlenmemiş.');
+    }
+    if ((n.includes('yumurta')) && !_wizardState.allergens.includes('yumurta')) {
+      warnings.push('İçerikte yumurta var ancak Yumurta işaretlenmemiş.');
+    }
+    if ((n.includes('fıstık') || n.includes('fındık') || n.includes('ceviz') || n.includes('badem')) && !_wizardState.allergens.includes('fistik') && !_wizardState.allergens.includes('kabuklu')) {
+      warnings.push('İçerikte kabuklu yemiş var ancak ilgili alerjen işaretlenmemiş.');
+    }
+    if ((n.includes('soya')) && !_wizardState.allergens.includes('soya')) {
+      warnings.push('İçerikte soya var ancak Soya işaretlenmemiş.');
+    }
+    if ((n.includes('susam')) && !_wizardState.allergens.includes('susam')) {
+      warnings.push('İçerikte susam var ancak Susam işaretlenmemiş.');
+    }
+  });
+
+  _wizardState.aiAnalysis = {
+    calories: Math.round(cal),
+    protein: Math.round(protein),
+    carbs: Math.round(carbs),
+    fat: Math.round(fat),
+    fiber: Math.round(fiber),
+    chefNote: chefNote,
+    allergenWarnings: [...new Set(warnings)],
+    tags: [...new Set(tags)]
+  };
+
+  if (warnings.length > 0) {
+    _wizardState._allergenWarning = warnings.join(' ');
+  } else {
+    _wizardState._allergenWarning = null;
+  }
+}
+
+function _checkAllergenConsistency() {
+  const ings = _wizardState.ingredients.filter(i => i.name);
+  const warnings = [];
+
+  ings.forEach(ing => {
+    const n = ing.name.toLowerCase();
+    if ((n.includes('süt') || n.includes('peynir') || n.includes('yoğurt')) && !_wizardState.allergens.includes('laktoz')) {
+      warnings.push('İçerikte süt ürünü var ancak Laktoz işaretlenmemiş.');
+    }
+    if ((n.includes('un') || n.includes('ekmek') || n.includes('lavaş') || n.includes('börek')) && !_wizardState.allergens.includes('gluten')) {
+      warnings.push('İçerikte gluten kaynağı var ancak Gluten işaretlenmemiş.');
+    }
+    if ((n.includes('yumurta')) && !_wizardState.allergens.includes('yumurta')) {
+      warnings.push('İçerikte yumurta var ancak Yumurta işaretlenmemiş.');
+    }
+    if ((n.includes('fıstık') || n.includes('fındık') || n.includes('ceviz') || n.includes('badem')) && !_wizardState.allergens.includes('fistik') && !_wizardState.allergens.includes('kabuklu')) {
+      warnings.push('İçerikte kabuklu yemiş var ancak ilgili alerjen işaretlenmemiş.');
+    }
+    if ((n.includes('soya')) && !_wizardState.allergens.includes('soya')) {
+      warnings.push('İçerikte soya var ancak Soya işaretlenmemiş.');
+    }
+    if ((n.includes('susam')) && !_wizardState.allergens.includes('susam')) {
+      warnings.push('İçerikte susam var ancak Susam işaretlenmemiş.');
+    }
+  });
+
+  _wizardState._allergenWarning = warnings.length > 0 ? [...new Set(warnings)].join(' ') : null;
+  if (_wizardState.aiAnalysis) {
+    _wizardState.aiAnalysis.allergenWarnings = [...new Set(warnings)];
+  }
+}
+
+function _validateStep3() {
+  const priceEl = document.getElementById('wiz_price');
+  _wizardState.basePrice = priceEl ? parseFloat(priceEl.value) : _wizardState.basePrice;
+  if (!_wizardState.basePrice || _wizardState.basePrice <= 0) { alert('Taban fiyat giriniz.'); return false; }
+  return true;
+}
+
+/* ═══ STEP 4: YAYINLAMA PLANI ═══ */
+function _renderStep4() {
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Section Header -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:rgba(34,197,94,0.1)">
+          <iconify-icon icon="solar:rocket-bold" style="font-size:18px;color:#22C55E"></iconify-icon>
+        </div>
+        <div>
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Yayınlama Planı</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Ürünü hemen veya ileri tarihte yayınlayın</div>
+        </div>
+      </div>
+
+      <!-- Product Preview Card -->
+      <div style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:16px;box-shadow:var(--shadow-md)">
+        <div style="font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Ürün Özeti</div>
+        <div style="font:var(--fw-bold) var(--fs-lg)/1.2 var(--font);color:var(--text-primary);margin-bottom:4px">${escHtml(_wizardState.name)}</div>
+        ${_wizardState.description ? `<div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-secondary);margin-bottom:10px">${escHtml(_wizardState.description)}</div>` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 10px;border-radius:var(--r-full);color:var(--primary);background:var(--primary-soft)">${_wizardState.category}</span>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 10px;border-radius:var(--r-full);color:var(--text-secondary);background:var(--glass-card)"><iconify-icon icon="solar:clock-circle-linear" style="font-size:10px;vertical-align:-1px"></iconify-icon> ${_wizardState.prepTime} dk</span>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 10px;border-radius:var(--r-full);color:var(--text-secondary);background:var(--glass-card)">${_wizardState.ingredients.filter(i=>i.name).length} malzeme</span>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 10px;border-radius:var(--r-full);color:var(--text-secondary);background:var(--glass-card)">${_wizardState.variations.length} varyasyon</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border-subtle)">
+          <div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Taban Fiyat</div>
+            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:var(--primary);margin-top:2px">₺${parseFloat(_wizardState.basePrice).toFixed(2)}</div>
+          </div>
+          ${_wizardState.allergens.length > 0 ? `
+          <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:60%">
+            ${_wizardState.allergens.map(aId => {
+              const al = BIZ_ALLERGEN_LIST.find(a => a.id === aId);
+              return al ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:3px 6px;border-radius:var(--r-full);color:${al.color};background:${al.color}12"><iconify-icon icon="${al.icon}" style="font-size:9px;vertical-align:-1px"></iconify-icon> ${al.label}</span>` : '';
+            }).join('')}
+          </div>` : ''}
+        </div>
+      </div>
+
+      <!-- Publish Options -->
+      <div>
+        <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block;margin-bottom:10px">Yayın Zamanı</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div onclick="wizSetPublishType('now')" style="padding:14px 16px;border-radius:var(--r-xl);border:2px solid ${_wizardState.publishType === 'now' ? 'var(--primary)' : 'var(--border-subtle)'};background:${_wizardState.publishType === 'now' ? 'var(--primary-soft)' : 'var(--bg-phone)'};cursor:pointer;display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${_wizardState.publishType === 'now' ? 'var(--primary)' : 'var(--glass-card)'}">
+              <iconify-icon icon="solar:rocket-bold" style="font-size:18px;color:${_wizardState.publishType === 'now' ? '#fff' : 'var(--text-muted)'}"></iconify-icon>
+            </div>
+            <div>
+              <div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Hemen Yayınla</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Ürün anında menüde görünür</div>
+            </div>
+          </div>
+
+          <div onclick="wizSetPublishType('scheduled')" style="padding:14px 16px;border-radius:var(--r-xl);border:2px solid ${_wizardState.publishType === 'scheduled' ? '#8B5CF6' : 'var(--border-subtle)'};background:${_wizardState.publishType === 'scheduled' ? 'rgba(139,92,246,0.05)' : 'var(--bg-phone)'};cursor:pointer;display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${_wizardState.publishType === 'scheduled' ? '#8B5CF6' : 'var(--glass-card)'}">
+              <iconify-icon icon="solar:calendar-bold" style="font-size:18px;color:${_wizardState.publishType === 'scheduled' ? '#fff' : 'var(--text-muted)'}"></iconify-icon>
+            </div>
+            <div>
+              <div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Zamanlanmış Yayın</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Takvimden tarih ve saat seçin</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div onclick="bizSaveMenuItem('${isEdit ? existingItem.id : ''}')" style="margin-top:20px;background:var(--primary);border-radius:var(--r-lg);padding:12px;text-align:center;cursor:pointer">
-        <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">${isEdit ? 'Güncelle' : 'Ekle'}</span>
+      ${_wizardState.publishType === 'scheduled' ? `
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Tarih</label>
+          <input id="wiz_pubDate" type="date" value="${_wizardState.publishDate ? _wizardState.publishDate.split('T')[0] : ''}" style="width:100%;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+        </div>
+        <div style="flex:1">
+          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Saat</label>
+          <input id="wiz_pubTime" type="time" value="${_wizardState.publishDate ? _wizardState.publishDate.split('T')[1] || '12:00' : '12:00'}" style="width:100%;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+        </div>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function wizSetPublishType(type) {
+  _wizardState.publishType = type;
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep4();
+}
+
+/* ═══ SAVE PRODUCT ═══ */
+function _saveProduct() {
+  // Collect scheduled date if applicable
+  let publishDate = null;
+  let status = 'active';
+  if (_wizardState.publishType === 'scheduled') {
+    const dateEl = document.getElementById('wiz_pubDate');
+    const timeEl = document.getElementById('wiz_pubTime');
+    if (dateEl && dateEl.value && timeEl && timeEl.value) {
+      publishDate = dateEl.value + 'T' + timeEl.value + ':00Z';
+      status = 'scheduled';
+    } else {
+      alert('Zamanlanmış yayın için tarih ve saat seçiniz.');
+      return;
+    }
+  }
+
+  const now = new Date().toISOString();
+
+  if (_wizardState.isEdit && _wizardState.editMenuItemId) {
+    // Update existing menu item
+    const mi = BIZ_MENU_ITEMS.find(i => i.id === _wizardState.editMenuItemId);
+    if (mi) {
+      mi.name = _wizardState.name;
+      mi.price = _wizardState.basePrice;
+      mi.category = _wizardState.category;
+      mi.kitchenCategory = _wizardState.kitchenCategory;
+      mi.status = status;
+    }
+    // Update or create product record
+    let prod = BIZ_PRODUCTS.find(p => p.menuItemId === _wizardState.editMenuItemId);
+    if (prod) {
+      Object.assign(prod, {
+        name: _wizardState.name,
+        description: _wizardState.description,
+        prepTime: _wizardState.prepTime,
+        basePrice: _wizardState.basePrice,
+        category: _wizardState.category,
+        kitchenCategory: _wizardState.kitchenCategory,
+        status: status,
+        publishDate: publishDate,
+        ingredients: _wizardState.ingredients.filter(i => i.name),
+        variations: _wizardState.variations.filter(v => v.label),
+        allergens: _wizardState.allergens,
+        aiAnalysis: _wizardState.aiAnalysis,
+        updatedAt: now
+      });
+    } else {
+      BIZ_PRODUCTS.push(_buildProductObject(_wizardState.editMenuItemId, status, publishDate, now));
+    }
+  } else {
+    // Create new menu item
+    const newMenuId = 'mi_' + String(BIZ_MENU_ITEMS.length + 1).padStart(2, '0') + '_' + Date.now();
+    BIZ_MENU_ITEMS.push({
+      id: newMenuId,
+      name: _wizardState.name,
+      price: _wizardState.basePrice,
+      category: _wizardState.category,
+      kitchenCategory: _wizardState.kitchenCategory,
+      status: status,
+      branchId: bizActiveBranch
+    });
+    // Create product record
+    BIZ_PRODUCTS.push(_buildProductObject(newMenuId, status, publishDate, now));
+  }
+
+  _syncComboStock();
+  closeProductWizard();
+
+  // Refresh menu list
+  const overlay = document.getElementById('bizMenuOverlay');
+  if (overlay) {
+    overlay.remove();
+    openBizMenuMgmt();
+  }
+}
+
+function _buildProductObject(menuItemId, status, publishDate, now) {
+  return {
+    id: 'prod_' + Date.now(),
+    branchId: bizActiveBranch,
+    type: 'single',
+    name: _wizardState.name,
+    description: _wizardState.description,
+    prepTime: _wizardState.prepTime,
+    basePrice: _wizardState.basePrice,
+    category: _wizardState.category,
+    kitchenCategory: _wizardState.kitchenCategory,
+    status: status,
+    publishDate: publishDate,
+    menuItemId: menuItemId,
+    ingredients: _wizardState.ingredients.filter(i => i.name),
+    variations: _wizardState.variations.filter(v => v.label),
+    allergens: _wizardState.allergens,
+    aiAnalysis: _wizardState.aiAnalysis,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COMBO CREATION WIZARD
+   ══════════════════════════════════════════════════════════════ */
+
+let _comboState = {};
+
+function openComboCreationWizard(editComboId) {
+  if (!_menuCanEdit()) return;
+
+  const singleProducts = BIZ_PRODUCTS.filter(p => p.branchId === bizActiveBranch && p.type === 'single');
+  const activeMenuItems = BIZ_MENU_ITEMS.filter(m => m.branchId === bizActiveBranch && m.status === 'active');
+
+  if (singleProducts.length === 0) {
+    alert('Grup ürün oluşturabilmek için önce en az bir tekil ürün tanımlamalısınız.');
+    return;
+  }
+
+  const isEdit = !!editComboId;
+  let existingCombo = isEdit ? BIZ_COMBO_PRODUCTS.find(c => c.id === editComboId) : null;
+
+  _comboState = {
+    step: 1,
+    isEdit: isEdit,
+    editComboId: editComboId || null,
+    name: existingCombo ? existingCombo.name : '',
+    description: existingCombo ? existingCombo.description : '',
+    category: existingCombo ? existingCombo.category : '',
+    selectedProductIds: existingCombo ? [...(existingCombo.includedProductIds || [])] : [],
+    selectedMenuItemIds: existingCombo ? [...(existingCombo.includedMenuItemIds || [])] : [],
+    comboPrice: existingCombo ? existingCombo.comboPrice : '',
+    publishType: 'now',
+    publishDate: existingCombo ? existingCombo.publishDate : null,
+    aiAnalysis: existingCombo ? { ...existingCombo.aiAnalysis } : null,
+    allergens: existingCombo ? [...(existingCombo.allergens || [])] : []
+  };
+
+  _renderComboWizard();
+}
+
+function _renderComboWizard() {
+  const existing = document.getElementById('bizComboWizard');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'bizComboWizard';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-page);z-index:70;display:flex;flex-direction:column;overflow:hidden';
+
+  const steps = [
+    { num: 1, label: 'Ürün Seç', icon: 'solar:checklist-bold' },
+    { num: 2, label: 'Fiyat & Analiz', icon: 'solar:tag-price-bold' },
+    { num: 3, label: 'Yayınla', icon: 'solar:rocket-bold' }
+  ];
+
+  overlay.innerHTML = `
+    <div style="padding:max(env(safe-area-inset-top),16px) var(--app-px) 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-subtle);background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);flex-shrink:0">
+      <div class="btn-icon" onclick="closeComboWizard()"><iconify-icon icon="solar:close-circle-linear" style="font-size:22px"></iconify-icon></div>
+      <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary);flex:1">${_comboState.isEdit ? 'Grup Ürün Düzenle' : 'Grup Ürün Oluştur'}</span>
+      <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Adım ${_comboState.step}/3</span>
+    </div>
+
+    <div style="display:flex;gap:4px;padding:12px var(--app-px) 0">
+      ${steps.map(s => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="height:3px;width:100%;border-radius:2px;background:${s.num <= _comboState.step ? '#8B5CF6' : 'var(--glass-card-strong)'};transition:background .3s"></div>
+          <div style="display:flex;align-items:center;gap:3px">
+            <iconify-icon icon="${s.icon}" style="font-size:10px;color:${s.num === _comboState.step ? '#8B5CF6' : 'var(--text-muted)'}"></iconify-icon>
+            <span style="font:var(--fw-medium) 9px/1 var(--font);color:${s.num === _comboState.step ? '#8B5CF6' : 'var(--text-muted)'}">${s.label}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div id="comboWizBody" style="flex:1;overflow-y:auto;padding:16px var(--app-px) 100px">
+      ${_renderComboStep()}
+    </div>
+
+    <div style="position:fixed;bottom:0;left:0;right:0;padding:12px var(--app-px) max(env(safe-area-inset-bottom),16px);background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-top:1px solid var(--border-subtle);display:flex;gap:10px">
+      ${_comboState.step > 1 ? `
+      <div onclick="comboWizPrev()" style="flex:1;padding:14px;text-align:center;border-radius:var(--r-xl);border:1px solid var(--border-subtle);cursor:pointer;font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-secondary)">
+        <iconify-icon icon="solar:arrow-left-linear" style="font-size:14px;vertical-align:-2px"></iconify-icon> Geri
+      </div>` : ''}
+      <div onclick="comboWizNext()" style="flex:2;padding:14px;text-align:center;border-radius:var(--r-xl);background:${_comboState.step === 3 ? 'linear-gradient(135deg,#22C55E,#16A34A)' : 'linear-gradient(135deg,#8B5CF6,#6366F1)'};cursor:pointer;font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">
+        ${_comboState.step === 3 ? '<iconify-icon icon="solar:rocket-bold" style="font-size:14px;vertical-align:-2px"></iconify-icon> Yayınla' : 'Devam <iconify-icon icon="solar:arrow-right-linear" style="font-size:14px;vertical-align:-2px"></iconify-icon>'}
       </div>
     </div>
   `;
 
-  document.getElementById('bizPhone').appendChild(modal);
+  document.getElementById('bizPhone').appendChild(overlay);
 }
 
-// Track selected values
-let _menuItemSelectedCat = '';
-let _menuItemSelectedKitchen = '';
+function closeComboWizard() {
+  const el = document.getElementById('bizComboWizard');
+  if (el) el.remove();
+  _comboState = {};
+}
 
-function bizSelectMenuCat(el, cat) {
-  _menuItemSelectedCat = cat;
-  document.querySelectorAll('#menuItemCategoryPicker > div').forEach(d => {
-    d.style.background = 'var(--bg-phone)';
-    d.style.color = 'var(--text-secondary)';
-    d.style.border = '1px solid var(--border-subtle)';
+function comboWizNext() {
+  if (_comboState.step === 1) {
+    _collectComboStep1();
+    if (_comboState.selectedProductIds.length + _comboState.selectedMenuItemIds.length < 2) {
+      alert('En az 2 ürün seçmelisiniz.');
+      return;
+    }
+    if (!_comboState.name.trim()) { alert('Paket adı giriniz.'); return; }
+    _runComboAiAnalysis();
+  }
+  if (_comboState.step === 2) {
+    _collectComboStep2();
+    if (!_comboState.comboPrice || _comboState.comboPrice <= 0) { alert('Kampanyalı fiyat giriniz.'); return; }
+  }
+  if (_comboState.step === 3) { _saveCombo(); return; }
+  _comboState.step++;
+  _renderComboWizard();
+}
+
+function comboWizPrev() {
+  if (_comboState.step === 2) _collectComboStep2();
+  if (_comboState.step > 1) { _comboState.step--; _renderComboWizard(); }
+}
+
+function _renderComboStep() {
+  switch (_comboState.step) {
+    case 1: return _renderComboStep1();
+    case 2: return _renderComboStep2();
+    case 3: return _renderComboStep3();
+    default: return '';
+  }
+}
+
+/* ═══ COMBO STEP 1: ÜRÜN SEÇİMİ ═══ */
+function _renderComboStep1() {
+  const products = BIZ_PRODUCTS.filter(p => p.branchId === bizActiveBranch && p.type === 'single');
+  const menuOnlyItems = BIZ_MENU_ITEMS.filter(m => {
+    return m.branchId === bizActiveBranch && m.status === 'active' && !BIZ_PRODUCTS.some(p => p.menuItemId === m.id);
   });
-  el.style.background = 'var(--primary)';
-  el.style.color = '#fff';
-  el.style.border = '1px solid var(--primary)';
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.1)">
+          <iconify-icon icon="solar:checklist-bold" style="font-size:18px;color:#8B5CF6"></iconify-icon>
+        </div>
+        <div>
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Ürün Seçimi & Gruplama</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Pakete dahil edilecek ürünleri seçin</div>
+        </div>
+      </div>
+
+      <!-- Combo Name -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Paket Adı *</label>
+        <input id="combo_name" type="text" value="${escHtml(_comboState.name)}" placeholder="Örn: Kebap Menü, Aile Paketi..." style="width:100%;padding:12px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+      </div>
+
+      <!-- Combo Description -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Açıklama</label>
+        <textarea id="combo_desc" rows="2" placeholder="Paket açıklaması..." style="width:100%;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;resize:none;box-sizing:border-box">${escHtml(_comboState.description)}</textarea>
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:8px">Kategori *</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${BIZ_MENU_CATEGORIES.map(c => {
+            const sel = _comboState.category === c;
+            return `<div onclick="comboSelectCat('${c}')" style="padding:7px 12px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;border:1px solid ${sel ? '#8B5CF6' : 'var(--border-subtle)'};background:${sel ? 'rgba(139,92,246,0.1)' : 'var(--bg-phone)'};color:${sel ? '#8B5CF6' : 'var(--text-secondary)'}">${c}</div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Detailed Products (with full data) -->
+      ${products.length > 0 ? `
+      <div>
+        <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block;margin-bottom:8px">Detaylı Ürünler</label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${products.map(p => {
+            const selected = _comboState.selectedProductIds.includes(p.id);
+            return `<div onclick="comboToggleProduct('${p.id}')" style="padding:12px;border-radius:var(--r-lg);border:2px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'};background:${selected ? 'rgba(139,92,246,0.04)' : 'var(--bg-phone)'};cursor:pointer;display:flex;align-items:center;gap:10px">
+              <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${selected ? '#8B5CF6' : 'transparent'}">
+                ${selected ? '<iconify-icon icon="solar:check-read-bold" style="font-size:12px;color:#fff"></iconify-icon>' : ''}
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">${escHtml(p.name)}</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${p.category} · ${p.prepTime} dk</div>
+              </div>
+              <span style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:var(--primary)">₺${p.basePrice.toFixed(2)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Menu-only items -->
+      ${menuOnlyItems.length > 0 ? `
+      <div>
+        <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block;margin-bottom:8px">Diğer Menü Ürünleri</label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${menuOnlyItems.map(m => {
+            const selected = _comboState.selectedMenuItemIds.includes(m.id);
+            return `<div onclick="comboToggleMenuItem('${m.id}')" style="padding:12px;border-radius:var(--r-lg);border:2px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'};background:${selected ? 'rgba(139,92,246,0.04)' : 'var(--bg-phone)'};cursor:pointer;display:flex;align-items:center;gap:10px">
+              <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${selected ? '#8B5CF6' : 'transparent'}">
+                ${selected ? '<iconify-icon icon="solar:check-read-bold" style="font-size:12px;color:#fff"></iconify-icon>' : ''}
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">${escHtml(m.name)}</div>
+                <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${m.category}</div>
+              </div>
+              <span style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:var(--primary)">₺${m.price.toFixed(2)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Selection Summary -->
+      <div id="comboSelectionSummary" style="padding:10px 14px;background:var(--glass-card);border-radius:var(--r-lg)">
+        ${_renderComboSelectionSummary()}
+      </div>
+    </div>
+  `;
 }
 
-function bizSelectKitchenCat(el, kitchenId) {
-  _menuItemSelectedKitchen = kitchenId;
-  const cat = BIZ_KITCHEN_CATEGORIES.find(c => c.id === kitchenId);
-  document.querySelectorAll('#menuItemKitchenPicker > div').forEach(d => {
-    d.style.background = 'var(--bg-phone)';
-    d.style.color = 'var(--text-secondary)';
-    d.style.border = '1px solid var(--border-subtle)';
+function comboSelectCat(cat) {
+  _comboState.category = cat;
+  const body = document.getElementById('comboWizBody');
+  if (body) body.innerHTML = _renderComboStep1();
+}
+
+function comboToggleProduct(pid) {
+  const idx = _comboState.selectedProductIds.indexOf(pid);
+  if (idx >= 0) _comboState.selectedProductIds.splice(idx, 1);
+  else _comboState.selectedProductIds.push(pid);
+  const body = document.getElementById('comboWizBody');
+  if (body) body.innerHTML = _renderComboStep1();
+}
+
+function comboToggleMenuItem(mid) {
+  const idx = _comboState.selectedMenuItemIds.indexOf(mid);
+  if (idx >= 0) _comboState.selectedMenuItemIds.splice(idx, 1);
+  else _comboState.selectedMenuItemIds.push(mid);
+  const body = document.getElementById('comboWizBody');
+  if (body) body.innerHTML = _renderComboStep1();
+}
+
+function _getComboTotalPrice() {
+  let total = 0;
+  _comboState.selectedProductIds.forEach(pid => {
+    const p = BIZ_PRODUCTS.find(x => x.id === pid);
+    if (p) total += p.basePrice;
   });
-  el.style.background = cat.color + '15';
-  el.style.color = cat.color;
-  el.style.border = '1px solid ' + cat.color;
+  _comboState.selectedMenuItemIds.forEach(mid => {
+    const m = BIZ_MENU_ITEMS.find(x => x.id === mid);
+    if (m) total += m.price;
+  });
+  return total;
 }
 
-function bizSaveMenuItem(existingId) {
-  const name = document.getElementById('menuItemName').value.trim();
-  const price = parseFloat(document.getElementById('menuItemPrice').value);
-  const category = _menuItemSelectedCat;
-  const kitchenCategory = _menuItemSelectedKitchen;
+function _renderComboSelectionSummary() {
+  const count = _comboState.selectedProductIds.length + _comboState.selectedMenuItemIds.length;
+  const total = _getComboTotalPrice();
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">${count} ürün seçildi</span>
+      </div>
+      <div>
+        <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Toplam:</span>
+        <span style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--primary);margin-left:4px">₺${total.toFixed(2)}</span>
+      </div>
+    </div>
+  `;
+}
 
-  if (!name || !price || !category || !kitchenCategory) {
-    alert('Lütfen tüm alanları doldurun.');
-    return;
+function _collectComboStep1() {
+  const nameEl = document.getElementById('combo_name');
+  const descEl = document.getElementById('combo_desc');
+  if (nameEl) _comboState.name = nameEl.value.trim();
+  if (descEl) _comboState.description = descEl.value.trim();
+}
+
+/* ═══ COMBO STEP 2: FİYAT & AI ANALİZ ═══ */
+function _renderComboStep2() {
+  const total = _getComboTotalPrice();
+  const ai = _comboState.aiAnalysis;
+  const allergens = _comboState.allergens;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.1)">
+          <iconify-icon icon="solar:tag-price-bold" style="font-size:18px;color:#8B5CF6"></iconify-icon>
+        </div>
+        <div>
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Fiyatlandırma & Analiz</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Kampanyalı fiyat ve AI karma analizi</div>
+        </div>
+      </div>
+
+      <!-- AI Combo Analysis -->
+      ${ai ? `
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.05),rgba(99,102,241,0.05));border:1px solid rgba(139,92,246,0.15);border-radius:var(--r-xl);padding:14px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <iconify-icon icon="solar:magic-stick-3-bold" style="font-size:16px;color:#8B5CF6"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:#8B5CF6">AI Paket Analizi</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">${ai.calories}</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">kcal</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#22C55E">${ai.protein}g</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">Protein</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#F59E0B">${ai.carbs}g</div>
+            <div style="font:var(--fw-regular) 9px/1 var(--font);color:var(--text-muted);margin-top:2px">Karbonhidrat</div>
+          </div>
+        </div>
+        ${ai.chefNote ? `
+        <div style="padding:8px 10px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:var(--r-lg)">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+            <iconify-icon icon="solar:chef-hat-bold" style="font-size:11px;color:#F59E0B"></iconify-icon>
+            <span style="font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:#F59E0B">Şefin Notu</span>
+          </div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary)">${escHtml(ai.chefNote)}</div>
+        </div>` : ''}
+      </div>` : ''}
+
+      <!-- Cumulative Allergens -->
+      ${allergens.length > 0 ? `
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <iconify-icon icon="solar:danger-triangle-bold" style="font-size:14px;color:#EF4444"></iconify-icon>
+          <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Kümülatif Alerjen Tablosu</label>
+        </div>
+        <div style="font:var(--fw-regular) 10px/1.3 var(--font);color:var(--text-muted);margin-bottom:8px">Paketteki tüm ürünlerin alerjen verilerinden otomatik derlenmiştir</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${allergens.map(aId => {
+            const al = BIZ_ALLERGEN_LIST.find(a => a.id === aId);
+            return al ? `<span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:5px 10px;border-radius:var(--r-full);color:${al.color};background:${al.color}12;display:flex;align-items:center;gap:4px"><iconify-icon icon="${al.icon}" style="font-size:12px"></iconify-icon>${al.label}</span>` : '';
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Pricing -->
+      <div style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:16px">
+        <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:12px">Fiyatlandırma Stratejisi</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-secondary)">Tekil Fiyatlar Toplamı</span>
+          <span style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">₺${total.toFixed(2)}</span>
+        </div>
+        <div>
+          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Kampanyalı Fiyat (₺) *</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:#8B5CF6">₺</span>
+            <input id="combo_price" type="number" step="0.50" min="0" value="${_comboState.comboPrice}" placeholder="${(total * 0.85).toFixed(2)}" style="flex:1;padding:12px 14px;border:1px solid rgba(139,92,246,0.3);border-radius:var(--r-lg);font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+          </div>
+          ${_comboState.comboPrice && _comboState.comboPrice < total ? `
+          <div style="margin-top:8px;padding:8px 12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:var(--r-lg);display:flex;align-items:center;gap:6px">
+            <iconify-icon icon="solar:tag-price-bold" style="font-size:14px;color:#22C55E"></iconify-icon>
+            <span style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:#22C55E">%${Math.round((1 - _comboState.comboPrice / total) * 100)} indirim uygulanacak</span>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function _collectComboStep2() {
+  const priceEl = document.getElementById('combo_price');
+  if (priceEl) _comboState.comboPrice = parseFloat(priceEl.value) || 0;
+}
+
+function _runComboAiAnalysis() {
+  let cal = 0, protein = 0, carbs = 0, fat = 0, fiber = 0;
+  const allAllergens = new Set();
+  const tags = [];
+
+  _comboState.selectedProductIds.forEach(pid => {
+    const p = BIZ_PRODUCTS.find(x => x.id === pid);
+    if (p && p.aiAnalysis) {
+      cal += p.aiAnalysis.calories || 0;
+      protein += p.aiAnalysis.protein || 0;
+      carbs += p.aiAnalysis.carbs || 0;
+      fat += p.aiAnalysis.fat || 0;
+      fiber += p.aiAnalysis.fiber || 0;
+    }
+    if (p && p.allergens) p.allergens.forEach(a => allAllergens.add(a));
+  });
+
+  _comboState.selectedMenuItemIds.forEach(mid => {
+    const m = BIZ_MENU_ITEMS.find(x => x.id === mid);
+    if (m) { cal += 120; carbs += 10; } // Rough estimate for menu-only items
+  });
+
+  _comboState.allergens = [...allAllergens];
+
+  let chefNote = `${_comboState.name} — `;
+  if (_comboState.selectedProductIds.length + _comboState.selectedMenuItemIds.length >= 3) {
+    chefNote += 'Zengin içerikli bir paket. ';
+    tags.push('Avantajlı Paket');
+  }
+  if (cal > 600) chefNote += 'Doyurucu bir öğün olarak idealdir.';
+  else chefNote += 'Hafif bir öğün tercihi.';
+
+  _comboState.aiAnalysis = {
+    calories: Math.round(cal),
+    protein: Math.round(protein),
+    carbs: Math.round(carbs),
+    fat: Math.round(fat),
+    fiber: Math.round(fiber),
+    chefNote: chefNote,
+    allergenWarnings: [],
+    tags: [...new Set(tags)]
+  };
+}
+
+/* ═══ COMBO STEP 3: YAYINLA ═══ */
+function _renderComboStep3() {
+  const total = _getComboTotalPrice();
+  const discount = total > 0 && _comboState.comboPrice < total ? Math.round((1 - _comboState.comboPrice / total) * 100) : 0;
+  const names = [];
+  _comboState.selectedProductIds.forEach(pid => { const p = BIZ_PRODUCTS.find(x => x.id === pid); if (p) names.push(p.name); });
+  _comboState.selectedMenuItemIds.forEach(mid => { const m = BIZ_MENU_ITEMS.find(x => x.id === mid); if (m) names.push(m.name); });
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:rgba(34,197,94,0.1)">
+          <iconify-icon icon="solar:rocket-bold" style="font-size:18px;color:#22C55E"></iconify-icon>
+        </div>
+        <div>
+          <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Yayınlama Planı</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Paketinizi yayınlamaya hazır mısınız?</div>
+        </div>
+      </div>
+
+      <!-- Summary Card -->
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(99,102,241,0.06));border:1px solid rgba(139,92,246,0.15);border-radius:var(--r-xl);padding:16px">
+        <div style="font:var(--fw-bold) var(--fs-lg)/1.2 var(--font);color:var(--text-primary);margin-bottom:6px">${escHtml(_comboState.name)}</div>
+        <div style="font:var(--fw-regular) var(--fs-sm)/1.3 var(--font);color:var(--text-secondary);margin-bottom:10px">${names.join(' + ')}</div>
+        <div style="display:flex;align-items:center;gap:12px;padding-top:10px;border-top:1px solid rgba(139,92,246,0.1)">
+          <div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Kampanyalı Fiyat</div>
+            <div style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:#8B5CF6;margin-top:2px">₺${parseFloat(_comboState.comboPrice).toFixed(2)}</div>
+          </div>
+          ${discount > 0 ? `<div style="padding:4px 10px;background:rgba(34,197,94,0.1);border-radius:var(--r-full);font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:#22C55E">%${discount} İndirim</div>` : ''}
+          <div style="margin-left:auto;text-align:right">
+            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Normal Fiyat</div>
+            <div style="font:var(--fw-medium) var(--fs-sm)/1 var(--font);color:var(--text-muted);text-decoration:line-through;margin-top:2px">₺${total.toFixed(2)}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Publish Options -->
+      <div>
+        <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block;margin-bottom:10px">Yayın Zamanı</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div onclick="comboSetPublishType('now')" style="padding:14px 16px;border-radius:var(--r-xl);border:2px solid ${_comboState.publishType === 'now' ? '#8B5CF6' : 'var(--border-subtle)'};background:${_comboState.publishType === 'now' ? 'rgba(139,92,246,0.05)' : 'var(--bg-phone)'};cursor:pointer;display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${_comboState.publishType === 'now' ? '#8B5CF6' : 'var(--glass-card)'}">
+              <iconify-icon icon="solar:rocket-bold" style="font-size:18px;color:${_comboState.publishType === 'now' ? '#fff' : 'var(--text-muted)'}"></iconify-icon>
+            </div>
+            <div>
+              <div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Hemen Yayınla</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Paket anında aktif olur</div>
+            </div>
+          </div>
+          <div onclick="comboSetPublishType('scheduled')" style="padding:14px 16px;border-radius:var(--r-xl);border:2px solid ${_comboState.publishType === 'scheduled' ? '#8B5CF6' : 'var(--border-subtle)'};background:${_comboState.publishType === 'scheduled' ? 'rgba(139,92,246,0.05)' : 'var(--bg-phone)'};cursor:pointer;display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${_comboState.publishType === 'scheduled' ? '#8B5CF6' : 'var(--glass-card)'}">
+              <iconify-icon icon="solar:calendar-bold" style="font-size:18px;color:${_comboState.publishType === 'scheduled' ? '#fff' : 'var(--text-muted)'}"></iconify-icon>
+            </div>
+            <div>
+              <div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Zamanlanmış Yayın</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Tarih ve saat belirleyin</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${_comboState.publishType === 'scheduled' ? `
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Tarih</label>
+          <input id="combo_pubDate" type="date" value="" style="width:100%;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+        </div>
+        <div style="flex:1">
+          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Saat</label>
+          <input id="combo_pubTime" type="time" value="12:00" style="width:100%;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
+        </div>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function comboSetPublishType(type) {
+  _comboState.publishType = type;
+  const body = document.getElementById('comboWizBody');
+  if (body) body.innerHTML = _renderComboStep3();
+}
+
+/* ═══ SAVE COMBO ═══ */
+function _saveCombo() {
+  let publishDate = null;
+  let status = 'active';
+  if (_comboState.publishType === 'scheduled') {
+    const dateEl = document.getElementById('combo_pubDate');
+    const timeEl = document.getElementById('combo_pubTime');
+    if (dateEl && dateEl.value && timeEl && timeEl.value) {
+      publishDate = dateEl.value + 'T' + timeEl.value + ':00Z';
+      status = 'scheduled';
+    } else {
+      alert('Tarih ve saat seçiniz.');
+      return;
+    }
   }
 
-  if (existingId) {
-    const item = BIZ_MENU_ITEMS.find(i => i.id === existingId);
-    if (item) {
-      item.name = name;
-      item.price = price;
-      item.category = category;
-      item.kitchenCategory = kitchenCategory;
+  const total = _getComboTotalPrice();
+  const now = new Date().toISOString();
+
+  if (_comboState.isEdit && _comboState.editComboId) {
+    const combo = BIZ_COMBO_PRODUCTS.find(c => c.id === _comboState.editComboId);
+    if (combo) {
+      Object.assign(combo, {
+        name: _comboState.name,
+        description: _comboState.description,
+        category: _comboState.category,
+        includedProductIds: _comboState.selectedProductIds,
+        includedMenuItemIds: _comboState.selectedMenuItemIds,
+        originalTotalPrice: total,
+        comboPrice: _comboState.comboPrice,
+        status: status,
+        publishDate: publishDate,
+        allergens: _comboState.allergens,
+        aiAnalysis: _comboState.aiAnalysis,
+        updatedAt: now
+      });
     }
   } else {
-    const newId = 'mi_' + String(BIZ_MENU_ITEMS.length + 1).padStart(2, '0');
-    BIZ_MENU_ITEMS.push({
-      id: newId,
-      name: name,
-      price: price,
-      category: category,
-      kitchenCategory: kitchenCategory,
-      status: 'active',
-      branchId: bizActiveBranch
+    BIZ_COMBO_PRODUCTS.push({
+      id: 'combo_' + Date.now(),
+      branchId: bizActiveBranch,
+      type: 'combo',
+      name: _comboState.name,
+      description: _comboState.description,
+      category: _comboState.category || 'Diğer',
+      includedProductIds: _comboState.selectedProductIds,
+      includedMenuItemIds: _comboState.selectedMenuItemIds,
+      originalTotalPrice: total,
+      comboPrice: _comboState.comboPrice,
+      status: status,
+      publishDate: publishDate,
+      allergens: _comboState.allergens,
+      aiAnalysis: _comboState.aiAnalysis,
+      createdAt: now,
+      updatedAt: now
     });
   }
 
-  // Close modal and refresh list
-  const modal = document.getElementById('bizMenuItemModal');
-  if (modal) modal.remove();
+  closeComboWizard();
 
-  const list = document.getElementById('bizMenuItemsList');
-  if (list) list.innerHTML = renderBizMenuItems();
+  // Refresh menu list on combo tab
+  const overlay = document.getElementById('bizMenuOverlay');
+  if (overlay) {
+    overlay.remove();
+    openBizMenuMgmt();
+    setTimeout(() => switchBizMenuTab('combo'), 50);
+  }
+}
 
-  // Reset selections
-  _menuItemSelectedCat = '';
-  _menuItemSelectedKitchen = '';
+/* ══════════════════════════════════════════════════════════════
+   PRODUCT DETAIL VIEWER
+   ══════════════════════════════════════════════════════════════ */
+
+function openProductDetail(productId) {
+  const product = BIZ_PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+
+  const ai = product.aiAnalysis;
+  const canEdit = _menuCanEdit();
+
+  const content = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Product Header -->
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font:var(--fw-bold) var(--fs-xl)/1.2 var(--font);color:var(--text-primary)">${escHtml(product.name)}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 10px;border-radius:var(--r-full);color:var(--primary);background:var(--primary-soft)">${product.category}</span>
+            <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)"><iconify-icon icon="solar:clock-circle-linear" style="font-size:10px;vertical-align:-1px"></iconify-icon> ${product.prepTime} dk</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font:var(--fw-bold) var(--fs-2xl)/1 var(--font);color:var(--primary)">₺${product.basePrice.toFixed(2)}</div>
+          <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Taban Fiyat</div>
+        </div>
+      </div>
+
+      ${product.description ? `<div style="font:var(--fw-regular) var(--fs-sm)/1.5 var(--font);color:var(--text-secondary)">${escHtml(product.description)}</div>` : ''}
+
+      <!-- Ingredients -->
+      ${product.ingredients && product.ingredients.length > 0 ? `
+      <div style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:14px">
+        <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:10px"><iconify-icon icon="solar:list-check-bold" style="font-size:14px;vertical-align:-2px;color:#22C55E"></iconify-icon> Malzemeler</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${product.ingredients.map(ing => `
+            <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:5px 10px;border-radius:var(--r-full);color:var(--text-secondary);background:var(--glass-card);display:flex;align-items:center;gap:4px">
+              ${escHtml(ing.name)} <span style="color:var(--text-muted)">${ing.amount} ${ing.unit}</span>
+              ${ing.removable ? '<iconify-icon icon="solar:close-circle-linear" style="font-size:10px;color:#EF4444" title="Çıkarılabilir"></iconify-icon>' : ''}
+              ${ing.customizable ? '<iconify-icon icon="solar:pen-linear" style="font-size:10px;color:#8B5CF6" title="Değiştirilebilir"></iconify-icon>' : ''}
+            </span>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Variations -->
+      ${product.variations && product.variations.length > 0 ? `
+      <div style="background:var(--bg-phone);border:1px solid rgba(139,92,246,0.15);border-radius:var(--r-xl);padding:14px">
+        <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:10px"><iconify-icon icon="solar:settings-bold" style="font-size:14px;vertical-align:-2px;color:#8B5CF6"></iconify-icon> Varyasyonlar</div>
+        ${product.variations.map(v => `
+          <div style="margin-bottom:8px">
+            <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);margin-bottom:4px">${escHtml(v.label)} (${v.type})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">
+              ${(v.options || []).map(opt => `
+                <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);padding:4px 8px;border-radius:var(--r-full);background:rgba(139,92,246,0.06);color:var(--text-secondary)">${escHtml(opt.value)} ${opt.priceDiff > 0 ? '<span style="color:#22C55E">+₺' + opt.priceDiff + '</span>' : opt.priceDiff < 0 ? '<span style="color:#EF4444">-₺' + Math.abs(opt.priceDiff) + '</span>' : ''}</span>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+
+      <!-- AI Analysis -->
+      ${ai ? `
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.05),rgba(99,102,241,0.05));border:1px solid rgba(139,92,246,0.15);border-radius:var(--r-xl);padding:14px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <iconify-icon icon="solar:magic-stick-3-bold" style="font-size:16px;color:#8B5CF6"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:#8B5CF6">AI Besin Analizi</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px">
+          <div style="text-align:center;padding:6px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">${ai.calories}</div>
+            <div style="font:var(--fw-regular) 8px/1 var(--font);color:var(--text-muted);margin-top:2px">kcal</div>
+          </div>
+          <div style="text-align:center;padding:6px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:#22C55E">${ai.protein}g</div>
+            <div style="font:var(--fw-regular) 8px/1 var(--font);color:var(--text-muted);margin-top:2px">Protein</div>
+          </div>
+          <div style="text-align:center;padding:6px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:#F59E0B">${ai.carbs}g</div>
+            <div style="font:var(--fw-regular) 8px/1 var(--font);color:var(--text-muted);margin-top:2px">Karb</div>
+          </div>
+          <div style="text-align:center;padding:6px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:#EF4444">${ai.fat}g</div>
+            <div style="font:var(--fw-regular) 8px/1 var(--font);color:var(--text-muted);margin-top:2px">Yağ</div>
+          </div>
+          <div style="text-align:center;padding:6px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:#06B6D4">${ai.fiber}g</div>
+            <div style="font:var(--fw-regular) 8px/1 var(--font);color:var(--text-muted);margin-top:2px">Lif</div>
+          </div>
+        </div>
+        ${ai.chefNote ? `
+        <div style="padding:8px 10px;background:rgba(245,158,11,0.06);border-radius:var(--r-lg);margin-bottom:6px">
+          <span style="font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:#F59E0B"><iconify-icon icon="solar:chef-hat-bold" style="font-size:11px;vertical-align:-1px"></iconify-icon> Şefin Notu:</span>
+          <span style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-secondary)"> ${escHtml(ai.chefNote)}</span>
+        </div>` : ''}
+        ${ai.tags && ai.tags.length > 0 ? `
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${ai.tags.map(t => `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:3px 8px;border-radius:var(--r-full);color:#8B5CF6;background:rgba(139,92,246,0.1)">${escHtml(t)}</span>`).join('')}
+        </div>` : ''}
+      </div>` : ''}
+
+      <!-- Allergens -->
+      ${product.allergens && product.allergens.length > 0 ? `
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <iconify-icon icon="solar:danger-triangle-bold" style="font-size:14px;color:#EF4444"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Alerjen Bilgileri</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${product.allergens.map(aId => {
+            const al = BIZ_ALLERGEN_LIST.find(a => a.id === aId);
+            return al ? `<span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:5px 10px;border-radius:var(--r-full);color:${al.color};background:${al.color}12;display:flex;align-items:center;gap:4px"><iconify-icon icon="${al.icon}" style="font-size:12px"></iconify-icon>${al.label}</span>` : '';
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      ${canEdit ? `
+      <div onclick="openProductCreationWizard('${product.menuItemId}')" style="margin-top:8px;padding:14px;background:var(--primary);border-radius:var(--r-xl);text-align:center;cursor:pointer;font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">
+        <iconify-icon icon="solar:pen-bold" style="font-size:14px;vertical-align:-2px"></iconify-icon> Düzenle
+      </div>` : ''}
+    </div>
+  `;
+
+  const overlay = createBizOverlay('bizProductDetailOverlay', product.name, content);
+  document.getElementById('bizPhone').appendChild(overlay);
+}
+
+function openComboDetail(comboId) {
+  const combo = BIZ_COMBO_PRODUCTS.find(c => c.id === comboId);
+  if (!combo) return;
+
+  const names = _getComboItemNames(combo);
+  const discount = combo.originalTotalPrice > 0 ? Math.round((1 - combo.comboPrice / combo.originalTotalPrice) * 100) : 0;
+  const ai = combo.aiAnalysis;
+  const canEdit = _menuCanEdit();
+
+  const content = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font:var(--fw-bold) var(--fs-xl)/1.2 var(--font);color:var(--text-primary)">${escHtml(combo.name)}</div>
+        <div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-secondary);margin-top:4px">${escHtml(combo.description || '')}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+          <span style="font:var(--fw-bold) var(--fs-xl)/1 var(--font);color:#8B5CF6">₺${combo.comboPrice.toFixed(2)}</span>
+          <span style="font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-muted);text-decoration:line-through">₺${combo.originalTotalPrice.toFixed(2)}</span>
+          ${discount > 0 ? `<span style="font:var(--fw-bold) var(--fs-xs)/1 var(--font);padding:3px 8px;border-radius:var(--r-full);color:#22C55E;background:rgba(34,197,94,0.1)">%${discount} İndirim</span>` : ''}
+        </div>
+      </div>
+
+      <!-- Included Items -->
+      <div style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:14px">
+        <div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);margin-bottom:10px">Paket İçeriği</div>
+        <div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-secondary)">${names}</div>
+      </div>
+
+      ${ai ? `
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.05),rgba(99,102,241,0.05));border:1px solid rgba(139,92,246,0.15);border-radius:var(--r-xl);padding:14px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <iconify-icon icon="solar:magic-stick-3-bold" style="font-size:16px;color:#8B5CF6"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:#8B5CF6">AI Paket Analizi</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">${ai.calories} kcal</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#22C55E">${ai.protein}g P</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:var(--bg-phone);border-radius:var(--r-lg)">
+            <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:#F59E0B">${ai.carbs}g K</div>
+          </div>
+        </div>
+        ${ai.chefNote ? `<div style="margin-top:8px;font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary)"><iconify-icon icon="solar:chef-hat-bold" style="font-size:11px;color:#F59E0B"></iconify-icon> ${escHtml(ai.chefNote)}</div>` : ''}
+      </div>` : ''}
+
+      ${combo.allergens && combo.allergens.length > 0 ? `
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <iconify-icon icon="solar:danger-triangle-bold" style="font-size:14px;color:#EF4444"></iconify-icon>
+          <span style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)">Kümülatif Alerjenler</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${combo.allergens.map(aId => {
+            const al = BIZ_ALLERGEN_LIST.find(a => a.id === aId);
+            return al ? `<span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:5px 10px;border-radius:var(--r-full);color:${al.color};background:${al.color}12;display:flex;align-items:center;gap:4px"><iconify-icon icon="${al.icon}" style="font-size:12px"></iconify-icon>${al.label}</span>` : '';
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      ${canEdit ? `
+      <div onclick="openComboCreationWizard('${combo.id}')" style="margin-top:8px;padding:14px;background:linear-gradient(135deg,#8B5CF6,#6366F1);border-radius:var(--r-xl);text-align:center;cursor:pointer;font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">
+        <iconify-icon icon="solar:pen-bold" style="font-size:14px;vertical-align:-2px"></iconify-icon> Düzenle
+      </div>` : ''}
+    </div>
+  `;
+
+  const overlay = createBizOverlay('bizComboDetailOverlay', combo.name, content);
+  document.getElementById('bizPhone').appendChild(overlay);
+}
+
+/* ═══ BACKWARD COMPATIBILITY — old function names ═══ */
+function bizEditMenuItem(itemId) {
+  if (!_menuCanEdit()) return;
+  const item = BIZ_MENU_ITEMS.find(i => i.id === itemId);
+  if (!item || !_menuCanEditItem(item)) return;
+  openProductCreationWizard(itemId);
+}
+
+function bizOpenAddMenuItem() {
+  openProductCreationWizard();
 }

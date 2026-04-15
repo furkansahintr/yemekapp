@@ -264,11 +264,11 @@ function openBizBranchDetail(branchId) {
           <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Şube Ayarları</span>
         </div>
         <div style="background:var(--bg-phone);border-radius:var(--r-xl);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);overflow:hidden">
-          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="alert('Teslimat ayarları — yakında!')">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizDeliverySettings('${branch.id}')">
             <iconify-icon icon="solar:delivery-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
             <div style="flex:1">
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Teslimat Ayarları</div>
-              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${branch.deliveryArea.distance} · Min ₺${branch.minOrder} · ₺${branch.deliveryFee} kargo</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(function(){ const zc = typeof BIZ_DELIVERY_ZONES !== 'undefined' ? BIZ_DELIVERY_ZONES.filter(z => z.branchId === branch.id).length : 0; return zc > 0 ? zc + ' bölge tanımlı' : branch.deliveryArea.distance + ' · Min ₺' + branch.minOrder; })()}</div>
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>

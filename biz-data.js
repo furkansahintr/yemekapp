@@ -1383,6 +1383,267 @@ const BIZ_INVITES = [
   }
 ];
 
+/* ═══ ALERJEN LİSTESİ (İşletme tarafı — kullanıcı tarafındaki ALLERGEN_LIST ile aynı) ═══ */
+const BIZ_ALLERGEN_LIST = [
+  { id: 'gluten',     icon: 'solar:wheat-bold',            color: '#D97706', label: 'Gluten',                   desc: 'Buğday, arpa, çavdar, yulaf' },
+  { id: 'laktoz',     icon: 'solar:cup-hot-bold',          color: '#3B82F6', label: 'Laktoz',                   desc: 'Süt ve süt ürünleri' },
+  { id: 'fistik',     icon: 'solar:leaf-bold',             color: '#10B981', label: 'Fıstık / Yer Fıstığı',    desc: 'Yer fıstığı ve ürünleri' },
+  { id: 'kabuklu',    icon: 'solar:leaf-bold',             color: '#8B5CF6', label: 'Sert Kabuklu Yemişler',    desc: 'Badem, ceviz, fındık, kaju' },
+  { id: 'deniz',      icon: 'solar:swimming-bold',         color: '#06B6D4', label: 'Kabuklu Deniz Ürünleri',   desc: 'Karides, yengeç, istakoz, midye' },
+  { id: 'yumurta',    icon: 'solar:donut-bold',            color: '#F59E0B', label: 'Yumurta',                  desc: 'Yumurta ve yumurta içeren ürünler' },
+  { id: 'soya',       icon: 'solar:leaf-bold',             color: '#84CC16', label: 'Soya',                     desc: 'Soya fasulyesi ve türevleri' },
+  { id: 'balik',      icon: 'solar:swimming-bold',         color: '#0EA5E9', label: 'Balık',                    desc: 'Tüm balık türleri' },
+  { id: 'susam',      icon: 'solar:leaf-bold',             color: '#A3A3A3', label: 'Susam',                    desc: 'Susam tohumu ve yağı' },
+  { id: 'kereviz',    icon: 'solar:leaf-bold',             color: '#22C55E', label: 'Kereviz',                  desc: 'Kereviz ve kereviz tozu' },
+  { id: 'hardal',     icon: 'solar:fire-bold',             color: '#EAB308', label: 'Hardal',                   desc: 'Hardal tohumu ve sos' },
+  { id: 'lupin',      icon: 'solar:leaf-bold',             color: '#A855F7', label: 'Lupin',                    desc: 'Lupin (baklagil) ürünleri' },
+  { id: 'sulfit',     icon: 'solar:test-tube-bold',        color: '#EF4444', label: 'Sülfitler',                desc: 'Şarap, kuru meyve, sirke vb.' },
+  { id: 'selenyum',   icon: 'solar:atom-bold',             color: '#F97316', label: 'Yumuşakçalar',             desc: 'Salyangoz, kalamar, ahtapot' }
+];
+
+/* ═══ VARYASYON TİPLERİ ═══ */
+const BIZ_VARIATION_TYPES = [
+  { id: 'ml',    label: 'Mililitre (ml)',  unit: 'ml',   icon: 'solar:glass-water-bold' },
+  { id: 'gr',    label: 'Gram (gr)',       unit: 'gr',   icon: 'solar:scales-bold' },
+  { id: 'adet',  label: 'Adet',           unit: 'adet', icon: 'solar:add-circle-bold' },
+  { id: 'boyut', label: 'Boyut (S/M/L)',  unit: '',     icon: 'solar:sort-from-bottom-to-top-bold' }
+];
+
+/* ═══ GENİŞLETİLMİŞ ÜRÜN YAPISI (Detaylı menü kalemleri) ═══ */
+let BIZ_PRODUCTS = [
+  {
+    id: 'prod_01',
+    branchId: 'b1',
+    type: 'single',     // 'single' | 'combo'
+    name: 'Adana Kebap',
+    description: 'Kıyılmış kuzu eti, özel baharat harmanı ile mangalda pişirilir. Yanında lavaş ve közlenmiş biber ile servis edilir.',
+    prepTime: 25,       // dakika
+    basePrice: 18.50,
+    category: 'Kebaplar',
+    kitchenCategory: 'grill',
+    status: 'active',   // 'active' | 'inactive' | 'scheduled'
+    publishDate: null,   // zamanlanmış yayın için
+    menuItemId: 'mi_01', // BIZ_MENU_ITEMS ile bağlantı
+    // Malzeme listesi
+    ingredients: [
+      { id: 'ing_01', name: 'Kuzu kıyma',       amount: '200',  unit: 'gr', removable: false, customizable: true },
+      { id: 'ing_02', name: 'Kuyruk yağı',       amount: '30',   unit: 'gr', removable: false, customizable: false },
+      { id: 'ing_03', name: 'Pul biber',          amount: '5',    unit: 'gr', removable: true,  customizable: true },
+      { id: 'ing_04', name: 'Tuz',               amount: '3',    unit: 'gr', removable: false, customizable: false },
+      { id: 'ing_05', name: 'Lavaş',             amount: '2',    unit: 'adet', removable: true, customizable: true },
+      { id: 'ing_06', name: 'Közlenmiş biber',    amount: '2',    unit: 'adet', removable: true, customizable: false },
+      { id: 'ing_07', name: 'Domates',            amount: '1',    unit: 'adet', removable: true, customizable: false }
+    ],
+    // Varyasyonlar (müşteri tarafından değiştirilebilir)
+    variations: [
+      { id: 'var_01', ingredientId: 'ing_01', type: 'gr',  label: 'Ekstra Et',       options: [{ value: '+50 gr', priceDiff: 8 }, { value: '+100 gr', priceDiff: 15 }] },
+      { id: 'var_02', ingredientId: 'ing_03', type: 'gr',  label: 'Acılık Seviyesi',  options: [{ value: 'Az Acılı', priceDiff: 0 }, { value: 'Orta', priceDiff: 0 }, { value: 'Çok Acılı', priceDiff: 0 }] },
+      { id: 'var_03', ingredientId: 'ing_05', type: 'adet', label: 'Ekstra Lavaş',     options: [{ value: '+1 adet', priceDiff: 3 }, { value: '+2 adet', priceDiff: 5 }] }
+    ],
+    // Alerjenler
+    allergens: ['gluten'],
+    // AI analiz verileri
+    aiAnalysis: {
+      calories: 485,
+      protein: 32,
+      carbs: 28,
+      fat: 26,
+      fiber: 2,
+      chefNote: 'Geleneksel Adana usulü, yüksek kaliteli kuzu etiyle hazırlanır. Pul biberin kızartma sırasında oluşturduğu hafif is aroması ile kendine has tadını alır.',
+      allergenWarnings: ['Lavaş gluten içerir.'],
+      tags: ['Yüksek Protein', 'Mangal', 'Geleneksel']
+    },
+    createdAt: '2026-03-15T10:00:00Z',
+    updatedAt: '2026-04-01T14:30:00Z'
+  },
+  {
+    id: 'prod_02',
+    branchId: 'b1',
+    type: 'single',
+    name: 'Mercimek Çorbası',
+    description: 'Kırmızı mercimek, soğan, havuç ve özel baharat harmanı ile hazırlanan geleneksel Türk çorbası.',
+    prepTime: 10,
+    basePrice: 4.00,
+    category: 'Çorbalar',
+    kitchenCategory: 'hot_kitchen',
+    status: 'active',
+    publishDate: null,
+    menuItemId: null,
+    ingredients: [
+      { id: 'ing_08', name: 'Kırmızı mercimek', amount: '100', unit: 'gr', removable: false, customizable: false },
+      { id: 'ing_09', name: 'Soğan',           amount: '50',  unit: 'gr', removable: false, customizable: false },
+      { id: 'ing_10', name: 'Havuç',           amount: '30',  unit: 'gr', removable: false, customizable: false },
+      { id: 'ing_11', name: 'Limon',            amount: '1',   unit: 'adet', removable: true, customizable: true },
+      { id: 'ing_12', name: 'Pul biber',        amount: '2',   unit: 'gr', removable: true, customizable: false }
+    ],
+    variations: [
+      { id: 'var_04', ingredientId: 'ing_11', type: 'adet', label: 'Ekstra Limon', options: [{ value: '+1 adet', priceDiff: 1 }] },
+      { id: 'var_05', ingredientId: null, type: 'boyut', label: 'Porsiyon Boyutu', options: [{ value: 'Small', priceDiff: -1 }, { value: 'Medium', priceDiff: 0 }, { value: 'Large', priceDiff: 3 }] }
+    ],
+    allergens: [],
+    aiAnalysis: {
+      calories: 180,
+      protein: 12,
+      carbs: 30,
+      fat: 3,
+      fiber: 8,
+      chefNote: 'Vegan ve gluten-free. Sıcak servis önerilir, tercihe göre limon ve pul biber ile.',
+      allergenWarnings: [],
+      tags: ['Vegan', 'Düşük Kalorili', 'Gluten-Free']
+    },
+    createdAt: '2026-03-15T10:30:00Z',
+    updatedAt: '2026-03-15T10:30:00Z'
+  }
+];
+
+/* ═══ GRUP ÜRÜNLER (Combo / Paket Menü) ═══ */
+let BIZ_COMBO_PRODUCTS = [
+  {
+    id: 'combo_01',
+    branchId: 'b1',
+    type: 'combo',
+    name: 'Kebap Menü',
+    description: 'Adana Kebap + Mercimek Çorbası + Ayran kombinasyonu. %15 avantajlı fiyat!',
+    includedProductIds: ['prod_01', 'prod_02'],
+    includedMenuItemIds: ['mi_25'],  // Ayran (henüz product olarak tanımlı değil ama menü kalemi olarak var)
+    originalTotalPrice: 25.00,       // Tekil fiyatlar toplamı
+    comboPrice: 21.50,              // Kampanyalı fiyat
+    status: 'active',
+    publishDate: null,
+    category: 'Kebaplar',
+    // Kümülatif alerjenler (otomatik hesaplanır)
+    allergens: ['gluten'],
+    aiAnalysis: {
+      calories: 665,
+      protein: 44,
+      carbs: 58,
+      fat: 29,
+      fiber: 10,
+      chefNote: 'Dengeli bir öğün. Çorba ile başlayıp kebap ile devam etmenizi, ayran ile tamamlamanızı öneriyoruz.',
+      allergenWarnings: ['Lavaş gluten içerir.'],
+      tags: ['Menü', 'Avantajlı', 'Dengeli Öğün']
+    },
+    createdAt: '2026-04-01T09:00:00Z',
+    updatedAt: '2026-04-01T09:00:00Z'
+  }
+];
+
+/* ═══ BRANCH COORDINATES (kayıt sırasında haritada işaretlenen konum) ═══ */
+const BIZ_BRANCH_COORDS = {
+  b1: { lat: 40.9833, lng: 29.0294 }, // Kadıköy - Caferağa Mah.
+  b2: { lat: 41.0424, lng: 29.0010 }, // Beşiktaş - Çırağan Cad.
+  b3: { lat: 40.9924, lng: 29.1210 }  // Ataşehir - Dumlupınar Mah.
+};
+
+/* ═══ MAHALLE VERİ TABANI (İstanbul İlçeleri Mahalle Havuzu) ═══ */
+const BIZ_NEIGHBORHOODS = [
+  // ── Kadıköy Mahalleleri (b1 yakını) ──
+  { id: 'mh_01', name: 'Caferağa',          district: 'Kadıköy',    lat: 40.9870, lng: 29.0270 },
+  { id: 'mh_02', name: 'Moda',              district: 'Kadıköy',    lat: 40.9820, lng: 29.0240 },
+  { id: 'mh_03', name: 'Osmanağa',          district: 'Kadıköy',    lat: 40.9900, lng: 29.0290 },
+  { id: 'mh_04', name: 'Rasimpaşa',         district: 'Kadıköy',    lat: 40.9850, lng: 29.0220 },
+  { id: 'mh_05', name: 'Fenerbahçe',        district: 'Kadıköy',    lat: 40.9710, lng: 29.0360 },
+  { id: 'mh_06', name: 'Göztepe',           district: 'Kadıköy',    lat: 40.9780, lng: 29.0530 },
+  { id: 'mh_07', name: 'Acıbadem',          district: 'Kadıköy',    lat: 40.9890, lng: 29.0490 },
+  { id: 'mh_08', name: 'Koşuyolu',          district: 'Kadıköy',    lat: 40.9960, lng: 29.0400 },
+  { id: 'mh_09', name: 'Hasanpaşa',         district: 'Kadıköy',    lat: 40.9910, lng: 29.0340 },
+  { id: 'mh_10', name: 'Erenköy',           district: 'Kadıköy',    lat: 40.9680, lng: 29.0680 },
+  { id: 'mh_11', name: 'Bostancı',          district: 'Kadıköy',    lat: 40.9600, lng: 29.0900 },
+  { id: 'mh_12', name: 'Suadiye',           district: 'Kadıköy',    lat: 40.9620, lng: 29.0780 },
+  { id: 'mh_13', name: 'Caddebostan',       district: 'Kadıköy',    lat: 40.9650, lng: 29.0570 },
+  { id: 'mh_14', name: 'Zühtüpaşa',        district: 'Kadıköy',    lat: 40.9740, lng: 29.0450 },
+  { id: 'mh_15', name: 'Fikirtepe',         district: 'Kadıköy',    lat: 40.9960, lng: 29.0490 },
+  { id: 'mh_16', name: 'Merdivenköy',       district: 'Kadıköy',    lat: 40.9850, lng: 29.0720 },
+  // ── Üsküdar Mahalleleri (b1 yakın çevre) ──
+  { id: 'mh_17', name: 'Altunizade',        district: 'Üsküdar',    lat: 41.0050, lng: 29.0380 },
+  { id: 'mh_18', name: 'Kısıklı',           district: 'Üsküdar',    lat: 41.0100, lng: 29.0500 },
+  { id: 'mh_19', name: 'Üsküdar Merkez',    district: 'Üsküdar',    lat: 41.0230, lng: 29.0150 },
+  { id: 'mh_20', name: 'Bağlarbaşı',        district: 'Üsküdar',    lat: 41.0090, lng: 29.0320 },
+  // ── Beşiktaş Mahalleleri (b2 yakını) ──
+  { id: 'mh_21', name: 'Sinanpaşa',         district: 'Beşiktaş',   lat: 41.0430, lng: 29.0020 },
+  { id: 'mh_22', name: 'Cihannüma',         district: 'Beşiktaş',   lat: 41.0460, lng: 28.9980 },
+  { id: 'mh_23', name: 'Vişnezade',         district: 'Beşiktaş',   lat: 41.0400, lng: 28.9970 },
+  { id: 'mh_24', name: 'Yıldız',            district: 'Beşiktaş',   lat: 41.0480, lng: 28.9940 },
+  { id: 'mh_25', name: 'Ortaköy',           district: 'Beşiktaş',   lat: 41.0480, lng: 29.0260 },
+  { id: 'mh_26', name: 'Kuruçeşme',         district: 'Beşiktaş',   lat: 41.0530, lng: 29.0320 },
+  { id: 'mh_27', name: 'Arnavutköy',        district: 'Beşiktaş',   lat: 41.0560, lng: 29.0350 },
+  { id: 'mh_28', name: 'Bebek',             district: 'Beşiktaş',   lat: 41.0760, lng: 29.0430 },
+  { id: 'mh_29', name: 'Etiler',            district: 'Beşiktaş',   lat: 41.0800, lng: 29.0300 },
+  { id: 'mh_30', name: 'Levent',            district: 'Beşiktaş',   lat: 41.0830, lng: 29.0160 },
+  { id: 'mh_31', name: 'Nisbetiye',         district: 'Beşiktaş',   lat: 41.0790, lng: 29.0190 },
+  { id: 'mh_32', name: 'Ulus',              district: 'Beşiktaş',   lat: 41.0710, lng: 29.0270 },
+  // ── Ataşehir Mahalleleri (b3 yakını) ──
+  { id: 'mh_33', name: 'Küçükbakkalköy',    district: 'Ataşehir',   lat: 40.9870, lng: 29.1200 },
+  { id: 'mh_34', name: 'İçerenköy',         district: 'Ataşehir',   lat: 40.9820, lng: 29.1110 },
+  { id: 'mh_35', name: 'Yenisahra',         district: 'Ataşehir',   lat: 40.9900, lng: 29.1050 },
+  { id: 'mh_36', name: 'Barbaros',          district: 'Ataşehir',   lat: 40.9930, lng: 29.1170 },
+  { id: 'mh_37', name: 'Atatürk',           district: 'Ataşehir',   lat: 40.9880, lng: 29.1300 },
+  { id: 'mh_38', name: 'Aşık Veysel',       district: 'Ataşehir',   lat: 40.9960, lng: 29.1250 },
+  { id: 'mh_39', name: 'Esatpaşa',          district: 'Ataşehir',   lat: 40.9800, lng: 29.0970 },
+  { id: 'mh_40', name: 'Kayışdağı',         district: 'Ataşehir',   lat: 40.9750, lng: 29.1400 }
+];
+
+/* ═══ TESLİMAT BÖLGELERİ (İşletme tarafından tanımlanan gruplar) ═══ */
+let BIZ_DELIVERY_ZONES = [
+  // ── Kadıköy Şubesi (b1) ──
+  {
+    id: 'dz_01',
+    branchId: 'b1',
+    name: 'Bölge 1 — Yakın Çevre',
+    distanceLabel: '0-2 km',
+    deliveryFee: 20,
+    minCartAmount: 150,
+    estimatedTime: '15-25 dk',
+    color: '#22C55E',
+    neighborhoodIds: ['mh_01', 'mh_02', 'mh_03', 'mh_04', 'mh_09']
+  },
+  {
+    id: 'dz_02',
+    branchId: 'b1',
+    name: 'Bölge 2 — Orta Mesafe',
+    distanceLabel: '2-5 km',
+    deliveryFee: 35,
+    minCartAmount: 250,
+    estimatedTime: '25-40 dk',
+    color: '#F59E0B',
+    neighborhoodIds: ['mh_05', 'mh_06', 'mh_07', 'mh_08', 'mh_14']
+  },
+  {
+    id: 'dz_03',
+    branchId: 'b1',
+    name: 'Bölge 3 — Uzak Çevre',
+    distanceLabel: '5-8 km',
+    deliveryFee: 55,
+    minCartAmount: 400,
+    estimatedTime: '35-50 dk',
+    color: '#EF4444',
+    neighborhoodIds: ['mh_10', 'mh_13', 'mh_17', 'mh_20']
+  },
+  // ── Beşiktaş Şubesi (b2) ──
+  {
+    id: 'dz_04',
+    branchId: 'b2',
+    name: 'Bölge 1 — Yakın Çevre',
+    distanceLabel: '0-2 km',
+    deliveryFee: 25,
+    minCartAmount: 200,
+    estimatedTime: '15-25 dk',
+    color: '#22C55E',
+    neighborhoodIds: ['mh_21', 'mh_22', 'mh_23', 'mh_24']
+  },
+  {
+    id: 'dz_05',
+    branchId: 'b2',
+    name: 'Bölge 2 — Orta Mesafe',
+    distanceLabel: '2-5 km',
+    deliveryFee: 45,
+    minCartAmount: 350,
+    estimatedTime: '25-40 dk',
+    color: '#F59E0B',
+    neighborhoodIds: ['mh_25', 'mh_26', 'mh_32']
+  }
+];
+
 // Export all data
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -1407,6 +1668,13 @@ if (typeof module !== 'undefined' && module.exports) {
     BIZ_NOTIFICATIONS,
     BIZ_MENU_CATEGORIES,
     BIZ_KITCHEN_CATEGORIES,
-    BIZ_MENU_ITEMS
+    BIZ_MENU_ITEMS,
+    BIZ_ALLERGEN_LIST,
+    BIZ_VARIATION_TYPES,
+    BIZ_PRODUCTS,
+    BIZ_COMBO_PRODUCTS,
+    BIZ_BRANCH_COORDS,
+    BIZ_NEIGHBORHOODS,
+    BIZ_DELIVERY_ZONES
   };
 }
