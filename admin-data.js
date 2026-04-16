@@ -648,3 +648,27 @@ var ADMIN_RECIPE_CATEGORIES = [
   { key:'salad',     label:'Salata',     icon:'solar:leaf-bold',          color:'#10B981' },
   { key:'snack',     label:'Atıştırmalık',icon:'solar:donut-bold',        color:'#8B5CF6' }
 ];
+
+/* ═══ YÖNETİM MERKEZİ — Tile summary metrics ═══ */
+var ADMIN_MGMT_METRICS = {
+  /* 1 — Paydaş ve Operasyon */
+  bizApplications: { pending: 12 },
+  staff:           { total: 3892, activeShifts: 847 },
+
+  /* 2 — Finans */
+  tokenSupply:  { total: 18500000 },
+  tokenTxns:    { todayNet: 284520 },
+  payments:     { todayTl: 15400 },
+  premium:      { subscribers: 287 },
+
+  /* 3 — İçerik & Topluluk */
+  community:    { engagementPct: 78 },
+
+  /* 4 — Güvenlik */
+  blacklist:    { banned: 41 },
+  incident:     { status: 'normal' }, // 'normal' | 'warning' | 'critical'
+
+  /* 5 — Raporlama & Yetki */
+  reports:      { lastRun: 'Bugün 09:00' },
+  adminUsers:   { total: 5 }
+};

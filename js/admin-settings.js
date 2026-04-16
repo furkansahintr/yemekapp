@@ -2,61 +2,218 @@
    ADMIN-SETTINGS.JS — Yönetim Paneli (Platform Ayarları)
    ═══════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════
+   YÖNETİM MERKEZİ — Tile Grid (ana render)
+   ═══════════════════════════════════════════════════════════ */
 function renderAdminSettings() {
   _admInjectStyles();
   var c = document.getElementById('adminSettingsContainer');
   if (!c) return;
 
-  var html = '<div class="adm-fadeIn" style="padding:16px;display:flex;flex-direction:column;gap:16px">';
+  var S = (typeof ADMIN_STATS !== 'undefined') ? ADMIN_STATS : {};
+  var M = (typeof ADMIN_MGMT_METRICS !== 'undefined') ? ADMIN_MGMT_METRICS : {};
+  var BIZ = (typeof ADMIN_BUSINESSES !== 'undefined') ? ADMIN_BUSINESSES : [];
+  var REC = (typeof ADMIN_RECIPES !== 'undefined') ? ADMIN_RECIPES : [];
+  var TK  = (typeof ADMIN_TICKETS !== 'undefined') ? ADMIN_TICKETS : [];
+  var RP  = (typeof ADMIN_REPORTS !== 'undefined') ? ADMIN_REPORTS : [];
+  var CP  = (typeof ADMIN_CAMPAIGNS !== 'undefined') ? ADMIN_CAMPAIGNS : [];
+
+  var openTickets = TK.filter(function(t) { return t.status === 'open' || t.status === 'in_progress'; }).length;
+  var openReports = RP.filter(function(r) { return r.status === 'pending'; }).length;
+  var pendingRecipes = REC.filter(function(r) { return r.status === 'pending'; }).length;
+  var activeCampaigns = CP.filter(function(c) { return c.status === 'active'; }).length;
+
+  /* ═══ HIZLI ERİŞİM — 3 priority 2x tile ═══ */
+  var priority = [
+    { id:'orders',    label:'Siparişler',           icon:'solar:bag-check-bold',       tone:'#22C55E',
+      summary:_admFmt(S.dailyOrders || 0)+' bugün • '+_admFmtTL(S.dailyRevenue || 0),
+      action:"adminSwitchTab('adminOrders')" },
+    { id:'support',   label:'Destek',               icon:'solar:chat-round-dots-bold', tone:'#0EA5E9',
+      summary:openTickets+' açık talep',
+      action:"(typeof openAdminSupport==='function'?openAdminSupport():_admOpenTickets())" },
+    { id:'bizApps',   label:'İşletme Başvuruları',  icon:'solar:inbox-in-bold',        tone:'#F59E0B',
+      summary:(M.bizApplications && M.bizApplications.pending ? M.bizApplications.pending : 0)+' Yeni Başvuru',
+      action:"_admToast('Başvuru yönetimi yakında')" }
+  ];
+
+  /* ═══ 5 GRUP ═══ */
+  var groups = [
+    {
+      num:'01', title:'Paydaş ve Operasyon Yönetimi',
+      sub:'Uygulamanın ana aktörleri ve saha operasyonları',
+      tiles:[
+        { id:'users',      label:'Kullanıcılar', icon:'solar:users-group-two-rounded-bold', tone:'#3B82F6',
+          summary:_admFmt(S.totalUsers || 0)+' • '+_admFmt(S.activeUsers || 0)+' aktif',
+          action:"adminSwitchTab('adminUsers')" },
+        { id:'businesses', label:'İşletmeler', icon:'solar:shop-bold', tone:'#F97316',
+          summary:_admFmt(BIZ.length)+' kayıtlı • '+_admFmt(S.totalBranches || 0)+' şube',
+          action:"_admMgmtOpenBusinesses()" },
+        { id:'staff',      label:'Personel Sayfası', icon:'solar:users-group-rounded-bold', tone:'#8B5CF6',
+          summary:(M.staff ? _admFmt(M.staff.total)+' • '+_admFmt(M.staff.activeShifts)+' vardiya' : '—'),
+          action:"_admToast('Personel yönetimi yakında')" }
+      ]
+    },
+    {
+      num:'02', title:'Finans ve Gelir Merkezi',
+      sub:'Para, token ve abonelik akışı',
+      tiles:[
+        { id:'tokenSupply', label:'Token Yönetim Merkezi', icon:'solar:dollar-minimalistic-bold', tone:'#EAB308',
+          summary:(M.tokenSupply ? _admFmt(M.tokenSupply.total)+' arz' : '—'),
+          action:"_admToast('Token yönetimi yakında')" },
+        { id:'tokenTxns',  label:'Token İşlemleri', icon:'solar:round-transfer-horizontal-bold', tone:'#14B8A6',
+          summary:(M.tokenTxns ? 'Bugün: '+_admFmt(M.tokenTxns.todayNet)+' ↑' : '—'),
+          action:"_admToast('Token işlem geçmişi yakında')" },
+        { id:'payments',   label:'Ödemeler', icon:'solar:card-bold', tone:'#10B981',
+          summary:(M.payments ? 'Bugün: +'+_admFmtTL(M.payments.todayTl) : '—'),
+          action:"renderAdminFinance()" },
+        { id:'commission', label:'Komisyon Ayarları', icon:'solar:pie-chart-2-bold', tone:'#EC4899',
+          summary:'Ort. %'+(S.platformCommission || 0).toFixed(1),
+          action:"_admOpenTierInfo()" },
+        { id:'premium',    label:'Premium Plan & Ücret', icon:'solar:crown-bold', tone:'#A855F7',
+          summary:(M.premium ? _admFmt(M.premium.subscribers)+' premium üye' : '—'),
+          action:"_admToast('Premium plan yönetimi yakında')" }
+      ]
+    },
+    {
+      num:'03', title:'İçerik, Topluluk ve Pazarlama',
+      sub:'Sosyal doku ve dışa dönük yüz',
+      tiles:[
+        { id:'recipes',      label:'Tarifler', icon:'solar:chef-hat-bold', tone:'#F65013',
+          summary:_admFmt(REC.length)+' tarif • '+pendingRecipes+' bekliyor',
+          action:"adminSwitchTab('adminRecipes')" },
+        { id:'community',    label:'Topluluk Analizleri', icon:'solar:hashtag-chat-bold', tone:'#06B6D4',
+          summary:(M.community ? '%'+M.community.engagementPct+' etkileşim' : '—'),
+          action:"_admToast('Topluluk analizleri yakında')" },
+        { id:'ads',          label:'Reklam Alanı', icon:'solar:gallery-wide-bold', tone:'#F43F5E',
+          summary:activeCampaigns+' aktif kampanya',
+          action:"_admOpenCampaigns()" },
+        { id:'notifications',label:'Bildirim Merkezi', icon:'solar:bell-bing-bold', tone:'#6366F1',
+          summary:'Şablonlar & toplu gönderim',
+          action:"_admOpenNotifTemplates()" }
+      ]
+    },
+    {
+      num:'04', title:'Güvenlik, Denetim ve Kriz Yönetimi',
+      sub:'Sistem disiplini ve müdahale',
+      tiles:[
+        { id:'complaints', label:'Şikayet Yönetimi', icon:'solar:shield-warning-bold', tone:'#F59E0B',
+          summary:openReports+' bekliyor',
+          action:"_admOpenReports()" },
+        { id:'blacklist',  label:'Kara Liste', icon:'solar:user-block-rounded-bold', tone:'#6B7280',
+          summary:(M.blacklist ? M.blacklist.banned+' engelli' : '—'),
+          action:"_admToast('Kara liste yakında')" },
+        { id:'incident',   label:'Hızlı Müdahale', icon:'solar:siren-bold',
+          tone:(M.incident && M.incident.status === 'critical' ? '#EF4444' : M.incident && M.incident.status === 'warning' ? '#F59E0B' : '#22C55E'),
+          summary:(M.incident && M.incident.status === 'critical' ? 'Sistem: Kritik' : M.incident && M.incident.status === 'warning' ? 'Sistem: Uyarı' : 'Sistem: Normal'),
+          action:"_admToast('Acil müdahale merkezi yakında','err')" }
+      ]
+    },
+    {
+      num:'05', title:'Raporlama ve Üst Düzey Yetkilendirme',
+      sub:'Stratejik kararlar ve hassas ayarlar',
+      tiles:[
+        { id:'reports',   label:'Raporlama Merkezi', icon:'solar:chart-2-bold', tone:'#0EA5E9',
+          summary:(M.reports ? 'Son: '+M.reports.lastRun : '—'),
+          action:"_admToast('Raporlama merkezi yakında')" },
+        { id:'adminUsers',label:'Admin Ayarları', icon:'solar:shield-user-bold', tone:'#A855F7',
+          summary:(M.adminUsers ? M.adminUsers.total+' admin • Hassas Erişim' : 'Hassas Erişim'),
+          action:"_admToast('Admin yönetimi yakında')" }
+      ]
+    }
+  ];
+
+  var html = '<div class="amgmt-wrap adm-fadeIn">';
 
   /* Header */
-  html += '<div>'
-    + '<div style="font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">Yönetim Paneli</div>'
-    + '<div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:4px">Platform ayarları ve raporlar</div>'
-    + '</div>';
-
-  /* Section 1: Finans & Komisyon */
-  html += '<div>'
-    + '<div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Finans & Komisyon</div>'
-    + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + _admSettingsTile('solar:wallet-money-bold', '#22C55E', 'Komisyon & Gelir Raporu', 'Kazanılan komisyon ve gelir analizi', function() { renderAdminFinance(); })
-    + _admSettingsTile('solar:megaphone-bold', '#8B5CF6', 'Kampanyalar', 'Aktif ve bitmiş kampanya yönetimi', function() { _admOpenCampaigns(); })
+  html += '<div class="amgmt-head">'
+    + '<div>'
+    + '<div class="amgmt-title">Yönetim Merkezi</div>'
+    + '<div class="amgmt-sub">Platformun kalbi — paydaş, finans, içerik, denetim ve raporlama</div>'
     + '</div>'
+    + '<div class="amgmt-badge"><iconify-icon icon="solar:shield-check-bold" style="font-size:13px"></iconify-icon><span>Süper Admin</span></div>'
     + '</div>';
 
-  /* Section 2: Moderasyon */
-  html += '<div>'
-    + '<div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Moderasyon</div>'
-    + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + _admSettingsTile('solar:chat-round-dots-bold', '#EF4444', 'Destek Talepleri', 'Açık ve çözülen destek taleplerine bak', function() { _admOpenTickets(); })
-    + _admSettingsTile('solar:warning-circle-bold', '#F59E0B', 'Bildirilen İçerikler', 'Spam ve uygunsuz içerik şikayetleri', function() { _admOpenReports(); })
+  /* Hızlı Erişim (priority) */
+  html += '<div class="amgmt-group amgmt-group--priority">'
+    + '<div class="amgmt-ghead">'
+    + '<div class="amgmt-gnum amgmt-gnum--priority">★</div>'
+    + '<div><div class="amgmt-gtitle">Hızlı Erişim</div><div class="amgmt-gsub">En çok kullanılanlar</div></div>'
     + '</div>'
+    + '<div class="amgmt-grid amgmt-grid--priority">'
+    + priority.map(function(t){ return _amgmtTile(t, true); }).join('')
+    + '</div></div>';
+
+  /* 5 Groups */
+  for (var gi = 0; gi < groups.length; gi++) {
+    var g = groups[gi];
+    html += '<div class="amgmt-group">'
+      + '<div class="amgmt-ghead">'
+      + '<div class="amgmt-gnum">'+g.num+'</div>'
+      + '<div><div class="amgmt-gtitle">'+g.title+'</div><div class="amgmt-gsub">'+g.sub+'</div></div>'
+      + '</div>'
+      + '<div class="amgmt-grid">'
+      + g.tiles.map(function(t){ return _amgmtTile(t, false); }).join('')
+      + '</div></div>';
+  }
+
+  /* Footnote */
+  html += '<div class="amgmt-note">'
+    + '<iconify-icon icon="solar:lock-keyhole-bold" style="font-size:14px;color:#A855F7;flex-shrink:0;margin-top:1px"></iconify-icon>'
+    + '<span><b>Admin Ayarları</b> alanı Hassas Erişim katmanıyla korunur — sadece tanımlı yetkililer giriş yapabilir.</span>'
     + '</div>';
 
-  /* Section 3: Platform Ayarları */
-  html += '<div>'
-    + '<div style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Platform Ayarları</div>'
-    + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + _admSettingsTile('solar:bell-bold', '#3B82F6', 'Bildirim Şablonları', 'Push, email bildirim şablonları', function() { _admOpenNotifTemplates(); })
-    + _admSettingsTile('solar:layers-bold', '#6366F1', 'Komisyon Kademeleri', 'Platform komisyon tier sistemi', function() { _admOpenTierInfo(); })
-    + _admSettingsTile('solar:wrench-bold', '#6B7280', 'Platform Bakımı', 'Sistem bakımı ve güncellemeler', function() { _admToast('Henüz uygulanmadı'); })
-    + '</div>'
-    + '</div>';
-
-  /* Section 4: Bottom */
-  html += '<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border-subtle)">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+  /* Footer — Çıkış (eski davranış korunuyor) */
+  html += '<div style="padding-top:8px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     + '<div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Süperresto Admin <span style="font:var(--fw-bold)">v1.0.0</span></div>'
     + '</div>'
-    + '<button onclick="adminLogout()" style="width:100%;padding:12px;background:#EF4444;color:#fff;border:none;border-radius:var(--r-lg);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'">'
+    + '<button onclick="adminLogout()" style="width:100%;padding:12px;background:#EF4444;color:#fff;border:none;border-radius:var(--r-lg);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer">'
     + '<iconify-icon icon="solar:logout-bold" style="font-size:14px;vertical-align:text-bottom;margin-right:6px"></iconify-icon>'
-    + 'Çıkış Yap'
-    + '</button>'
+    + 'Çıkış Yap</button>'
     + '</div>';
 
   html += '</div>';
 
   c.innerHTML = html;
+}
+
+/* ─── Yönetim Merkezi tile (priority flag) ─── */
+function _amgmtTile(t, priority) {
+  var cls = 'amgmt-tile' + (priority ? ' amgmt-tile--priority' : '');
+  var iconSize = priority ? 24 : 20;
+  return '<div class="'+cls+'" onclick="'+t.action+'">'
+    + '<div class="amgmt-ticon" style="background:'+t.tone+'18;color:'+t.tone+'">'
+    + '<iconify-icon icon="'+t.icon+'" style="font-size:'+iconSize+'px"></iconify-icon>'
+    + '</div>'
+    + '<div class="amgmt-tbody">'
+    + '<div class="amgmt-tlabel">'+t.label+'</div>'
+    + '<div class="amgmt-tsum" style="color:'+t.tone+'">'+t.summary+'</div>'
+    + '</div>'
+    + '<iconify-icon icon="solar:alt-arrow-right-linear" class="amgmt-tchev"></iconify-icon>'
+    + '</div>';
+}
+
+/* ─── İşletmeler — overlay wrapper (navbar'a bağlı olmadığı için) ─── */
+function _admMgmtOpenBusinesses() {
+  _admInjectStyles();
+  var adminPhone = document.getElementById('adminPhone');
+  if (!adminPhone) return;
+  var existing = adminPhone.querySelector('.prof-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'prof-overlay open';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-phone);display:flex;flex-direction:column;z-index:78;animation:admFadeIn .3s ease;overflow-y:auto';
+  overlay.innerHTML =
+    '<div style="position:sticky;top:0;background:var(--bg-phone);padding:12px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:10px;z-index:10">'
+    + '<div style="width:32px;height:32px;border-radius:var(--r-md);background:var(--glass-card);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="this.closest(\'.prof-overlay\').remove()">'
+    + '<iconify-icon icon="solar:arrow-left-linear" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>'
+    + '</div>'
+    + '<div><div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">İşletmeler</div></div>'
+    + '</div>'
+    + '<div id="adminBusinessesContainer" style="flex:1"></div>';
+  adminPhone.appendChild(overlay);
+  if (typeof renderAdminBusinesses === 'function') renderAdminBusinesses();
 }
 
 /* ─── Settings Tile ─── */
