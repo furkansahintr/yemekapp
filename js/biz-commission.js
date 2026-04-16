@@ -181,6 +181,64 @@ var _COMM_FAQ = [
   }
 ];
 
+/* ═══ ŞUBE SEÇİCİ (çoklu şube) ═══ */
+function _commOpenBranchPicker() {
+  _commInjectStyles();
+  var branches = BIZ_BRANCHES;
+
+  var overlay = document.createElement('div');
+  overlay.id = 'commBranchPickerOverlay';
+  overlay.className = 'prof-overlay open';
+  overlay.innerHTML = '\
+    <div class="prof-container" style="background:var(--bg-phone-secondary)">\
+      <div class="prof-topbar" style="background:var(--bg-phone);border-bottom:1px solid var(--border-subtle)">\
+        <div onclick="document.getElementById(\'commBranchPickerOverlay\').remove()" style="cursor:pointer;display:flex;align-items:center;gap:6px">\
+          <iconify-icon icon="solar:alt-arrow-left-linear" style="font-size:22px;color:var(--text-primary)"></iconify-icon>\
+        </div>\
+        <div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Komisyon Oranlarım</div>\
+        <div style="width:22px"></div>\
+      </div>\
+      <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">\
+        <div style="background:var(--primary-soft);border-radius:var(--r-lg);padding:12px 14px;display:flex;gap:10px;align-items:flex-start">\
+          <iconify-icon icon="solar:shop-2-bold" style="font-size:20px;color:var(--primary);flex-shrink:0;margin-top:1px"></iconify-icon>\
+          <div style="font:var(--fw-regular) var(--fs-xs)/1.45 var(--font);color:var(--text-secondary)">Komisyon detaylarını görüntülemek istediğiniz şubeyi seçin. Her şubenin komisyon oranı, kendi performans puanına göre ayrı hesaplanır.</div>\
+        </div>\
+        <div style="display:flex;flex-direction:column;gap:10px" id="commBranchList"></div>\
+        <div style="height:20px"></div>\
+      </div>\
+    </div>';
+  document.getElementById('bizPhone').appendChild(overlay);
+
+  var list = document.getElementById('commBranchList');
+  if (!list) return;
+  var html = '';
+  for (var i = 0; i < branches.length; i++) {
+    var b = branches[i];
+    var r = Number(b.rating || 0);
+    var rate = _commRate(r);
+    var tier = _commTier(r);
+    html += '<div onclick="document.getElementById(\'commBranchPickerOverlay\').remove(); openBizCommissionSettings(\'' + b.id + '\')" style="background:var(--bg-phone);border:1px solid ' + tier.color + '33;border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color .15s ease">'
+      + '<div style="width:50px;height:50px;border-radius:var(--r-lg);background:' + tier.color + '18;display:flex;align-items:center;justify-content:center;flex-shrink:0;flex-direction:column;gap:2px">'
+      + '<span style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:' + tier.color + '">%' + rate + '</span>'
+      + '<span style="font:var(--fw-regular) 9px/1 var(--font);color:' + tier.color + '">komisyon</span>'
+      + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      + '<span style="font:var(--fw-semibold) var(--fs-md)/1.1 var(--font);color:var(--text-primary)">' + (typeof escHtml === 'function' ? escHtml(b.name) : b.name) + '</span>'
+      + '<span style="font:var(--fw-semibold) 10px/1 var(--font);color:' + tier.color + ';background:' + tier.color + '18;padding:3px 7px;border-radius:var(--r-full)">' + tier.label + '</span>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-top:5px">'
+      + '<div style="display:flex;gap:1px">' + _commStars(r) + '</div>'
+      + '<span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">' + r.toFixed(1) + ' / 5.0</span>'
+      + '</div>'
+      + '<div style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-tertiary);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (typeof escHtml === 'function' ? escHtml(b.address) : b.address) + '</div>'
+      + '</div>'
+      + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:20px;color:' + tier.color + '"></iconify-icon>'
+      + '</div>';
+  }
+  list.innerHTML = html;
+}
+
 /* ═══ ANA SAYFA ═══ */
 function openBizCommissionSettings(branchId) {
   if (typeof bizCurrentRole !== 'undefined' && bizCurrentRole !== 'owner' && bizCurrentRole !== 'manager') {

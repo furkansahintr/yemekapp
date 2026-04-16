@@ -120,6 +120,39 @@ function renderBizMyBusiness() {
         </div>
       </div>
 
+      <!-- Komisyon Oranlarım -->
+      ${(function(){
+        var _visibleBranches = isManager
+          ? BIZ_BRANCHES.filter(function(b){ return b.id === bizActiveBranch; })
+          : BIZ_BRANCHES;
+        if (!_visibleBranches.length) return '';
+        var _cb = _visibleBranches[0];
+        var _cr = Number(_cb.rating || 0);
+        var _cRate = (typeof _commRate === 'function') ? _commRate(_cr) : '—';
+        var _cTier = (typeof _commTier === 'function') ? _commTier(_cr) : { label:'', color:'#666', icon:'solar:star-bold' };
+        var _multi = _visibleBranches.length > 1;
+        var _onclick = _multi ? '_commOpenBranchPicker()' : 'openBizCommissionSettings(\'' + _cb.id + '\')';
+        var _sub = _multi
+          ? _visibleBranches.length + ' şube · Şube seçerek komisyon detaylarını görüntüleyin'
+          : _cr.toFixed(1) + ' puan · %' + _cRate + ' komisyon · ' + _cb.name;
+        return '<div onclick="' + _onclick + '" style="background:linear-gradient(135deg, ' + _cTier.color + '15, var(--bg-phone));border-radius:var(--r-xl);border:1px solid ' + _cTier.color + '44;box-shadow:var(--shadow-md);padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-top:2px">'
+          + '<div style="width:44px;height:44px;border-radius:var(--r-lg);background:' + _cTier.color + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+          + '<iconify-icon icon="solar:wallet-money-bold" style="font-size:22px;color:#fff"></iconify-icon>'
+          + '</div>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+          + '<span style="font:var(--fw-semibold) var(--fs-md)/1.1 var(--font);color:var(--text-primary)">Komisyon Oranlarım</span>'
+          + '<span style="font:var(--fw-semibold) 10px/1 var(--font);color:' + _cTier.color + ';background:' + _cTier.color + '18;padding:3px 7px;border-radius:var(--r-full)">' + (_multi ? _visibleBranches.length + ' Şube' : _cTier.label) + '</span>'
+          + '</div>'
+          + '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">' + _sub + '</div>'
+          + '</div>'
+          + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:' + _cTier.color + '"></iconify-icon>'
+          + '</div>';
+      })()}
+
+      <!-- Cüzdanım -->
+      ${(typeof _wltPreviewTileHtml === 'function') ? _wltPreviewTileHtml() : ''}
+
       <!-- Ayarlar -->
       <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:4px 0">Ayarlar</div>
       <div style="background:var(--bg-phone);border-radius:var(--r-xl);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);overflow:hidden">

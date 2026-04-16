@@ -221,7 +221,7 @@ const BIZ_ROLE_PERMISSIONS = {
   owner: {
     label: 'İşletme Sahibi',
     color: '#8B5CF6',
-    tiles: ['orders','tables','menu','waiterCalls','staff','reviews','branches','delivery'],
+    tiles: ['liveOrders','orders','tables','menu','waiterCalls','staff','reviews','branches','delivery'],
     navTabs: ['bizHome','bizDashboard','bizAI','bizCommunity','bizMyBusiness'],
     screens: ['orders','tables','menu','waiterCalls','staff','reviews','dashboard','ai','community','myBusiness','branches','roles','payments','invoice','settings','notifications'],
     actions: ['edit_menu','manage_staff','assign_roles','view_reports','process_payment','manage_tables','manage_orders','manage_settings','manage_branches']
@@ -229,7 +229,7 @@ const BIZ_ROLE_PERMISSIONS = {
   manager: {
     label: 'Şube Müdürü',
     color: '#3B82F6',
-    tiles: ['orders','tables','menu','waiterCalls','staff','reviews'],
+    tiles: ['liveOrders','orders','tables','menu','waiterCalls','staff','reviews'],
     navTabs: ['bizHome','bizDashboard','bizAI','bizCommunity','bizMyBusiness'],
     screens: ['orders','tables','menu','waiterCalls','staff','reviews','dashboard','ai','community','myBusiness'],
     actions: ['edit_menu','manage_staff','view_reports','manage_tables','manage_orders','manage_reservations']
@@ -237,7 +237,7 @@ const BIZ_ROLE_PERMISSIONS = {
   coordinator: {
     label: 'Koordinatör',
     color: '#A855F7',
-    tiles: ['orders','tables','waiterCalls','staff','reviews','delivery'],
+    tiles: ['liveOrders','orders','tables','waiterCalls','staff','reviews','delivery'],
     // AI access: only for the coordinator's own branch (branch picker is
     // already locked to bizActiveBranch for non-owner roles in biz-app.js).
     navTabs: ['bizHome','bizAI','bizCommunity'],
@@ -247,7 +247,7 @@ const BIZ_ROLE_PERMISSIONS = {
   chef: {
     label: 'Mutfak Sorumlusu',
     color: '#F59E0B',
-    tiles: ['orders','menu'],
+    tiles: ['liveOrders','orders','menu'],
     navTabs: ['bizHome','bizAI'],
     screens: ['orders','menu','ai'],
     actions: ['edit_menu','manage_orders']
@@ -255,7 +255,7 @@ const BIZ_ROLE_PERMISSIONS = {
   waiter: {
     label: 'Garson',
     color: '#22C55E',
-    tiles: ['orders','tables','waiterCalls'],
+    tiles: ['liveOrders','orders','tables','waiterCalls'],
     navTabs: ['bizHome'],
     screens: ['orders','tables','waiterCalls'],
     actions: ['manage_tables','manage_orders','manage_reservations']
@@ -263,7 +263,7 @@ const BIZ_ROLE_PERMISSIONS = {
   cashier: {
     label: 'Kasiyer',
     color: '#06B6D4',
-    tiles: ['orders','tables','menu'],
+    tiles: ['liveOrders','orders','tables','menu'],
     navTabs: ['bizHome','bizAI','bizCommunity'],
     screens: ['orders','tables','menu','ai','community'],
     actions: ['process_payment','manage_orders','manage_reservations']
@@ -271,7 +271,7 @@ const BIZ_ROLE_PERMISSIONS = {
   courier: {
     label: 'Kurye',
     color: '#EF4444',
-    tiles: ['orders','delivery'],
+    tiles: ['liveOrders','orders','delivery'],
     navTabs: ['bizHome'],
     screens: ['orders','delivery'],
     actions: ['manage_orders']
@@ -280,6 +280,7 @@ const BIZ_ROLE_PERMISSIONS = {
 
 /* ═══ TILE DEFINITIONS (id → config) ═══ */
 const BIZ_TILE_DEFS = {
+  liveOrders:   { icon: 'solar:bag-music-bold',                     color: '#22C55E', title: 'Canlı Siparişler', fn: 'openBizLiveOrders', custom: true },
   orders:       { icon: 'solar:bag-check-bold',                    color: '#8B5CF6', title: 'Siparişler',       fn: 'openBizOrders' },
   tables:       { icon: 'solar:sofa-2-bold',                       color: '#3B82F6', title: 'Masalar',          fn: 'openBizTables' },
   menu:         { icon: 'solar:notebook-bold',                     color: '#F59E0B', title: 'Menü',             fn: 'openBizMenuMgmt' },

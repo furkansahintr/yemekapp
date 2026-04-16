@@ -339,6 +339,76 @@
   </div>
 </div>
 
+<!-- ═══ ADMIN PHONE SHELL ═══ -->
+<div class="phone" id="adminPhone" style="display:none">
+  <div class="app-body" id="adminAppBody">
+    <div class="app-header" id="adminAppHeader">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px;flex:1">
+          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(99,102,241,0.35)">
+            <iconify-icon icon="solar:shield-keyhole-bold" style="font-size:20px;color:#fff"></iconify-icon>
+          </div>
+          <div style="min-width:0;flex:1">
+            <div id="adminHeaderName" style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Süperresto Admin</div>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:3px">
+              <div style="width:6px;height:6px;border-radius:50%;background:#22C55E"></div>
+              <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Platform Yönetimi</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="btn-icon" style="position:relative" onclick="adminOpenNotifications()">
+            <iconify-icon icon="solar:bell-linear"></iconify-icon>
+            <span class="cart-badge" id="adminNotifBadge">5</span>
+          </div>
+          <div class="btn-icon" onclick="adminLogout()" title="Çıkış">
+            <iconify-icon icon="solar:logout-2-linear" style="font-size:20px;color:#EF4444"></iconify-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen active" id="screenAdminDashboard">
+      <div id="adminDashboardContainer"></div>
+    </div>
+    <div class="screen" id="screenAdminRecipes">
+      <div id="adminRecipesContainer"></div>
+    </div>
+    <div class="screen" id="screenAdminUsers">
+      <div id="adminUsersContainer"></div>
+    </div>
+    <div class="screen" id="screenAdminOrders">
+      <div id="adminOrdersContainer"></div>
+    </div>
+    <div class="screen" id="screenAdminSettings">
+      <div id="adminSettingsContainer"></div>
+    </div>
+
+    <div class="app-nav" id="adminAppNav">
+      <div class="ni active" onclick="adminSwitchTab('adminDashboard')" id="adminNavDashboard" data-icon-active="solar:chart-2-bold" data-icon="solar:chart-2-linear">
+        <iconify-icon icon="solar:chart-2-bold" style="font-size:26px"></iconify-icon>
+        <span>Genel</span>
+      </div>
+      <div class="ni" onclick="adminSwitchTab('adminRecipes')" id="adminNavRecipes" data-icon-active="solar:chef-hat-heart-bold" data-icon="solar:chef-hat-heart-linear">
+        <iconify-icon icon="solar:chef-hat-heart-linear" style="font-size:26px"></iconify-icon>
+        <span>Tarifler</span>
+      </div>
+      <div class="ni" onclick="adminSwitchTab('adminUsers')" id="adminNavUsers" data-icon-active="solar:users-group-rounded-bold" data-icon="solar:users-group-rounded-linear">
+        <iconify-icon icon="solar:users-group-rounded-linear" style="font-size:26px"></iconify-icon>
+        <span>Üyeler</span>
+      </div>
+      <div class="ni" onclick="adminSwitchTab('adminOrders')" id="adminNavOrders" data-icon-active="solar:bag-check-bold" data-icon="solar:bag-check-linear">
+        <iconify-icon icon="solar:bag-check-linear" style="font-size:26px"></iconify-icon>
+        <span>Siparişler</span>
+      </div>
+      <div class="ni" onclick="adminSwitchTab('adminSettings')" id="adminNavSettings" data-icon-active="solar:settings-bold" data-icon="solar:settings-linear">
+        <iconify-icon icon="solar:settings-linear" style="font-size:26px"></iconify-icon>
+        <span>Yönetim</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- #include pages/cooking-steps.html -->
 
 <!-- #include pages/hands-free.html -->
@@ -398,6 +468,7 @@
     // Business-side components
     'js/biz-home.js',
     'js/biz-dashboard.js',
+    'js/biz-live-orders.js',
     'js/biz-orders.js',
     'js/biz-tables.js',
     'js/biz-community.js',
@@ -414,10 +485,21 @@
     'js/biz-profile.js',
     'js/biz-branch-detail.js',
     'js/biz-commission.js',
+    'js/biz-wallet.js',
     'js/biz-delivery-settings.js',
     'js/biz-notifications.js',
     'js/biz-kitchen.js',
-    'js/biz-placeholders.js'
+    'js/biz-placeholders.js',
+    // Admin panel components
+    'admin-data.js',
+    'admin-app.js',
+    'js/admin-dashboard.js',
+    'js/admin-recipes.js',
+    'js/admin-users.js',
+    'js/admin-orders.js',
+    'js/admin-support.js',
+    'js/admin-finance.js',
+    'js/admin-settings.js'
   ];
   let i = 0;
   function loadNext() {

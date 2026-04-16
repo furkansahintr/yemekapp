@@ -16,6 +16,7 @@ function getBizTileData() {
   const reviews = BIZ_REVIEWS;
 
   return {
+    liveOrders:   { value: activeOrders.length + ' Aktif', subtitle: pendingOrders.length + ' yeni bekliyor', custom: true },
     orders:       { value: orders.length + ' Toplam', subtitle: activeOrders.length + ' aktif · ' + onlineOrders.length + ' online' },
     tables:       { value: occupiedTables.length + '/' + tables.length + ' Dolu', subtitle: callTables.length + ' garson çağrısı' },
     menu:         { value: '24 Ürün', subtitle: '2 pasif' },
@@ -190,6 +191,11 @@ function renderBizHome() {
     const def = BIZ_TILE_DEFS[tileId];
     const data = tileData[tileId];
     if (!def || !data) return;
+    /* Custom tile for Canlı Siparişler */
+    if (def.custom && typeof _blvoTileHtml === 'function') {
+      html += _blvoTileHtml();
+      return;
+    }
     html += bizTile(def.icon, def.color, def.title, data.value, data.subtitle, def.fn + '()');
   });
 
