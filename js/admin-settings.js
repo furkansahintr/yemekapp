@@ -124,8 +124,10 @@ function renderAdminSettings() {
           summary:(M.reports ? 'Son: '+M.reports.lastRun : '—'),
           action:"_admToast('Raporlama merkezi yakında')" },
         { id:'adminUsers',label:'Admin Ayarları', icon:'solar:shield-user-bold', tone:'#A855F7',
-          summary:(M.adminUsers ? M.adminUsers.total+' admin • Hassas Erişim' : 'Hassas Erişim'),
-          action:"_admToast('Admin yönetimi yakında')" }
+          summary:((typeof ADMIN_PANEL_ADMINS!=='undefined')
+            ? ADMIN_PANEL_ADMINS.length+' admin • '+ADMIN_PANEL_ROLES.length+' rol • Hassas Erişim'
+            : (M.adminUsers ? M.adminUsers.total+' admin • Hassas Erişim' : 'Hassas Erişim')),
+          action:"_admOpenPanelSettings()" }
       ]
     }
   ];
