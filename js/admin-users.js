@@ -190,7 +190,7 @@ function _mbrOpenUserDetail(uid) {
     + '</div>';
 
   /* ── Hero ── */
-  h += '<div style="background:linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%);border-radius:var(--r-xl);padding:16px;color:#fff;margin-bottom:16px">'
+  h += '<div style="position:relative;background:linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%);border-radius:var(--r-xl);padding:16px;color:#fff;margin-bottom:16px">'
     + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
     + '<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font:var(--fw-bold) 20px/1 var(--font)">' + u.name.charAt(0) + '</div>'
     + '<div>'
@@ -203,7 +203,11 @@ function _mbrOpenUserDetail(uid) {
     + (u.isPremium ? '<span class="mbr-badge" style="background:rgba(255,255,255,0.2);color:#fff">Premium</span>' : '')
     + '<span class="mbr-badge" style="background:rgba(255,255,255,0.2);color:#fff">' + u.city + ', ' + (u.district || '') + '</span>'
     + '</div>'
-    + '<div style="font:var(--fw-regular) 10px/1 var(--font);opacity:.7;margin-top:8px">Kayıt: ' + u.joinDate + ' · Son aktif: ' + _admRelative(u.lastActive) + '</div>'
+    + '<div style="font:var(--fw-regular) 10px/1 var(--font);opacity:.7;margin-top:8px;padding-right:110px">Kayıt: ' + u.joinDate + ' · Son aktif: ' + _admRelative(u.lastActive) + '</div>'
+    + '<button onclick="_admOpenUserFullDetail(\'' + u.id + '\')" style="position:absolute;right:12px;bottom:12px;background:rgba(255,255,255,0.22);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.3);border-radius:var(--r-full);padding:6px 12px;font:var(--fw-semibold) 11px/1 var(--font);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s" onmouseover="this.style.background=\'rgba(255,255,255,0.32)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.22)\'">'
+    + '<span>Detayını gör</span>'
+    + '<iconify-icon icon="solar:arrow-right-linear" style="font-size:13px"></iconify-icon>'
+    + '</button>'
     + '</div>';
 
   /* ── Section 1: Profil & Sağlık ── */
@@ -363,7 +367,7 @@ function _mbrOpenBizDetail(bid) {
     + '</div>';
 
   /* ── Hero ── */
-  h += '<div style="background:linear-gradient(135deg,#3B82F6 0%,#06B6D4 100%);border-radius:var(--r-xl);padding:16px;color:#fff;margin-bottom:16px">'
+  h += '<div style="position:relative;background:linear-gradient(135deg,#3B82F6 0%,#06B6D4 100%);border-radius:var(--r-xl);padding:16px;color:#fff;margin-bottom:16px">'
     + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
     + '<div style="width:48px;height:48px;border-radius:var(--r-md);background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font:var(--fw-bold) 20px/1 var(--font)">' + b.name.charAt(0) + '</div>'
     + '<div>'
@@ -377,7 +381,11 @@ function _mbrOpenBizDetail(bid) {
     + '<span class="mbr-badge" style="background:rgba(255,255,255,0.2);color:#fff">' + b.city + ' · ' + b.branches + ' Şube</span>'
     + '<span class="mbr-badge" style="background:rgba(255,255,255,0.2);color:#fff">★ ' + b.rating.toFixed(1) + '</span>'
     + '</div>'
-    + '<div style="font:var(--fw-regular) 10px/1 var(--font);opacity:.7;margin-top:8px">Kayıt: ' + b.joinDate + (b.planExpiry ? ' · Plan bitiş: ' + b.planExpiry : '') + '</div>'
+    + '<div style="font:var(--fw-regular) 10px/1 var(--font);opacity:.7;margin-top:8px;padding-right:110px">Kayıt: ' + b.joinDate + (b.planExpiry ? ' · Plan bitiş: ' + b.planExpiry : '') + '</div>'
+    + '<button onclick="_admOpenBizFullDetail(\'' + b.id + '\')" style="position:absolute;right:12px;bottom:12px;background:rgba(255,255,255,0.22);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.3);border-radius:var(--r-full);padding:6px 12px;font:var(--fw-semibold) 11px/1 var(--font);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:4px" onmouseover="this.style.background=\'rgba(255,255,255,0.32)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.22)\'">'
+    + '<span>Detayını gör</span>'
+    + '<iconify-icon icon="solar:arrow-right-linear" style="font-size:13px"></iconify-icon>'
+    + '</button>'
     + '</div>';
 
   /* ── Section 1: Operasyon (Menü, Masalar, Aktif Siparişler) ── */
