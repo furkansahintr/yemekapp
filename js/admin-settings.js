@@ -60,11 +60,13 @@ function renderAdminSettings() {
       sub:'Para, token ve abonelik akışı',
       tiles:[
         { id:'tokenSupply', label:'Token Yönetim Merkezi', icon:'solar:dollar-minimalistic-bold', tone:'#EAB308',
-          summary:(M.tokenSupply ? _admFmt(M.tokenSupply.total)+' arz' : '—'),
-          action:"_admToast('Token yönetimi yakında')" },
+          summary:((typeof ADMIN_TOKEN_CONFIG!=='undefined')
+            ? '1 Tkn = ₺'+ADMIN_TOKEN_CONFIG.exchangeRate.toFixed(2)+' • '+BIZ.length+' işletme'
+            : (M.tokenSupply ? _admFmt(M.tokenSupply.total)+' arz' : '—')),
+          action:"_admOpenTokens()" },
         { id:'tokenTxns',  label:'Token İşlemleri', icon:'solar:round-transfer-horizontal-bold', tone:'#14B8A6',
           summary:(M.tokenTxns ? 'Bugün: '+_admFmt(M.tokenTxns.todayNet)+' ↑' : '—'),
-          action:"_admToast('Token işlem geçmişi yakında')" },
+          action:"_admOpenTokens()" },
         { id:'payments',   label:'Ödemeler', icon:'solar:card-bold', tone:'#10B981',
           summary:(M.payments ? 'Bugün: +'+_admFmtTL(M.payments.todayTl) : '—'),
           action:"renderAdminFinance()" },
