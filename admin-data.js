@@ -1699,3 +1699,97 @@ var ADMIN_BIZ_APPLICATIONS = [
     ]
   }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   BİLDİRİM MERKEZİ — Kanallar, Otomasyon, Kitle Filtreleri
+   ═══════════════════════════════════════════════════════════ */
+
+/* 3 gönderim kanalı */
+var ADMIN_NOTIF_CHANNELS = [
+  { id:'mail', label:'Mail ile Gönderim', icon:'solar:letter-bold',
+    description:'Zengin içerikli bültenler (görsel + metin)',
+    color:'#3B82F6', gradient:'linear-gradient(135deg,#3B82F6,#06B6D4)' },
+  { id:'sms',  label:'SMS ile Gönderim',  icon:'solar:chat-round-dots-bold',
+    description:'Acil ve doğrudan metin mesajları',
+    color:'#22C55E', gradient:'linear-gradient(135deg,#22C55E,#16A34A)', charLimit:160 },
+  { id:'push', label:'Uygulama Bildirimi', icon:'solar:bell-bing-bold',
+    description:'Anlık uygulama içi bildirim',
+    color:'#8B5CF6', gradient:'linear-gradient(135deg,#8B5CF6,#A78BFA)', charLimit:120 }
+];
+
+/* Kullanılabilir dinamik değişkenler */
+var ADMIN_NOTIF_VARIABLES = [
+  { token:'{kullanici_adi}',  label:'Kullanıcı Adı',  example:'Ahmet Yılmaz' },
+  { token:'{siparis_no}',     label:'Sipariş No',     example:'#104281' },
+  { token:'{isletme_adi}',    label:'İşletme Adı',    example:'Lezzet Mutfak' },
+  { token:'{tutar}',          label:'Tutar',          example:'₺184' },
+  { token:'{kurye_adi}',      label:'Kurye',          example:'Murat Y.' },
+  { token:'{sehir}',          label:'Şehir',          example:'İstanbul' }
+];
+
+/* Dinamik otomasyon senaryoları — 4 grup */
+var ADMIN_NOTIF_AUTOMATION = [
+  {
+    id:'grp_order', label:'Sipariş Senaryoları', icon:'solar:bag-check-bold', color:'#3B82F6',
+    scenarios:[
+      { id:'n_order_received',  label:'Sipariş Alındı',       channel:'push', active:true,
+        text:'Merhaba {kullanici_adi}, siparişiniz ({siparis_no}) alındı. {isletme_adi} hazırlamaya başlıyor.' },
+      { id:'n_order_preparing', label:'Sipariş Hazırlanıyor', channel:'push', active:true,
+        text:'Şefler mutfakta! {siparis_no} numaralı siparişiniz {isletme_adi} tarafından hazırlanıyor.' },
+      { id:'n_order_onway',     label:'Sipariş Yola Çıktı',   channel:'push', active:true,
+        text:'Siparişiniz yola çıktı! {kurye_adi} en kısa sürede kapınıza getirecek. 🚴' },
+      { id:'n_order_delivered', label:'Sipariş Teslim Edildi', channel:'push', active:true,
+        text:'{siparis_no} teslim edildi. Afiyet olsun! Siparişinizi değerlendirmek ister misiniz?' }
+    ]
+  },
+  {
+    id:'grp_cancel', label:'İptal & İade Senaryoları', icon:'solar:close-circle-bold', color:'#EF4444',
+    scenarios:[
+      { id:'n_cancel_user',   label:'Kullanıcı İptali',        channel:'push', active:true,
+        text:'{siparis_no} numaralı siparişiniz iptal edildi. İade süreci başlatıldı.' },
+      { id:'n_cancel_biz',    label:'İşletme İptali',          channel:'push', active:true,
+        text:'Üzgünüz, {isletme_adi} {siparis_no} siparişini iptal etti. Cüzdan iadeniz yapıldı.' },
+      { id:'n_cancel_admin',  label:'Admin İptali',            channel:'mail', active:true,
+        text:'Sipariş {siparis_no} güvenlik nedeniyle iptal edilmiştir. Detaylar e-postanızda.' },
+      { id:'n_refund_done',   label:'Token İadesi Tamamlandı', channel:'push', active:true,
+        text:'{tutar} token iadeniz cüzdanınıza yatırıldı.' }
+    ]
+  },
+  {
+    id:'grp_community', label:'Topluluk Senaryoları', icon:'solar:users-group-two-rounded-bold', color:'#EC4899',
+    scenarios:[
+      { id:'n_new_recipe',  label:'Yeni Tarif Paylaşıldı', channel:'push', active:true,
+        text:'Takip ettiğin şef {kullanici_adi} yeni bir tarif paylaştı. Hemen keşfet!' },
+      { id:'n_liked',       label:'İçeriğin Beğenildi',    channel:'push', active:false,
+        text:'Paylaşımın {kullanici_adi} tarafından beğenildi ❤️' },
+      { id:'n_new_follower', label:'Yeni Takipçi',          channel:'push', active:true,
+        text:'{kullanici_adi} seni takip etmeye başladı. Merhaba de! 👋' }
+    ]
+  },
+  {
+    id:'grp_system', label:'Sistem Senaryoları', icon:'solar:shield-keyhole-bold', color:'#8B5CF6',
+    scenarios:[
+      { id:'n_password_reset', label:'Şifre Sıfırlama',     channel:'mail', active:true,
+        text:'Merhaba {kullanici_adi}, şifre sıfırlama isteğiniz alındı. Aşağıdaki linke tıklayarak yeni şifrenizi belirleyebilirsiniz.' },
+      { id:'n_new_login',      label:'Yeni Giriş Tespit Edildi', channel:'mail', active:true,
+        text:'Hesabınıza {sehir} konumundan yeni bir giriş yapıldı. Siz değilseniz hemen şifrenizi değiştirin.' }
+    ]
+  }
+];
+
+/* Audience filtre preset seçenekleri */
+var ADMIN_NOTIF_FILTERS = {
+  cities: ['İstanbul','Ankara','İzmir','Bursa','Antalya','Gaziantep','Mersin','Trabzon'],
+  statuses: [
+    { id:'premium', label:'Premium Üyeler',   icon:'solar:crown-bold',             color:'#F59E0B' },
+    { id:'chef',    label:'İçerik Paylaşanlar', icon:'solar:chef-hat-bold',        color:'#EC4899' },
+    { id:'biz',     label:'İşletme Çalışanları', icon:'solar:shop-bold',           color:'#3B82F6' },
+    { id:'active',  label:'Aktif Kullanıcılar', icon:'solar:fire-bold',            color:'#22C55E' }
+  ],
+  activityPresets: [
+    { id:'7d',  label:'Son 7 gün',  days:7 },
+    { id:'30d', label:'Son 30 gün', days:30 },
+    { id:'90d', label:'Son 90 gün', days:90 },
+    { id:'inactive', label:'30+ gündür aktif değil', days:-30 }
+  ]
+};

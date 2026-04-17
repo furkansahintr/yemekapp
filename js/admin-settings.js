@@ -92,8 +92,10 @@ function renderAdminSettings() {
             : activeCampaigns+' aktif kampanya'),
           action:"_admOpenAds()" },
         { id:'notifications',label:'Bildirim Merkezi', icon:'solar:bell-bing-bold', tone:'#6366F1',
-          summary:'Şablonlar & toplu gönderim',
-          action:"_admOpenNotifTemplates()" }
+          summary:((typeof ADMIN_NOTIF_AUTOMATION!=='undefined')
+            ? ADMIN_NOTIF_CHANNELS.length+' kanal • '+(function(){var t=0,a=0;ADMIN_NOTIF_AUTOMATION.forEach(function(g){g.scenarios.forEach(function(s){t++;if(s.active)a++;});});return a+'/'+t+' otomasyon';})()
+            : 'Şablonlar & toplu gönderim'),
+          action:"_admOpenNotifications()" }
       ]
     },
     {
