@@ -1306,3 +1306,118 @@ var ADMIN_COMPLAINT_CATEGORIES = [
 
   for (var j = 0; j < extra.length; j++) ADMIN_REPORTS.push(extra[j]);
 })();
+
+/* ═══════════════════════════════════════════════════════════
+   REKLAM ALANI — Placement Katalog + Reklam Veren Kampanyaları
+   ═══════════════════════════════════════════════════════════ */
+
+/* 8 reklam yerleşimi, 3 grup halinde */
+var ADMIN_AD_PLACEMENTS = [
+  /* Konum Odaklı */
+  { id:'p_rest_list',  group:'location', groupLabel:'Konum Odaklı',
+    label:'Restoran Listeleme',  icon:'solar:shop-bold',
+    description:'Konumdaki restoran listesinde üst sıralarda yer alma',
+    pricePerImpression: 2.5, dailyFreqCap: 5, region:'İl bazlı', color:'#3B82F6',
+    updatedAt:'2026-03-15T10:00:00' },
+  { id:'p_recipe_disc', group:'location', groupLabel:'Konum Odaklı',
+    label:'Tarif Keşfi',  icon:'solar:chef-hat-heart-bold',
+    description:'Yakındaki kullanıcıların tarifler sekmesinde işletme görünümü',
+    pricePerImpression: 1.8, dailyFreqCap: 4, region:'5 km çap', color:'#F59E0B',
+    updatedAt:'2026-03-15T10:00:00' },
+  { id:'p_local_story', group:'location', groupLabel:'Konum Odaklı',
+    label:'Yerel Hikayeler',  icon:'solar:gallery-wide-bold',
+    description:'Konumdaki kullanıcıların hikaye akışında reklam',
+    pricePerImpression: 3.0, dailyFreqCap: 3, region:'İlçe bazlı', color:'#EC4899',
+    updatedAt:'2026-03-15T10:00:00' },
+
+  /* İçerik & AI */
+  { id:'p_smart_match', group:'content', groupLabel:'İçerik & AI Odaklı',
+    label:'Akıllı Eşleşme',  icon:'solar:magic-stick-3-bold',
+    description:'Tarif içeriği ile menü ürünü örtüştüğünde tarif içi yerleşim',
+    pricePerImpression: 4.2, dailyFreqCap: 2, region:'Ülke geneli', color:'#8B5CF6',
+    updatedAt:'2026-03-15T10:00:00' },
+  { id:'p_ai_assist',   group:'content', groupLabel:'İçerik & AI Odaklı',
+    label:'AI Asistan Reklamı',  icon:'solar:widget-5-bold',
+    description:'AI ile tarif/yer arayanlara öneri olarak işletme sunumu',
+    pricePerImpression: 5.0, dailyFreqCap: 1, region:'Ülke geneli', color:'#06B6D4',
+    updatedAt:'2026-03-15T10:00:00' },
+
+  /* Genel & Keşfet */
+  { id:'p_discover',    group:'general', groupLabel:'Genel & Keşfet',
+    label:'Keşfet Tanıtımı',  icon:'solar:compass-bold',
+    description:'Keşfet sayfasında genel işletme tanıtımı',
+    pricePerImpression: 2.0, dailyFreqCap: 6, region:'İl bazlı', color:'#22C55E',
+    updatedAt:'2026-03-15T10:00:00' },
+  { id:'p_content_feat',group:'general', groupLabel:'Genel & Keşfet',
+    label:'İçerik Öne Çıkarma',  icon:'solar:star-bold',
+    description:'Seçili topluluk içeriğini öne çıkarma',
+    pricePerImpression: 2.8, dailyFreqCap: 4, region:'Opsiyonel konum', color:'#F97316',
+    updatedAt:'2026-03-15T10:00:00' },
+  { id:'p_global_story',group:'general', groupLabel:'Genel & Keşfet',
+    label:'Global Hikayeler',  icon:'solar:planet-bold',
+    description:'Kullanıcı hikayelerinde konumdan bağımsız gösterim',
+    pricePerImpression: 3.5, dailyFreqCap: 3, region:'Ülke geneli', color:'#6366F1',
+    updatedAt:'2026-03-15T10:00:00' }
+];
+
+/* Reklam Veren Kampanyaları — her işletmenin satın aldığı placement + bütçe */
+var ADMIN_AD_CAMPAIGNS = [
+  /* ── AKTİF ── */
+  { id:'ac_001', bizId:'bz2', bizName:'Pide Palace', bizOwner:'Mehmet Demir',
+    placements:['p_rest_list','p_smart_match','p_recipe_disc'],
+    budgetToken:25000, spentToken:14300, impressions:8420, clicks:612,
+    startDate:'2026-04-01', endDate:'2026-04-30', status:'active',
+    dailySpend:[520,610,580,640,700,680,720,560,640,720] },
+  { id:'ac_002', bizId:'bz9', bizName:'Kebapçı Hakkı', bizOwner:'Hakkı Usta',
+    placements:['p_rest_list','p_ai_assist','p_discover','p_global_story'],
+    budgetToken:60000, spentToken:38900, impressions:15200, clicks:1120,
+    startDate:'2026-03-20', endDate:'2026-05-20', status:'active',
+    dailySpend:[1100,1240,1380,1420,1380,1520,1490,1550,1420,1480] },
+  { id:'ac_003', bizId:'bz5', bizName:'Çiğ Köfte Express', bizOwner:'Fatma Şahin',
+    placements:['p_local_story','p_content_feat'],
+    budgetToken:18000, spentToken:7200, impressions:6100, clicks:340,
+    startDate:'2026-04-05', endDate:'2026-05-05', status:'active',
+    dailySpend:[280,320,390,410,380,420,450,410,460,490] },
+  { id:'ac_004', bizId:'bz13', bizName:'Tatlıcı Nene', bizOwner:'Ayşe Hanım',
+    placements:['p_smart_match','p_recipe_disc','p_ai_assist'],
+    budgetToken:35000, spentToken:21500, impressions:9300, clicks:725,
+    startDate:'2026-03-25', endDate:'2026-04-25', status:'active',
+    dailySpend:[720,840,890,920,890,950,1020,890,940,1050] },
+  { id:'ac_005', bizId:'bz7', bizName:'Waffle House', bizOwner:'Selin Aydın',
+    placements:['p_discover','p_content_feat'],
+    budgetToken:12000, spentToken:9800, impressions:4200, clicks:310,
+    startDate:'2026-04-01', endDate:'2026-04-20', status:'active',
+    dailySpend:[480,520,510,490,560,580,520,540,600,510] },
+  { id:'ac_006', bizId:'bz12', bizName:'Dönerci Baba', bizOwner:'İbrahim Koç',
+    placements:['p_rest_list'],
+    budgetToken:8000, spentToken:3400, impressions:2800, clicks:180,
+    startDate:'2026-04-10', endDate:'2026-05-10', status:'active',
+    dailySpend:[310,340,380,410,390,420,380] },
+  { id:'ac_007', bizId:'bz1', bizName:'Lezzet Mutfak', bizOwner:'Ali Yılmaz',
+    placements:['p_local_story','p_global_story','p_discover'],
+    budgetToken:20000, spentToken:11200, impressions:5900, clicks:430,
+    startDate:'2026-04-03', endDate:'2026-05-03', status:'active',
+    dailySpend:[480,540,590,620,580,640,610,680,720,650] },
+
+  /* ── GEÇMIŞ ── */
+  { id:'ac_008', bizId:'bz4', bizName:'Sushi Master', bizOwner:'Kemal Aksoy',
+    placements:['p_ai_assist','p_discover'],
+    budgetToken:22000, spentToken:22000, impressions:8100, clicks:580,
+    startDate:'2026-02-15', endDate:'2026-03-15', status:'ended',
+    dailySpend:[720,780,820,790] },
+  { id:'ac_009', bizId:'bz15', bizName:'Makarna Dükkanı', bizOwner:'Ece Yılmaz',
+    placements:['p_smart_match'],
+    budgetToken:10000, spentToken:6700, impressions:3200, clicks:195,
+    startDate:'2026-02-01', endDate:'2026-03-01', status:'cancelled',
+    dailySpend:[260,290,310] },
+  { id:'ac_010', bizId:'bz3', bizName:'Burger Lab', bizOwner:'Zeynep Kaya',
+    placements:['p_rest_list','p_discover'],
+    budgetToken:15000, spentToken:15000, impressions:5800, clicks:412,
+    startDate:'2026-01-10', endDate:'2026-02-10', status:'ended',
+    dailySpend:[510,540,580,600] },
+  { id:'ac_011', bizId:'bz6', bizName:'Pizza Napoli', bizOwner:'Emre Öztürk',
+    placements:['p_local_story'],
+    budgetToken:5000, spentToken:2100, impressions:1400, clicks:78,
+    startDate:'2026-03-01', endDate:'2026-03-15', status:'cancelled',
+    dailySpend:[180,210,240] }
+];

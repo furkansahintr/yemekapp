@@ -84,9 +84,11 @@ function renderAdminSettings() {
         { id:'community',    label:'Topluluk Analizleri', icon:'solar:hashtag-chat-bold', tone:'#06B6D4',
           summary:(M.community ? '%'+M.community.engagementPct+' etkileşim' : '—'),
           action:"_admToast('Topluluk analizleri yakında')" },
-        { id:'ads',          label:'Reklam Alanı', icon:'solar:gallery-wide-bold', tone:'#F43F5E',
-          summary:activeCampaigns+' aktif kampanya',
-          action:"_admOpenCampaigns()" },
+        { id:'ads',          label:'Reklam Alanı', icon:'solar:gallery-wide-bold', tone:'#8B5CF6',
+          summary:((typeof ADMIN_AD_CAMPAIGNS!=='undefined')
+            ? ADMIN_AD_CAMPAIGNS.filter(function(c){return c.status==='active';}).length+' aktif • '+ADMIN_AD_PLACEMENTS.length+' yerleşim'
+            : activeCampaigns+' aktif kampanya'),
+          action:"_admOpenAds()" },
         { id:'notifications',label:'Bildirim Merkezi', icon:'solar:bell-bing-bold', tone:'#6366F1',
           summary:'Şablonlar & toplu gönderim',
           action:"_admOpenNotifTemplates()" }
