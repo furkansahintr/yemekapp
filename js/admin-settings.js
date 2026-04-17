@@ -32,8 +32,10 @@ function renderAdminSettings() {
       summary:openTickets+' açık talep',
       action:"(typeof openAdminSupport==='function'?openAdminSupport():_admOpenTickets())" },
     { id:'bizApps',   label:'İşletme Başvuruları',  icon:'solar:inbox-in-bold',        tone:'#F59E0B',
-      summary:(M.bizApplications && M.bizApplications.pending ? M.bizApplications.pending : 0)+' Yeni Başvuru',
-      action:"_admToast('Başvuru yönetimi yakında')" }
+      summary:((typeof ADMIN_BIZ_APPLICATIONS!=='undefined')
+        ? ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='pending';}).length+' yeni • '+ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='awaiting_response';}).length+' cevap bekliyor'
+        : (M.bizApplications && M.bizApplications.pending ? M.bizApplications.pending+' Yeni Başvuru' : '—')),
+      action:"_admOpenBizApps()" }
   ];
 
   /* ═══ 5 GRUP ═══ */
