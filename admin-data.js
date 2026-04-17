@@ -908,3 +908,137 @@ var ADMIN_CANCEL_COMMISSION = {
   bizCancel:    { label: 'İşletme İptal — Cayma Bedeli',    rate: 25, description: 'İşletme siparişi iptal ettiğinde, mevcut komisyonun %X\'i kadar ek ceza uygulanır.' },
   updatedAt: '2026-03-20T10:00:00'
 };
+
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM PLAN — Özellik Katalogları, Planlar, Üyeler
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Kullanıcı Premium Özellik Kataloğu ── */
+var ADMIN_PREMIUM_USER_FEATURES = [
+  { id:'u_noads',       label:'Reklamsız Kullanım',         icon:'solar:shield-cross-bold',     description:'Tüm uygulamada reklam gösterilmez' },
+  { id:'u_recipes',     label:'Özel Tarif Erişimi',          icon:'solar:chef-hat-heart-bold',    description:'Şefe özel, sınırlı tarif arşivi' },
+  { id:'u_ai',          label:'AI Asistan (Süresiz)',        icon:'solar:magic-stick-3-bold',     description:'Aylık sorgu limiti yok' },
+  { id:'u_handsfree',   label:'Hands-Free Pişirme',          icon:'solar:microphone-bold',        description:'Sesli tarif yönlendirme' },
+  { id:'u_planner',     label:'Haftalık Planlama',           icon:'solar:calendar-bold',          description:'Özel menü + alışveriş listesi' },
+  { id:'u_bmi',         label:'BMI & Sağlık Analizi',        icon:'solar:heart-pulse-bold',       description:'Kişiye özel kalori önerisi' },
+  { id:'u_community',   label:'Özel Topluluk Erişimi',       icon:'solar:users-group-two-rounded-bold', description:'Şeflerle canlı soru-cevap' },
+  { id:'u_savings',     label:'Token Cashback +%5',          icon:'solar:wallet-money-bold',      description:'Her siparişte ekstra %5 cashback' },
+  { id:'u_priority',    label:'Öncelikli Destek',            icon:'solar:headphones-round-sound-bold', description:'7/24 hat önceliği' },
+  { id:'u_unlimited',   label:'Sınırsız Favori & Liste',     icon:'solar:heart-bold',             description:'Kayıt limiti yok' }
+];
+
+/* Aktif Kullanıcı Premium Planı */
+var ADMIN_PREMIUM_USER_PLAN = {
+  activeFeatures: ['u_noads','u_recipes','u_ai','u_handsfree','u_planner','u_bmi','u_savings','u_priority'],
+  pricing: { monthly: 59, yearly: 590 },
+  currency: '₺',
+  updatedAt: '2026-03-20T10:00:00'
+};
+
+/* ── İşletme Premium Özellik Kataloğu ── */
+var ADMIN_PREMIUM_BIZ_FEATURES = [
+  { id:'b_dashboard',    label:'Gelişmiş Dashboard',         icon:'solar:chart-2-bold' },
+  { id:'b_staff',        label:'Sınırsız Personel',           icon:'solar:users-group-rounded-bold' },
+  { id:'b_branches',     label:'Çoklu Şube Yönetimi',         icon:'solar:buildings-bold' },
+  { id:'b_kitchen',      label:'Mutfak İstasyonu Paneli',     icon:'solar:chef-hat-bold' },
+  { id:'b_tables',       label:'Masa & QR Menü Yönetimi',     icon:'solar:qr-code-bold' },
+  { id:'b_stock',        label:'Canlı Stok Takibi',           icon:'solar:boxes-bold' },
+  { id:'b_analytics',    label:'Satış & Trend Analizi',       icon:'solar:graph-up-bold' },
+  { id:'b_ai',           label:'AI Menü Optimizasyonu',       icon:'solar:magic-stick-3-bold' },
+  { id:'b_commission',   label:'İndirimli Komisyon',          icon:'solar:pie-chart-2-bold' },
+  { id:'b_ads',          label:'Reklam Alanı (Öne Çıkar)',    icon:'solar:megaphone-bold' },
+  { id:'b_support',      label:'7/24 Öncelikli Destek',       icon:'solar:headphones-round-sound-bold' },
+  { id:'b_api',          label:'API & Entegrasyon Erişimi',   icon:'solar:code-square-bold' },
+  { id:'b_branding',     label:'Beyaz Etiket (White-label)',  icon:'solar:crown-bold' },
+  { id:'b_coupons',      label:'Kupon & Kampanya Sihirbazı',  icon:'solar:tag-price-bold' }
+];
+
+/* İşletme Premium — 3 Katmanlı Plan */
+var ADMIN_PREMIUM_BIZ_PLANS = [
+  {
+    id:'tier_standard',
+    label:'Standart',
+    tagline:'Tek şube • Temel analitik',
+    tier:'silver',
+    accent:'#94A3B8',
+    accentSoft:'#CBD5E1',
+    features:['b_dashboard','b_staff','b_tables','b_stock','b_commission'],
+    pricing:{ monthly:500, yearly:5000 },
+    updatedAt:'2026-03-15T10:00:00'
+  },
+  {
+    id:'tier_plus',
+    label:'Plus',
+    tagline:'Çoklu şube • Gelişmiş raporlar',
+    tier:'plus',
+    accent:'#8B5CF6',
+    accentSoft:'#C4B5FD',
+    features:['b_dashboard','b_staff','b_branches','b_kitchen','b_tables','b_stock','b_analytics','b_commission','b_coupons'],
+    pricing:{ monthly:1250, yearly:12500 },
+    updatedAt:'2026-03-15T10:00:00'
+  },
+  {
+    id:'tier_pro',
+    label:'Pro',
+    tagline:'Kurumsal • Tam paket + API',
+    tier:'gold',
+    accent:'#F59E0B',
+    accentSoft:'#FCD34D',
+    features:['b_dashboard','b_staff','b_branches','b_kitchen','b_tables','b_stock','b_analytics','b_ai','b_commission','b_ads','b_support','b_api','b_branding','b_coupons'],
+    pricing:{ monthly:2800, yearly:28000 },
+    updatedAt:'2026-03-15T10:00:00'
+  }
+];
+
+/* ── Premium Üye Listesi — biz (ADMIN_BUSINESSES plan:'premium') ve user (ADMIN_USERS isPremium) türevli ── */
+var ADMIN_PREMIUM_MEMBERS = (function() {
+  var out = { biz: [], user: [] };
+
+  // İşletme üyeleri
+  var bizPlanAssign = {
+    bz1:'tier_plus', bz2:'tier_pro', bz4:'tier_plus', bz5:'tier_pro',
+    bz7:'tier_standard', bz9:'tier_pro', bz12:'tier_plus', bz13:'tier_pro'
+  };
+  if (typeof ADMIN_BUSINESSES !== 'undefined') {
+    for (var i = 0; i < ADMIN_BUSINESSES.length; i++) {
+      var b = ADMIN_BUSINESSES[i];
+      if (b.plan !== 'premium') continue;
+      var tier = bizPlanAssign[b.id] || 'tier_standard';
+      out.biz.push({
+        id: 'mbz_' + b.id,
+        bizId: b.id,
+        name: b.name,
+        owner: b.owner,
+        tier: tier,
+        startDate: b.joinDate,
+        endDate: b.planExpiry,
+        billingCycle: (i % 3 === 0 ? 'yearly' : 'monthly')
+      });
+    }
+  }
+
+  // Kullanıcı üyeleri — ADMIN_USERS.isPremium
+  if (typeof ADMIN_USERS !== 'undefined') {
+    var billingCycles = ['monthly','yearly','monthly','yearly','monthly'];
+    var cy = 0;
+    for (var u = 0; u < ADMIN_USERS.length; u++) {
+      var usr = ADMIN_USERS[u];
+      if (!usr.isPremium) continue;
+      var start = usr.joinDate || '2025-08-01';
+      var end = new Date(start);
+      end.setFullYear(end.getFullYear() + 1);
+      out.user.push({
+        id: 'mur_' + usr.id,
+        userId: usr.id,
+        name: usr.name,
+        email: usr.email,
+        avatar: null,
+        startDate: (start instanceof Date) ? start.toISOString().slice(0,10) : start,
+        endDate: end.toISOString().slice(0,10),
+        billingCycle: billingCycles[cy++ % billingCycles.length]
+      });
+    }
+  }
+
+  return out;
+})();

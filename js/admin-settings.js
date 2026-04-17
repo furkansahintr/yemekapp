@@ -70,8 +70,8 @@ function renderAdminSettings() {
           summary:((typeof ADMIN_COMMISSION_RULES!=='undefined') ? ADMIN_COMMISSION_RULES.length+' aktif kural • Ort. %'+(S.platformCommission || 0).toFixed(1) : 'Ort. %'+(S.platformCommission || 0).toFixed(1)),
           action:"_admOpenCommission()" },
         { id:'premium',    label:'Premium Plan & Ücret', icon:'solar:crown-bold', tone:'#A855F7',
-          summary:(M.premium ? _admFmt(M.premium.subscribers)+' premium üye' : '—'),
-          action:"_admToast('Premium plan yönetimi yakında')" }
+          summary:((typeof ADMIN_PREMIUM_MEMBERS!=='undefined') ? (ADMIN_PREMIUM_MEMBERS.biz.length+ADMIN_PREMIUM_MEMBERS.user.length)+' üye • '+ADMIN_PREMIUM_BIZ_PLANS.length+' katman' : (M.premium ? _admFmt(M.premium.subscribers)+' premium üye' : '—')),
+          action:"_admOpenPremium()" }
       ]
     },
     {
