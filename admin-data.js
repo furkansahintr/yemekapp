@@ -2298,3 +2298,104 @@ var ADMIN_TOKEN_TX_TYPES = {
   commission: { label:'Sipariş Komisyonu', color:'#F97316', icon:'solar:pie-chart-2-bold',       direction:'out' },
   ad:         { label:'Reklam Ödemesi',    color:'#EC4899', icon:'solar:gallery-wide-bold',      direction:'out' }
 };
+
+/* ═══════════════════════════════════════════════════════════
+   ÖDEMELER — Transaction Seed
+   ═══════════════════════════════════════════════════════════ */
+
+var ADMIN_PAYMENT_TYPES = {
+  premium_biz:  { label:'İşletme Premium',  icon:'solar:crown-star-bold',    color:'#F59E0B' },
+  premium_user: { label:'Kullanıcı Premium', icon:'solar:crown-bold',         color:'#8B5CF6' },
+  token:        { label:'Token Paketi',      icon:'solar:coin-bold',          color:'#EAB308' },
+  ad:           { label:'Reklam Ödemesi',    icon:'solar:gallery-wide-bold',  color:'#EC4899' }
+};
+
+var ADMIN_PAYMENT_METHODS = {
+  card:      { label:'Kredi Kartı',     icon:'solar:card-bold' },
+  bank:      { label:'Banka Havalesi',  icon:'solar:money-bag-bold' },
+  wallet:    { label:'Dijital Cüzdan',  icon:'solar:wallet-money-bold' }
+};
+
+var ADMIN_PAYMENT_PROVIDERS = ['Iyzico','Stripe','Papara','PayTR'];
+
+var ADMIN_PAYMENT_ERROR_CODES = {
+  '3DS_FAILED':       { label:'3D Secure Hatası',     desc:'Müşteri 3D Secure doğrulamasını tamamlayamadı', severity:'warning' },
+  'INSUFFICIENT':     { label:'Yetersiz Bakiye',       desc:'Kart üzerinde yeterli bakiye yok',            severity:'info' },
+  'CARD_DECLINED':    { label:'Kart Reddedildi',        desc:'Banka ödemeyi onaylamadı',                    severity:'critical' },
+  'EXPIRED_CARD':     { label:'Kart Süresi Dolmuş',     desc:'Kart son kullanma tarihi geçmiş',             severity:'info' },
+  'FRAUD_SUSPECTED':  { label:'Dolandırıcılık Şüphesi', desc:'Sistem güvenlik kontrolünde takıldı',         severity:'critical' },
+  'TIMEOUT':          { label:'Zaman Aşımı',            desc:'Ödeme aracısı yanıt vermedi',                 severity:'warning' },
+  'BANK_MAINTENANCE': { label:'Banka Bakım',            desc:'Banka bakımda, sonra tekrar deneyin',         severity:'warning' }
+};
+
+var ADMIN_PAYMENTS = [
+  /* ── TAMAMLANAN (success) ── */
+  { id:'py_001', status:'success', type:'premium_biz', payerKind:'biz',  payerId:'bz9',  payerName:'Kebapçı Hakkı',  amount:2800,   date:'2026-04-16T14:32:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83920-2026', cardMask:'**** 4521',
+    productDesc:'Pro Plan — 1 aylık premium üyelik (14 özellik)', billingPeriod:'monthly' },
+  { id:'py_002', status:'success', type:'token',       payerKind:'biz',  payerId:'bz2',  payerName:'Pide Palace',    amount:5000,   date:'2026-04-16T13:50:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83921-2026', cardMask:'**** 8833',
+    productDesc:'5000 TL karşılığı 6000 Token Paketi (+1000 hediye)', tokenGranted:6000 },
+  { id:'py_003', status:'success', type:'premium_user', payerKind:'user', payerId:'u2',   payerName:'Elif Demir',    amount:590,    date:'2026-04-16T12:20:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83918-2026', cardMask:'**** 1234',
+    productDesc:'Kullanıcı Premium — 12 aylık yıllık üyelik', billingPeriod:'yearly' },
+  { id:'py_004', status:'success', type:'ad',          payerKind:'biz',  payerId:'bz1',  payerName:'Lezzet Mutfak',  amount:1500,   date:'2026-04-16T11:15:00',
+    method:'wallet', provider:'Papara', providerRef:'PPR-44872-2026',
+    productDesc:'Reklam bütçesi — Yerel Hikayeler yerleşimi' },
+  { id:'py_005', status:'success', type:'token',       payerKind:'biz',  payerId:'bz13', payerName:'Tatlıcı Nene',   amount:2500,   date:'2026-04-16T10:40:00',
+    method:'card', provider:'Stripe', providerRef:'STR-ch_7732-2026', cardMask:'**** 9912',
+    productDesc:'2500 TL karşılığı 2700 Token Paketi (+200 hediye)', tokenGranted:2700 },
+  { id:'py_006', status:'success', type:'premium_biz', payerKind:'biz',  payerId:'bz5',  payerName:'Çiğ Köfte Express', amount:14400, date:'2026-04-15T16:00:00',
+    method:'bank', provider:'PayTR', providerRef:'PYT-TRF-2026-0415-5511',
+    productDesc:'Plus Plan — 12 aylık yıllık abonelik (indirimli)', billingPeriod:'yearly', invoiceNo:'FT-2026-0488' },
+  { id:'py_007', status:'success', type:'token',       payerKind:'biz',  payerId:'bz4',  payerName:'Sushi Master',   amount:1000,   date:'2026-04-15T14:30:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83901-2026', cardMask:'**** 5522',
+    productDesc:'1000 TL karşılığı 1050 Token Paketi (+50 hediye)', tokenGranted:1050 },
+  { id:'py_008', status:'success', type:'ad',          payerKind:'biz',  payerId:'bz12', payerName:'Dönerci Baba',   amount:8000,   date:'2026-04-15T11:20:00',
+    method:'bank', provider:'PayTR', providerRef:'PYT-TRF-2026-0415-4422',
+    productDesc:'Reklam bütçesi — Keşfet + AI Asistan yerleşimi', invoiceNo:'FT-2026-0487' },
+  { id:'py_009', status:'success', type:'premium_user', payerKind:'user', payerId:'u5',   payerName:'Mert Özkan',    amount:59,     date:'2026-04-15T09:45:00',
+    method:'card', provider:'Stripe', providerRef:'STR-ch_7711-2026', cardMask:'**** 7845',
+    productDesc:'Kullanıcı Premium — 1 aylık aylık üyelik', billingPeriod:'monthly' },
+  { id:'py_010', status:'success', type:'token',       payerKind:'biz',  payerId:'bz7',  payerName:'Waffle House',   amount:2500,   date:'2026-04-14T18:30:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83880-2026', cardMask:'**** 3399',
+    productDesc:'2500 TL karşılığı 2700 Token Paketi (+200 hediye)', tokenGranted:2700,
+    refunded:true, refundedAt:'2026-04-15T10:00:00', refundReason:'Müşteri talebiyle iade' },
+
+  /* ── TAMAMLANMAYAN (failed) ── */
+  { id:'py_011', status:'failed',  type:'premium_biz', payerKind:'biz',  payerId:'bz15', payerName:'Makarna Dükkanı', amount:500,    date:'2026-04-16T15:00:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83922-2026', cardMask:'**** 6677',
+    errorCode:'3DS_FAILED',
+    productDesc:'Standart Plan — 1 aylık üyelik' },
+  { id:'py_012', status:'failed',  type:'token',       payerKind:'biz',  payerId:'bz6',  payerName:'Pizza Napoli',   amount:10000,  date:'2026-04-16T13:10:00',
+    method:'card', provider:'Stripe', providerRef:'STR-ch_7730-2026', cardMask:'**** 8811',
+    errorCode:'INSUFFICIENT',
+    productDesc:'10000 TL karşılığı 12500 Token Paketi' },
+  { id:'py_013', status:'failed',  type:'ad',          payerKind:'biz',  payerId:'bz11', payerName:'Balıkçı Rıza',   amount:2000,   date:'2026-04-16T09:45:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83915-2026', cardMask:'**** 2211',
+    errorCode:'CARD_DECLINED',
+    productDesc:'Reklam bütçesi — Restoran Listeleme' },
+  { id:'py_014', status:'failed',  type:'premium_user', payerKind:'user', payerId:'u12',  payerName:'Hasan Yılmaz',   amount:590,    date:'2026-04-15T22:15:00',
+    method:'card', provider:'Stripe', providerRef:'STR-ch_7705-2026', cardMask:'**** 4433',
+    errorCode:'EXPIRED_CARD',
+    productDesc:'Kullanıcı Premium — Yıllık' },
+  { id:'py_015', status:'failed',  type:'token',       payerKind:'biz',  payerId:'bz14', payerName:'Kumpir Evi',     amount:25000,  date:'2026-04-15T20:00:00',
+    method:'card', provider:'PayTR', providerRef:'PYT-CRD-2026-0415-9901', cardMask:'**** 7788',
+    errorCode:'FRAUD_SUSPECTED',
+    productDesc:'25000 TL karşılığı 35000 Token Paketi' },
+  { id:'py_016', status:'failed',  type:'premium_biz', payerKind:'biz',  payerId:'bz8',  payerName:'Tantuni Evi',    amount:500,    date:'2026-04-15T11:30:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83875-2026', cardMask:'**** 5566',
+    errorCode:'TIMEOUT',
+    productDesc:'Standart Plan — 1 aylık' },
+
+  /* ── BEKLEYEN (pending) ── */
+  { id:'py_017', status:'pending', type:'token',       payerKind:'biz',  payerId:'bz3',  payerName:'Burger Lab',     amount:1000,   date:'2026-04-16T15:45:00',
+    method:'bank', provider:'PayTR', providerRef:'PYT-TRF-2026-0416-8834',
+    productDesc:'1000 TL karşılığı 1050 Token Paketi', pendingReason:'Havale onayı bekleniyor' },
+  { id:'py_018', status:'pending', type:'premium_biz', payerKind:'biz',  payerId:'bz10', payerName:'Vegan Kitchen',  amount:1250,   date:'2026-04-16T14:20:00',
+    method:'card', provider:'Iyzico', providerRef:'IYZ-83920-2026', cardMask:'**** 0099',
+    productDesc:'Plus Plan — 1 aylık üyelik', pendingReason:'Provizyon tamamlanıyor' },
+  { id:'py_019', status:'pending', type:'ad',          payerKind:'biz',  payerId:'bz2',  payerName:'Pide Palace',    amount:5000,   date:'2026-04-16T12:50:00',
+    method:'bank', provider:'PayTR', providerRef:'PYT-TRF-2026-0416-5511',
+    productDesc:'Reklam bütçesi — Akıllı Eşleşme yerleşimi', pendingReason:'Manuel admin onayı gerekli' }
+];

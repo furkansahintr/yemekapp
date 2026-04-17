@@ -70,8 +70,10 @@ function renderAdminSettings() {
             : (M.tokenTxns ? 'Bugün: '+_admFmt(M.tokenTxns.todayNet)+' ↑' : '—')),
           action:"_admOpenTokenOps()" },
         { id:'payments',   label:'Ödemeler', icon:'solar:card-bold', tone:'#10B981',
-          summary:(M.payments ? 'Bugün: +'+_admFmtTL(M.payments.todayTl) : '—'),
-          action:"renderAdminFinance()" },
+          summary:((typeof ADMIN_PAYMENTS!=='undefined')
+            ? ADMIN_PAYMENTS.filter(function(p){return p.status==='success';}).length+' tamamlanan • '+ADMIN_PAYMENTS.filter(function(p){return p.status==='pending';}).length+' bekleyen'
+            : (M.payments ? 'Bugün: +'+_admFmtTL(M.payments.todayTl) : '—')),
+          action:"_admOpenPayments()" },
         { id:'commission', label:'Komisyon Ayarları', icon:'solar:pie-chart-2-bold', tone:'#EC4899',
           summary:((typeof ADMIN_COMMISSION_RULES!=='undefined') ? ADMIN_COMMISSION_RULES.length+' aktif kural • Ort. %'+(S.platformCommission || 0).toFixed(1) : 'Ort. %'+(S.platformCommission || 0).toFixed(1)),
           action:"_admOpenCommission()" },
