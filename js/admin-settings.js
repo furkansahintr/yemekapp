@@ -121,8 +121,10 @@ function renderAdminSettings() {
       sub:'Stratejik kararlar ve hassas ayarlar',
       tiles:[
         { id:'reports',   label:'Raporlama Merkezi', icon:'solar:chart-2-bold', tone:'#0EA5E9',
-          summary:(M.reports ? 'Son: '+M.reports.lastRun : '—'),
-          action:"_admToast('Raporlama merkezi yakında')" },
+          summary:((typeof ADMIN_REPORTS_CATALOG!=='undefined')
+            ? ADMIN_REPORTS_CATALOG.length+' rapor • 4 kategori'
+            : (M.reports ? 'Son: '+M.reports.lastRun : '—')),
+          action:"_admOpenReportCenter()" },
         { id:'adminUsers',label:'Admin Ayarları', icon:'solar:shield-user-bold', tone:'#A855F7',
           summary:((typeof ADMIN_PANEL_ADMINS!=='undefined')
             ? ADMIN_PANEL_ADMINS.length+' admin • '+ADMIN_PANEL_ROLES.length+' rol • Hassas Erişim'
