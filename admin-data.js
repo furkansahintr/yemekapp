@@ -2207,3 +2207,94 @@ var ADMIN_TOKEN_CONFIG = {
     if (biz) biz.walletHistory.push(ex);
   }
 })();
+
+/* ═══════════════════════════════════════════════════════════
+   TOKEN İŞLEMLERİ — Paketler, Otomatik Kampanya, Analitik
+   ═══════════════════════════════════════════════════════════ */
+
+/* Token paketleri — alım limiti & bonus */
+var ADMIN_TOKEN_PACKAGES = [
+  { id:'pkg_001', minTL:1000,  tokens:1050,  active:true,  createdAt:'2026-01-15T10:00:00' },
+  { id:'pkg_002', minTL:2500,  tokens:2700,  active:true,  createdAt:'2026-01-15T10:00:00' },
+  { id:'pkg_003', minTL:5000,  tokens:6000,  active:true,  createdAt:'2026-02-01T10:00:00' },
+  { id:'pkg_004', minTL:10000, tokens:12500, active:true,  createdAt:'2026-02-15T10:00:00' },
+  { id:'pkg_005', minTL:25000, tokens:35000, active:true,  createdAt:'2026-03-01T10:00:00' },
+  { id:'pkg_006', minTL:500,   tokens:500,   active:false, createdAt:'2025-12-01T10:00:00' }
+];
+
+/* Otomatik kampanya */
+var ADMIN_TOKEN_AUTO_CAMPAIGN = {
+  enabled: true,
+  triggerType: 'first_topup',       // 'first_topup' | 'monthly_loyalty'
+  label: 'Yeni İşletmeye İlk Yükleme Bonusu',
+  description: 'Yeni kayıt olan işletmelerin ilk token yüklemesinde ekstra bonus verilir',
+  bonusPercent: 10,
+  minAmount: 500,
+  maxBonus: 5000,
+  updatedAt: '2026-03-10T14:00:00'
+};
+
+/* Günlük İşlem Özeti (anlık snapshot) */
+var ADMIN_TOKEN_DAILY_SUMMARY = {
+  soldToken: 184500,         // İşletmelerin bugün satın aldığı
+  giftToken: 12400,          // Bugün hediye edilen
+  spentToken: 156800,        // Sirkülasyonda bugün harcanan
+  netVolume: 27700,          // Sold - Spent
+  reserveTL: 2450000,        // Sistem rezervi
+  circulationToken: 2510000, // Dolaşımdaki toplam token
+  reserveHealth: 'healthy'   // 'healthy' | 'warning' | 'critical'
+};
+
+/* Trend: 24 saatlik yükleme + haftalık */
+var ADMIN_TOKEN_TRENDS = (function() {
+  function gen(seed, base, variance, n) {
+    var out = []; var s = seed;
+    for (var i = 0; i < n; i++) {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      var pct = (s % 10000) / 10000;
+      out.push(Math.max(0, Math.round(base + pct * variance - variance / 2)));
+    }
+    return out;
+  }
+  return {
+    hourly24: gen(100, 3500, 4500, 24),    // 24h saatlik yükleme
+    weekly7:  gen(200, 24000, 16000, 7),   // 7g günlük yükleme
+    daily30:  gen(300, 22000, 18000, 30),  // 30g günlük yükleme
+    giftConversion: [
+      { label:'<1 gün',    value:38, color:'#22C55E' },
+      { label:'1-3 gün',   value:27, color:'#3B82F6' },
+      { label:'4-7 gün',   value:18, color:'#8B5CF6' },
+      { label:'8-30 gün',  value:12, color:'#F59E0B' },
+      { label:'Harcanmadı', value:5,  color:'#6B7280' }
+    ]
+  };
+})();
+
+/* Tüm Token Hareketleri — log */
+var ADMIN_TOKEN_TRANSACTIONS = [
+  { id:'tx_001', date:'2026-04-16T14:32:00', bizId:'bz9',  bizName:'Kebapçı Hakkı',      type:'package',    amount:12500,  status:'success', desc:'10K TL Paket (+2500 bonus)' },
+  { id:'tx_002', date:'2026-04-16T13:50:00', bizId:'bz2',  bizName:'Pide Palace',         type:'commission', amount:-180,   status:'success', desc:'Sipariş #104280 komisyonu' },
+  { id:'tx_003', date:'2026-04-16T13:22:00', bizId:'bz1',  bizName:'Lezzet Mutfak',       type:'commission', amount:-40,    status:'success', desc:'Sipariş #104281 komisyonu' },
+  { id:'tx_004', date:'2026-04-16T12:15:00', bizId:'bz13', bizName:'Tatlıcı Nene',        type:'gift',       amount:800,    status:'success', desc:'Admin hediyesi — 5.0 puan ödülü' },
+  { id:'tx_005', date:'2026-04-16T11:30:00', bizId:'bz5',  bizName:'Çiğ Köfte Express',   type:'package',    amount:2700,   status:'success', desc:'2.5K TL Paket (+200 bonus)' },
+  { id:'tx_006', date:'2026-04-16T11:15:00', bizId:'bz4',  bizName:'Sushi Master',        type:'ad',         amount:-420,   status:'success', desc:'AI Asistan reklam gösterimi' },
+  { id:'tx_007', date:'2026-04-16T10:40:00', bizId:'bz13', bizName:'Tatlıcı Nene',        type:'commission', amount:-15,    status:'success', desc:'Sipariş #104274 komisyonu' },
+  { id:'tx_008', date:'2026-04-16T10:20:00', bizId:'bz12', bizName:'Dönerci Baba',        type:'refund',     amount:230,    status:'success', desc:'Kullanıcı iptal iadesi' },
+  { id:'tx_009', date:'2026-04-16T09:55:00', bizId:'bz3',  bizName:'Burger Lab',          type:'package',    amount:1050,   status:'pending', desc:'1K TL Paket — ödeme onayı bekliyor' },
+  { id:'tx_010', date:'2026-04-16T09:30:00', bizId:'bz7',  bizName:'Waffle House',        type:'ad',         amount:-180,   status:'success', desc:'Keşfet reklam gösterimi' },
+  { id:'tx_011', date:'2026-04-16T09:00:00', bizId:'bz2',  bizName:'Pide Palace',         type:'gift',       amount:1000,   status:'success', desc:'Admin hediyesi — Kampanya başarısı' },
+  { id:'tx_012', date:'2026-04-16T08:45:00', bizId:'bz15', bizName:'Makarna Dükkanı',     type:'package',    amount:500,    status:'cancelled', desc:'500 TL Paket — iptal' },
+  { id:'tx_013', date:'2026-04-16T08:30:00', bizId:'bz10', bizName:'Vegan Kitchen',       type:'commission', amount:-23,    status:'success', desc:'Sipariş #104270 komisyonu' },
+  { id:'tx_014', date:'2026-04-15T22:10:00', bizId:'bz9',  bizName:'Kebapçı Hakkı',       type:'commission', amount:-21,    status:'success', desc:'Sipariş #104265 komisyonu' },
+  { id:'tx_015', date:'2026-04-15T18:00:00', bizId:'bz1',  bizName:'Lezzet Mutfak',       type:'ad',         amount:-320,   status:'success', desc:'Local Stories reklam' },
+  { id:'tx_016', date:'2026-04-15T14:00:00', bizId:'bz6',  bizName:'Pizza Napoli',        type:'gift',       amount:300,    status:'success', desc:'Otomatik kampanya — İlk yükleme bonusu' }
+];
+
+/* Tx tür meta (render için) */
+var ADMIN_TOKEN_TX_TYPES = {
+  package:    { label:'Paket Alımı',       color:'#22C55E', icon:'solar:wallet-money-bold',      direction:'in'  },
+  gift:       { label:'Manuel Hediye',     color:'#8B5CF6', icon:'solar:gift-bold',              direction:'in'  },
+  refund:     { label:'İade',              color:'#06B6D4', icon:'solar:refresh-circle-bold',    direction:'in'  },
+  commission: { label:'Sipariş Komisyonu', color:'#F97316', icon:'solar:pie-chart-2-bold',       direction:'out' },
+  ad:         { label:'Reklam Ödemesi',    color:'#EC4899', icon:'solar:gallery-wide-bold',      direction:'out' }
+};
