@@ -100,8 +100,10 @@ function renderAdminSettings() {
           summary:openReports+' bekliyor',
           action:"_admOpenReports()" },
         { id:'blacklist',  label:'Kara Liste', icon:'solar:user-block-rounded-bold', tone:'#6B7280',
-          summary:(M.blacklist ? M.blacklist.banned+' engelli' : '—'),
-          action:"_admToast('Kara liste yakında')" },
+          summary:((typeof ADMIN_PENALTIES!=='undefined')
+            ? ADMIN_PENALTIES.filter(function(p){return p.type==='ban';}).length+' yasak • '+ADMIN_PENALTIES.filter(function(p){return p.type==='restriction';}).length+' engel'
+            : (M.blacklist ? M.blacklist.banned+' engelli' : '—')),
+          action:"_admOpenBlacklist()" },
         { id:'incident',   label:'Hızlı Müdahale', icon:'solar:siren-bold',
           tone:(M.incident && M.incident.status === 'critical' ? '#EF4444' : M.incident && M.incident.status === 'warning' ? '#F59E0B' : '#22C55E'),
           summary:(M.incident && M.incident.status === 'critical' ? 'Sistem: Kritik' : M.incident && M.incident.status === 'warning' ? 'Sistem: Uyarı' : 'Sistem: Normal'),

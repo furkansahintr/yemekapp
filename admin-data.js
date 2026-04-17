@@ -1042,3 +1042,102 @@ var ADMIN_PREMIUM_MEMBERS = (function() {
 
   return out;
 })();
+
+/* ═══════════════════════════════════════════════════════════
+   KARA LİSTE — Kısıtlama Kataloğu, Aktif Cezalar, Sabıka Kaydı
+   ═══════════════════════════════════════════════════════════ */
+
+/* Engelleme modunda kullanılabilecek kısıtlama toggle'ları */
+var ADMIN_PENALTY_RESTRICTIONS = [
+  { id:'no_recipe',      label:'Tarif paylaşımı',       icon:'solar:chef-hat-bold',           description:'Yeni tarif yükleyemez ve paylaşamaz' },
+  { id:'no_post',        label:'İçerik paylaşımı',      icon:'solar:gallery-bold',            description:'Hikaye, gönderi veya yorum paylaşamaz' },
+  { id:'no_order',       label:'Online sipariş',        icon:'solar:bag-check-bold',          description:'Online sipariş vermesi engellenir' },
+  { id:'no_table_order', label:'Masa siparişi',         icon:'solar:table-2-bold',            description:'QR/Masa üzerinden sipariş veremez' },
+  { id:'no_waiter_call', label:'Garson çağırma',        icon:'solar:bell-bold',               description:'Restoranda garson çağırma özelliği kapatılır' },
+  { id:'no_ai',          label:'Yapay Zeka asistanı',   icon:'solar:magic-stick-3-bold',      description:'AI asistan ve öneri sistemini kullanamaz' },
+  { id:'no_like',        label:'Beğenme / Yorum',       icon:'solar:heart-bold',              description:'Diğer içeriklere beğeni veya yorum yapamaz' }
+];
+
+/* Ceza sebebi preset'leri (wizard için) */
+var ADMIN_PENALTY_REASONS = [
+  'Uygunsuz içerik paylaşımı',
+  'Taciz veya hakaret',
+  'Spam / tekrar eden gönderi',
+  'Sahte değerlendirme',
+  'Ödeme sorunu / iade suistimali',
+  'Platform kurallarını ihlal',
+  'Kullanıcı şikayeti (çoklu)',
+  'Diğer'
+];
+
+/* Aktif ceza kaydı */
+var ADMIN_PENALTIES = [
+  /* ── Kullanıcı cezaları ── */
+  {
+    id:'pen_001', subjectType:'user', subjectId:'u6', subjectName:'Zehra Aydın',
+    type:'ban', reason:'Taciz veya hakaret',
+    createdAt:'2026-03-20T10:00:00', expiresAt:null,
+    userNote:'Platform kurallarını ihlal nedeniyle hesabınız kalıcı olarak askıya alınmıştır.',
+    adminNote:'Birden fazla şikayet aldıktan sonra kalıcı ban uygulandı. 3 farklı kullanıcıdan taciz raporu.',
+    restrictions:[],
+    appliedBy:'Admin'
+  },
+  {
+    id:'pen_002', subjectType:'user', subjectId:'u12', subjectName:'Hasan Yılmaz',
+    type:'restriction', reason:'Sahte değerlendirme',
+    createdAt:'2026-04-05T14:30:00', expiresAt:'2026-05-05T14:30:00',
+    userNote:'Sahte yorum tespiti nedeniyle 30 gün boyunca yorum yapamayacaksınız.',
+    adminNote:'Aynı işletmeye 5 farklı hesaptan yorum bırakmış. 3. uyarı.',
+    restrictions:['no_like','no_post'],
+    appliedBy:'Admin'
+  },
+  {
+    id:'pen_003', subjectType:'user', subjectId:'u18', subjectName:'Murat Demir',
+    type:'restriction', reason:'Spam / tekrar eden gönderi',
+    createdAt:'2026-04-10T08:15:00', expiresAt:'2026-04-24T08:15:00',
+    userNote:'Spam içerik nedeniyle 14 gün sipariş veremeyeceksiniz.',
+    adminNote:'Sürekli aynı kampanyayı spam şeklinde paylaşıyor.',
+    restrictions:['no_order','no_post','no_like'],
+    appliedBy:'Admin'
+  },
+  /* ── İşletme cezaları ── */
+  {
+    id:'pen_004', subjectType:'biz', subjectId:'bz8', subjectName:'Tantuni Evi',
+    type:'ban', reason:'Ödeme sorunu / iade suistimali',
+    createdAt:'2026-03-10T09:00:00', expiresAt:null,
+    userNote:'İşletmeniz platform kurallarını ihlal nedeniyle askıya alınmıştır.',
+    adminNote:'Ödeme ihtilafı, müşteriye ulaşmama, token geri ödeme gerçekleşmedi.',
+    restrictions:[],
+    appliedBy:'Admin'
+  },
+  {
+    id:'pen_005', subjectType:'biz', subjectId:'bz14', subjectName:'Kumpir Evi',
+    type:'restriction', reason:'Kullanıcı şikayeti (çoklu)',
+    createdAt:'2026-04-02T16:20:00', expiresAt:'2026-05-02T16:20:00',
+    userNote:'30 gün boyunca öne çıkan listelerden kaldırıldınız.',
+    adminNote:'Puanı 3.2\'ye düştü, son ayda 12 olumsuz yorum.',
+    restrictions:['no_post'],
+    appliedBy:'Admin'
+  }
+];
+
+/* Sabıka kaydı / geçmiş uyarılar — subjectId bazlı */
+var ADMIN_PENALTY_HISTORY = [
+  /* u6 — Zehra (şu an ban) */
+  { id:'hist_001', subjectType:'user', subjectId:'u6', date:'2025-11-04T10:00:00', action:'warning',     reason:'Uygunsuz yorum', note:'Yazılı uyarı' },
+  { id:'hist_002', subjectType:'user', subjectId:'u6', date:'2026-01-15T14:20:00', action:'restriction', reason:'Yorumda hakaret', note:'7 gün engel' },
+  { id:'hist_003', subjectType:'user', subjectId:'u6', date:'2026-03-20T10:00:00', action:'ban',         reason:'Taciz/hakaret', note:'Kalıcı ban' },
+  /* u12 — Hasan */
+  { id:'hist_004', subjectType:'user', subjectId:'u12', date:'2025-12-10T11:30:00', action:'warning',     reason:'Sahte yorum', note:'Uyarı' },
+  { id:'hist_005', subjectType:'user', subjectId:'u12', date:'2026-02-08T09:15:00', action:'restriction', reason:'Sahte yorum (tekrar)', note:'14 gün yorum engeli' },
+  { id:'hist_006', subjectType:'user', subjectId:'u12', date:'2026-04-05T14:30:00', action:'restriction', reason:'Sahte yorum', note:'30 gün engel (mevcut)' },
+  /* u18 — Murat */
+  { id:'hist_007', subjectType:'user', subjectId:'u18', date:'2026-04-10T08:15:00', action:'restriction', reason:'Spam', note:'İlk ihlal' },
+  /* bz8 — Tantuni Evi */
+  { id:'hist_008', subjectType:'biz', subjectId:'bz8', date:'2025-12-20T10:00:00', action:'warning',     reason:'Geç teslimat', note:'Uyarı' },
+  { id:'hist_009', subjectType:'biz', subjectId:'bz8', date:'2026-02-01T14:00:00', action:'restriction', reason:'İade sorunu', note:'15 gün öncelik kaybı' },
+  { id:'hist_010', subjectType:'biz', subjectId:'bz8', date:'2026-03-10T09:00:00', action:'ban',         reason:'Ödeme suistimali', note:'Kalıcı askı' },
+  /* bz14 — Kumpir Evi */
+  { id:'hist_011', subjectType:'biz', subjectId:'bz14', date:'2026-03-15T12:00:00', action:'warning',     reason:'Puan düşüşü', note:'Uyarı' },
+  { id:'hist_012', subjectType:'biz', subjectId:'bz14', date:'2026-04-02T16:20:00', action:'restriction', reason:'Çoklu şikayet', note:'30 gün (mevcut)' }
+];
