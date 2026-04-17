@@ -1982,3 +1982,180 @@ var ADMIN_PANEL_ACTIVITY_LOG = [
   { id:'log_017', adminId:'adm_005', date:'2026-04-12T16:30:00', action:'premium_plan_updated', target:'tier_pro', detail:'Pro paket aylık ücreti ₺2.800 olarak güncellendi' },
   { id:'log_018', adminId:'adm_001', date:'2026-04-12T09:30:00', action:'super_admin_granted', target:'adm_001', detail:'İlk süper admin hesabı aktifleştirildi' }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   RAPORLAMA MERKEZİ — Kategoriler, Raporlar, Zaman Serileri
+   ═══════════════════════════════════════════════════════════ */
+
+var ADMIN_REPORT_CATEGORIES = [
+  { id:'cat_user',    label:'Kullanıcı & Etkileşim', icon:'solar:users-group-two-rounded-bold', color:'#3B82F6' },
+  { id:'cat_ops',     label:'Operasyon & Finans',    icon:'solar:bag-check-bold',               color:'#22C55E' },
+  { id:'cat_support', label:'Destek & Kalite',       icon:'solar:shield-warning-bold',          color:'#F97316' },
+  { id:'cat_strategic', label:'Stratejik Metrikler', icon:'solar:magic-stick-3-bold',           color:'#8B5CF6' }
+];
+
+/* Zaman serileri üretici — deterministik dummy */
+var ADMIN_REPORT_TIMESERIES = (function() {
+  function gen(seed, base, variance, days) {
+    var out = [];
+    var s = seed;
+    for (var i = 0; i < days; i++) {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      var pct = ((s % 10000) / 10000);
+      var val = Math.round(base + pct * variance - variance/2);
+      if (val < 0) val = 0;
+      out.push(val);
+    }
+    return out;
+  }
+  return {
+    dau:           gen(111, 31200, 4000, 30),
+    wau:           gen(222, 42100, 5500, 30),
+    mau:           gen(333, 48520, 3800, 30),
+    posts:         gen(444, 420,   180,  30),
+    recipes:       gen(555, 120,   60,   30),
+    aiRecipeAsk:   gen(666, 2400,  800,  30),
+    aiPlaceAsk:    gen(777, 1600,  600,  30),
+    orders:        gen(888, 1180,  420,  30),
+    ordersDone:    gen(999, 1050,  380,  30),
+    cancelUser:    gen(121, 58,    24,   30),
+    cancelBiz:     gen(232, 42,    18,   30),
+    avgBasket:     gen(343, 148,   35,   30),
+    tokenSpent:    gen(454, 284520, 80000, 30),
+    tokenEarned:   gen(565, 312000, 95000, 30),
+    complaints:    gen(676, 22,    12,   30),
+    complaintsResolved: gen(787, 18, 9, 30),
+    responseTime:  gen(898, 12,    8,    30)  // dakika
+  };
+})();
+
+/* Rapor kataloğu */
+var ADMIN_REPORTS_CATALOG = [
+  // Kullanıcı & Etkileşim
+  { id:'rpt_dau',        category:'cat_user', name:'Aktif Kullanıcı Sayısı (DAU/WAU/MAU)', scope:'Günlük + rollup',
+    chart:'line', description:'Platforma her gün/hafta/ay giriş yapan kullanıcı sayısı trendi.',
+    series:['dau','wau','mau'], labels:['Günlük','Haftalık','Aylık'], colors:['#3B82F6','#06B6D4','#8B5CF6'],
+    lastUpdated:'2026-04-16T09:00:00' },
+  { id:'rpt_posts',      category:'cat_user', name:'İçerik Paylaşım & Tarif Sayısı', scope:'Günlük',
+    chart:'bar', description:'Her gün topluluğa eklenen paylaşım ve tarif sayısı.',
+    series:['posts','recipes'], labels:['Paylaşım','Tarif'], colors:['#EC4899','#F59E0B'],
+    lastUpdated:'2026-04-16T08:30:00' },
+  { id:'rpt_ai',         category:'cat_user', name:'AI Asistan Kullanımı', scope:'Günlük',
+    chart:'line', description:'Yapay zekaya sorulan tarif ve yer önerisi sayısı.',
+    series:['aiRecipeAsk','aiPlaceAsk'], labels:['Tarif Sorusu','Yer Önerisi'], colors:['#8B5CF6','#06B6D4'],
+    lastUpdated:'2026-04-16T07:00:00' },
+
+  // Operasyon & Finans
+  { id:'rpt_orders',     category:'cat_ops', name:'Toplam & Tamamlanan Siparişler', scope:'Günlük',
+    chart:'line', description:'Platform genelinde oluşturulan ve tamamlanan sipariş trendi.',
+    series:['orders','ordersDone'], labels:['Toplam','Tamamlanan'], colors:['#3B82F6','#22C55E'],
+    lastUpdated:'2026-04-16T13:00:00' },
+  { id:'rpt_cancel',     category:'cat_ops', name:'İptal Analizi (Kullanıcı vs. İşletme)', scope:'Günlük',
+    chart:'bar', description:'Günlük iptal sebepleri karşılaştırması.',
+    series:['cancelUser','cancelBiz'], labels:['Kullanıcı İptali','İşletme İptali'], colors:['#F97316','#EF4444'],
+    lastUpdated:'2026-04-16T12:00:00' },
+  { id:'rpt_basket',     category:'cat_ops', name:'Ortalama Sepet Tutarı', scope:'Günlük (₺)',
+    chart:'line', description:'Her gün sipariş başına düşen ortalama harcama.',
+    series:['avgBasket'], labels:['Ort. Sepet'], colors:['#22C55E'],
+    lastUpdated:'2026-04-16T11:00:00' },
+  { id:'rpt_token',      category:'cat_ops', name:'Token Sirkülasyonu', scope:'Günlük',
+    chart:'bar', description:'Sistemde harcanan ve kullanıcılar tarafından kazanılan toplam token.',
+    series:['tokenSpent','tokenEarned'], labels:['Harcanan','Kazanılan'], colors:['#EAB308','#22C55E'],
+    lastUpdated:'2026-04-16T10:30:00' },
+
+  // Destek & Kalite
+  { id:'rpt_complaints', category:'cat_support', name:'Şikayet Sayısı & Çözümleme', scope:'Günlük',
+    chart:'line', description:'Gelen ve çözülen şikayetlerin günlük akışı.',
+    series:['complaints','complaintsResolved'], labels:['Toplam','Çözülen'], colors:['#EF4444','#22C55E'],
+    lastUpdated:'2026-04-16T14:00:00' },
+  { id:'rpt_complaint_types', category:'cat_support', name:'Şikayet Türleri Dağılımı', scope:'Son 30 gün',
+    chart:'pie', description:'Şikayetlerin kategorilere göre dağılımı (pasta grafiği).',
+    pie:[
+      { label:'İçerik',     value:47, color:'#8B5CF6' },
+      { label:'Sipariş',    value:28, color:'#3B82F6' },
+      { label:'Kullanıcı',  value:15, color:'#EF4444' },
+      { label:'Diğer',      value:10, color:'#6B7280' }
+    ],
+    lastUpdated:'2026-04-16T09:30:00' },
+  { id:'rpt_response',   category:'cat_support', name:'Şikayete Yanıt Süresi (dk)', scope:'Günlük',
+    chart:'line', description:'Destek ekibinin ortalama yanıt süresi. 15 dk üzeri uyarı.',
+    series:['responseTime'], labels:['Ort. Yanıt (dk)'], colors:['#F59E0B'], threshold:15,
+    lastUpdated:'2026-04-16T13:45:00' },
+
+  // Stratejik
+  { id:'rpt_heatmap',    category:'cat_strategic', name:'Popüler Kategori Isı Haritası', scope:'Saatlik × Kategori',
+    chart:'heatmap', description:'Hangi saatlerde hangi mutfak türü daha çok sipariş veriliyor?',
+    lastUpdated:'2026-04-16T12:15:00' },
+  { id:'rpt_league',     category:'cat_strategic', name:'İşletme Performans Ligi', scope:'Son 30 gün',
+    chart:'league', description:'En yüksek puanlı ve en az şikayet alan ilk 10 işletme.',
+    lastUpdated:'2026-04-16T10:00:00' },
+  { id:'rpt_retention',  category:'cat_strategic', name:'Retention (Bağlılık) Oranı', scope:'Cohort',
+    chart:'retention', description:'Yeni kullanıcıların ne kadarı ikinci kez sipariş veriyor veya tarif paylaşıyor?',
+    lastUpdated:'2026-04-15T18:00:00' },
+  { id:'rpt_premium',    category:'cat_strategic', name:'Premium Dönüşüm Hızı', scope:'Son 90 gün',
+    chart:'pie', description:'Ücretsiz kullanıcıların premium\'a geçiş süresi analizi.',
+    pie:[
+      { label:'İlk 7 gün',   value:34, color:'#22C55E' },
+      { label:'8-30 gün',    value:28, color:'#3B82F6' },
+      { label:'31-90 gün',   value:19, color:'#8B5CF6' },
+      { label:'90+ gün',     value:12, color:'#F59E0B' },
+      { label:'Dönüşmedi',   value:7,  color:'#6B7280' }
+    ],
+    lastUpdated:'2026-04-16T08:00:00' }
+];
+
+/* KPI özet — Ana dashboard için */
+var ADMIN_REPORT_KPI = {
+  todayOrders:   { value: 1180,  delta: 12.4, trend: 'up'   },
+  activeUsers:   { value: 31200, delta: 3.2,  trend: 'up'   },
+  todayRevenue:  { value: 172000, delta: 8.7, trend: 'up'   },
+  openComplaints:{ value: 23,    delta: -15.0, trend: 'down' }
+};
+
+/* Stratejik veriler */
+var ADMIN_REPORT_HEATMAP = (function() {
+  // 24 saat × 7 kategori, her hücrede yoğunluk 0-100
+  var cats = ['Burger & Fast Food','Türk Mutfağı','İtalyan','Kahvaltı','Deniz Ürünleri','Tatlı','Kebap'];
+  var rows = [];
+  var seed = 13579;
+  for (var c = 0; c < cats.length; c++) {
+    var row = { label: cats[c], hours: [] };
+    for (var h = 0; h < 24; h++) {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      var base = 20;
+      // Öğün saatlerinde artış
+      if (h === 12 || h === 13 || h === 19 || h === 20) base = 60;
+      else if (h === 11 || h === 14 || h === 18 || h === 21) base = 45;
+      else if (h >= 7 && h <= 10) base = c === 3 ? 70 : 25; // kahvaltı
+      else if (h >= 0 && h <= 5) base = 8;
+      var intensity = base + (seed % 25);
+      if (intensity > 100) intensity = 100;
+      row.hours.push(intensity);
+    }
+    rows.push(row);
+  }
+  return rows;
+})();
+
+var ADMIN_REPORT_LEAGUE = [
+  { rank:1, bizId:'bz13', name:'Tatlıcı Nene',       rating:5.0, complaints:0, orders:780,  delta:2 },
+  { rank:2, bizId:'bz9',  name:'Kebapçı Hakkı',      rating:4.9, complaints:1, orders:1800, delta:0 },
+  { rank:3, bizId:'bz2',  name:'Pide Palace',        rating:4.9, complaints:2, orders:1250, delta:1 },
+  { rank:4, bizId:'bz4',  name:'Sushi Master',       rating:4.8, complaints:1, orders:680,  delta:-1 },
+  { rank:5, bizId:'bz1',  name:'Lezzet Mutfak',      rating:4.7, complaints:3, orders:820,  delta:3 },
+  { rank:6, bizId:'bz12', name:'Dönerci Baba',       rating:4.6, complaints:4, orders:950,  delta:0 },
+  { rank:7, bizId:'bz7',  name:'Waffle House',       rating:4.6, complaints:3, orders:560,  delta:-2 },
+  { rank:8, bizId:'bz3',  name:'Burger Lab',         rating:4.5, complaints:5, orders:430,  delta:1 },
+  { rank:9, bizId:'bz10', name:'Vegan Kitchen',      rating:4.4, complaints:2, orders:320,  delta:4 },
+  { rank:10, bizId:'bz5', name:'Çiğ Köfte Express',  rating:4.3, complaints:8, orders:2100, delta:-3 }
+];
+
+var ADMIN_REPORT_RETENTION = {
+  cohorts: [
+    { label:'Ocak',  D1:100, D7:68, D30:41, D90:28 },
+    { label:'Şubat', D1:100, D7:72, D30:45, D90:31 },
+    { label:'Mart',  D1:100, D7:75, D30:48, D90:34 },
+    { label:'Nisan', D1:100, D7:77, D30:50, D90:null } // henüz 90 gün geçmedi
+  ],
+  averageD30: 46
+};
