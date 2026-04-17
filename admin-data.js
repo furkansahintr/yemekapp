@@ -809,3 +809,102 @@ function _admGenPassword(seed) {
   }
   return out;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   KOMİSYON AYARLARI — Kriterler, Kurallar, İptal Oranları
+   ═══════════════════════════════════════════════════════════ */
+
+/* Değerlendirme kriteri kataloğu — her kriter kendi "operator"leri ile */
+var ADMIN_COMMISSION_CRITERIA = [
+  {
+    id: 'rating',
+    label: 'İşletme Puanı',
+    icon: 'solar:star-bold',
+    color: '#F59E0B',
+    unit: '★',
+    ranges: [
+      { id: 'r_50',    label: '5.0 (Mükemmel)' },
+      { id: 'r_48_49', label: '4.8 – 4.9' },
+      { id: 'r_45_47', label: '4.5 – 4.7' },
+      { id: 'r_40_44', label: '4.0 – 4.4' },
+      { id: 'r_35_39', label: '3.5 – 3.9' },
+      { id: 'r_lt_35', label: '< 3.5' }
+    ]
+  },
+  {
+    id: 'monthlyOrders',
+    label: 'Aylık Sipariş Hacmi',
+    icon: 'solar:bag-check-bold',
+    color: '#3B82F6',
+    unit: '',
+    ranges: [
+      { id: 'o_gt2000',    label: '> 2.000' },
+      { id: 'o_1000_2000', label: '1.000 – 2.000' },
+      { id: 'o_500_999',   label: '500 – 999' },
+      { id: 'o_100_499',   label: '100 – 499' },
+      { id: 'o_lt100',     label: '< 100' }
+    ]
+  },
+  {
+    id: 'prepTime',
+    label: 'Ort. Hazırlık Süresi',
+    icon: 'solar:chef-hat-bold',
+    color: '#8B5CF6',
+    unit: 'dk',
+    ranges: [
+      { id: 'p_lt15',   label: '< 15 dk' },
+      { id: 'p_15_25',  label: '15 – 25 dk' },
+      { id: 'p_25_40',  label: '25 – 40 dk' },
+      { id: 'p_gt40',   label: '> 40 dk' }
+    ]
+  },
+  {
+    id: 'satisfaction',
+    label: 'Müşteri Memnuniyeti',
+    icon: 'solar:heart-bold',
+    color: '#EC4899',
+    unit: '%',
+    ranges: [
+      { id: 's_gt90',  label: '> %90' },
+      { id: 's_80_90', label: '%80 – %90' },
+      { id: 's_70_79', label: '%70 – %79' },
+      { id: 's_lt70',  label: '< %70' }
+    ]
+  },
+  {
+    id: 'branches',
+    label: 'Şube Sayısı',
+    icon: 'solar:buildings-bold',
+    color: '#06B6D4',
+    unit: '',
+    ranges: [
+      { id: 'b_1',     label: 'Tekil İşletme' },
+      { id: 'b_2_4',   label: '2 – 4 Şube' },
+      { id: 'b_5_10',  label: '5 – 10 Şube' },
+      { id: 'b_gt10',  label: '10+ Şube (Zincir)' }
+    ]
+  }
+];
+
+/* Aktif komisyon kuralları — kategori bazlı (online / masa) */
+var ADMIN_COMMISSION_RULES = [
+  /* ── Online Siparişler ── */
+  { id: 'cr_on_1', category: 'online', criterionA: { criterion:'rating',        range:'r_50' },      criterionB: { criterion:'satisfaction', range:'s_gt90' },  rate: 5.5, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_2', category: 'online', criterionA: { criterion:'rating',        range:'r_48_49' },   criterionB: { criterion:'monthlyOrders', range:'o_gt2000' }, rate: 7.0, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_3', category: 'online', criterionA: { criterion:'rating',        range:'r_45_47' },   criterionB: { criterion:'prepTime',     range:'p_lt15' },  rate: 9.0, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_4', category: 'online', criterionA: { criterion:'rating',        range:'r_40_44' },   criterionB: { criterion:'satisfaction', range:'s_80_90' }, rate: 11.0, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_5', category: 'online', criterionA: { criterion:'rating',        range:'r_35_39' },   criterionB: { criterion:'monthlyOrders', range:'o_100_499' }, rate: 13.0, updatedAt: '2026-03-20T10:00:00' },
+
+  /* ── Masa Siparişleri ── */
+  { id: 'cr_ma_1', category: 'masa', criterionA: { criterion:'rating',        range:'r_50' },      criterionB: { criterion:'prepTime',     range:'p_lt15' },  rate: 3.0, updatedAt: '2026-03-15T14:00:00' },
+  { id: 'cr_ma_2', category: 'masa', criterionA: { criterion:'rating',        range:'r_48_49' },   criterionB: { criterion:'satisfaction', range:'s_gt90' },  rate: 4.5, updatedAt: '2026-03-15T14:00:00' },
+  { id: 'cr_ma_3', category: 'masa', criterionA: { criterion:'rating',        range:'r_45_47' },   criterionB: { criterion:'branches',     range:'b_2_4' },  rate: 6.0, updatedAt: '2026-03-15T14:00:00' },
+  { id: 'cr_ma_4', category: 'masa', criterionA: { criterion:'rating',        range:'r_40_44' },   criterionB: { criterion:'monthlyOrders', range:'o_500_999' }, rate: 8.0, updatedAt: '2026-03-15T14:00:00' }
+];
+
+/* Dinamik İptal Komisyonları — mevcut komisyonun % */
+var ADMIN_CANCEL_COMMISSION = {
+  userCancel:   { label: 'Kullanıcı İptal — Hizmet Bedeli', rate: 50, description: 'Kullanıcı siparişi iptal ettiğinde, işletmeden mevcut komisyonun %X\'i token olarak kesilir.' },
+  bizCancel:    { label: 'İşletme İptal — Cayma Bedeli',    rate: 25, description: 'İşletme siparişi iptal ettiğinde, mevcut komisyonun %X\'i kadar ek ceza uygulanır.' },
+  updatedAt: '2026-03-20T10:00:00'
+};

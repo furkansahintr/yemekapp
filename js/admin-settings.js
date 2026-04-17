@@ -67,8 +67,8 @@ function renderAdminSettings() {
           summary:(M.payments ? 'Bugün: +'+_admFmtTL(M.payments.todayTl) : '—'),
           action:"renderAdminFinance()" },
         { id:'commission', label:'Komisyon Ayarları', icon:'solar:pie-chart-2-bold', tone:'#EC4899',
-          summary:'Ort. %'+(S.platformCommission || 0).toFixed(1),
-          action:"_admOpenTierInfo()" },
+          summary:((typeof ADMIN_COMMISSION_RULES!=='undefined') ? ADMIN_COMMISSION_RULES.length+' aktif kural • Ort. %'+(S.platformCommission || 0).toFixed(1) : 'Ort. %'+(S.platformCommission || 0).toFixed(1)),
+          action:"_admOpenCommission()" },
         { id:'premium',    label:'Premium Plan & Ücret', icon:'solar:crown-bold', tone:'#A855F7',
           summary:(M.premium ? _admFmt(M.premium.subscribers)+' premium üye' : '—'),
           action:"_admToast('Premium plan yönetimi yakında')" }
