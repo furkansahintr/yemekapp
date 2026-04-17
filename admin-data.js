@@ -1421,3 +1421,281 @@ var ADMIN_AD_CAMPAIGNS = [
     startDate:'2026-03-01', endDate:'2026-03-15', status:'cancelled',
     dailySpend:[180,210,240] }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   İŞLETME BAŞVURULARI — Belge Tipleri + Başvuru Kayıtları
+   ═══════════════════════════════════════════════════════════ */
+
+/* 6 belge tipi — resmi başvuru paketi */
+var ADMIN_BIZ_APP_DOC_TYPES = [
+  { id:'doc_tax',      label:'Vergi Levhası',         icon:'solar:document-text-bold',     required:true },
+  { id:'doc_activity', label:'Faaliyet Belgesi',      icon:'solar:verified-check-bold',    required:true },
+  { id:'doc_signature',label:'İmza Sirküleri',        icon:'solar:pen-new-square-bold',    required:true },
+  { id:'doc_id',       label:'Yetkili TC Kimlik',     icon:'solar:user-id-bold',           required:true },
+  { id:'doc_bank',     label:'Banka Hesap Belgesi',   icon:'solar:card-bold',              required:true },
+  { id:'doc_license',  label:'İşyeri Ruhsatı',        icon:'solar:document-add-bold',      required:false }
+];
+
+/* Başvuru kayıtları */
+var ADMIN_BIZ_APPLICATIONS = [
+  /* ── BEKLEYEN (pending) ── */
+  {
+    id:'bap_001', status:'pending',
+    bizName:'Mantıcı Adile Teyze', bizType:'Geleneksel Türk Mutfağı',
+    owner:'Adile Yılmaz', ownerPhone:'+905551201001', ownerEmail:'adile@manticiadileteyze.com',
+    taxNo:'1234567890', taxOffice:'Kadıköy Vergi Dairesi',
+    address:'Caferağa Mah. Moda Cad. No:42 Kadıköy/İstanbul',
+    city:'İstanbul', district:'Kadıköy',
+    branchCount:1, expectedOpenDate:'2026-05-01',
+    appliedAt:'2026-04-16T08:30:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-16T08:20:00', preview:'Vergi Levhası 2026 · PDF · 1.2 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2026-04-16T08:22:00', preview:'Faaliyet Belgesi · PDF · 890 KB',    flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2026-04-16T08:25:00', preview:'İmza Sirküleri · PDF · 1.8 MB',      flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-16T08:27:00', preview:'TC Kimlik Kartı · JPG · 450 KB',     flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-16T08:28:00', preview:'Banka Hesap Dekont · PDF · 320 KB',   flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:null,                 preview:null,                                flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'', businessNote:'', history:[
+      { date:'2026-04-16T08:30:00', by:'İşletme', text:'Başvuru gönderildi' }
+    ]
+  },
+  {
+    id:'bap_002', status:'pending',
+    bizName:'Fırın Başı', bizType:'Ekmek & Pastane',
+    owner:'Recep Demir', ownerPhone:'+905551202002', ownerEmail:'recep@firinbasi.com',
+    taxNo:'9876543210', taxOffice:'Çankaya Vergi Dairesi',
+    address:'Kavaklıdere Mah. Tunalı Hilmi Cad. No:78 Çankaya/Ankara',
+    city:'Ankara', district:'Çankaya',
+    branchCount:2, expectedOpenDate:'2026-05-15',
+    appliedAt:'2026-04-16T10:15:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-16T10:00:00', preview:'Vergi Levhası · PDF · 980 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2026-04-16T10:03:00', preview:'Faaliyet Belgesi · PDF · 760 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2026-04-16T10:06:00', preview:'İmza Sirküleri · PDF · 1.5 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-16T10:08:00', preview:'TC Kimlik · JPG · 380 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-16T10:10:00', preview:'IBAN Dekont · PDF · 290 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:'2026-04-16T10:12:00', preview:'İşyeri Ruhsatı · PDF · 1.4 MB', flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'', businessNote:'', history:[
+      { date:'2026-04-16T10:15:00', by:'İşletme', text:'Başvuru gönderildi' }
+    ]
+  },
+  {
+    id:'bap_003', status:'pending',
+    bizName:'Denizci Balık', bizType:'Deniz Ürünleri Restoranı',
+    owner:'Ahmet Balcı', ownerPhone:'+905551203003', ownerEmail:'ahmet@denizcibalik.com',
+    taxNo:'5544332211', taxOffice:'Konyaaltı Vergi Dairesi',
+    address:'Arapsuyu Mah. Konyaaltı Cad. No:215 Konyaaltı/Antalya',
+    city:'Antalya', district:'Konyaaltı',
+    branchCount:1, expectedOpenDate:'2026-06-01',
+    appliedAt:'2026-04-15T16:45:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-15T16:30:00', preview:'Vergi Levhası · PDF · 1.1 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2026-04-15T16:33:00', preview:'Faaliyet Belgesi · PDF · 820 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2026-04-15T16:36:00', preview:'İmza Sirküleri · PDF · 1.6 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-15T16:38:00', preview:'TC Kimlik · JPG · 420 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-15T16:40:00', preview:'Banka Dekont · PDF · 310 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:null,                 preview:null, flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'', businessNote:'', history:[
+      { date:'2026-04-15T16:45:00', by:'İşletme', text:'Başvuru gönderildi' }
+    ]
+  },
+  {
+    id:'bap_004', status:'pending',
+    bizName:'Bambu Sushi Co.', bizType:'Asya Mutfağı',
+    owner:'Yuki Tanaka', ownerPhone:'+905551204004', ownerEmail:'yuki@bambusushi.com',
+    taxNo:'7788990011', taxOffice:'Alsancak Vergi Dairesi',
+    address:'Alsancak Mah. Kıbrıs Şehitleri Cad. No:112 Konak/İzmir',
+    city:'İzmir', district:'Konak',
+    branchCount:1, expectedOpenDate:'2026-05-20',
+    appliedAt:'2026-04-14T11:20:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-14T11:05:00', preview:'Vergi Levhası · PDF · 1.0 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2026-04-14T11:08:00', preview:'Faaliyet Belgesi · PDF · 740 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2026-04-14T11:12:00', preview:'İmza Sirküleri · PDF · 1.3 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-14T11:14:00', preview:'TC Kimlik · JPG · 400 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-14T11:16:00', preview:'IBAN · PDF · 280 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:'2026-04-14T11:18:00', preview:'İşyeri Ruhsatı · PDF · 1.2 MB', flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'', businessNote:'', history:[
+      { date:'2026-04-14T11:20:00', by:'İşletme', text:'Başvuru gönderildi' }
+    ]
+  },
+  {
+    id:'bap_005', status:'pending',
+    bizName:'Pancake Factory', bizType:'Kahvaltı & Brunch',
+    owner:'Cem Kara', ownerPhone:'+905551205005', ownerEmail:'cem@pancakefactory.com',
+    taxNo:'2233445566', taxOffice:'Nişantaşı Vergi Dairesi',
+    address:'Nişantaşı Teşvikiye Cad. No:28 Şişli/İstanbul',
+    city:'İstanbul', district:'Şişli',
+    branchCount:1, expectedOpenDate:'2026-05-10',
+    appliedAt:'2026-04-13T09:30:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-13T09:10:00', preview:'Vergi Levhası · PDF · 1.1 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:null,                 preview:null, flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2026-04-13T09:15:00', preview:'İmza Sirküleri · PDF · 1.4 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-13T09:18:00', preview:'TC Kimlik · JPG · 380 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-13T09:22:00', preview:'Banka Dekont · PDF · 310 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:null,                 preview:null, flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'', businessNote:'', history:[
+      { date:'2026-04-13T09:30:00', by:'İşletme', text:'Başvuru gönderildi' }
+    ]
+  },
+
+  /* ── CEVAP BEKLEYEN (awaiting_response) ── */
+  {
+    id:'bap_006', status:'awaiting_response',
+    bizName:'Vegan Dükkan', bizType:'Vegan & Bitkisel',
+    owner:'Ela Demir', ownerPhone:'+905551206006', ownerEmail:'ela@vegandukkan.com',
+    taxNo:'1122334455', taxOffice:'Beşiktaş Vergi Dairesi',
+    address:'Levent Mah. Büyükdere Cad. No:88 Beşiktaş/İstanbul',
+    city:'İstanbul', district:'Beşiktaş',
+    branchCount:1, expectedOpenDate:'2026-04-28',
+    appliedAt:'2026-04-10T14:00:00',
+    respondedAt:'2026-04-11T11:30:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-10T13:45:00', preview:'Vergi Levhası 2023 · PDF · 920 KB', flaggedIssue:true,  issueNote:'Güncel değil — 2026 tarihli olanı yükleyin' },
+      { typeId:'doc_activity',  uploadedAt:'2026-04-10T13:48:00', preview:'Faaliyet Belgesi · PDF · 760 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2026-04-10T13:52:00', preview:'İmza Sirküleri · PDF · 1.3 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-10T13:54:00', preview:'TC Kimlik ön yüz · JPG · 280 KB', flaggedIssue:true,  issueNote:'Arka yüz de gerekli — lütfen ekleyin' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-10T13:56:00', preview:'IBAN · PDF · 290 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:null,                 preview:null, flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'Vergi levhası güncel tarih taşımıyor. TC arka yüz eksik. Onay verilmedi.',
+    businessNote:'Merhaba, başvurunuzu inceledik. Vergi levhanız eski tarihli (2023). 2026 tarihli güncel Vergi Levhanızı yüklemenizi ve TC kimlik kartınızın arka yüzünü de eklemenizi rica ederiz.',
+    history:[
+      { date:'2026-04-10T14:00:00', by:'İşletme', text:'Başvuru gönderildi' },
+      { date:'2026-04-11T11:30:00', by:'Admin',   text:'Eksik bildirim gönderildi (2 belge)' }
+    ]
+  },
+  {
+    id:'bap_007', status:'awaiting_response',
+    bizName:'Köfteci Dayı', bizType:'Fast Food',
+    owner:'Hüseyin Yıldız', ownerPhone:'+905551207007', ownerEmail:'huseyin@koftecidayi.com',
+    taxNo:'3344556677', taxOffice:'Sultanbeyli Vergi Dairesi',
+    address:'Abdurrahmangazi Mah. İnönü Cad. No:19 Sultanbeyli/İstanbul',
+    city:'İstanbul', district:'Sultanbeyli',
+    branchCount:3, expectedOpenDate:'2026-04-20',
+    appliedAt:'2026-04-08T16:00:00',
+    respondedAt:'2026-04-09T10:00:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-08T15:45:00', preview:'Vergi Levhası · PDF · 1.0 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2026-04-08T15:48:00', preview:'Faaliyet Belgesi · PDF · 720 KB', flaggedIssue:true,  issueNote:'Sicil tasdik tarihi 6 aydan eski — yeniden tasdiklenmeli' },
+      { typeId:'doc_signature', uploadedAt:'2026-04-08T15:50:00', preview:'İmza Sirküleri · PDF · 1.4 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-08T15:52:00', preview:'TC Kimlik · JPG · 410 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-08T15:54:00', preview:'Farklı bir şahıs adına · PDF · 280 KB', flaggedIssue:true,  issueNote:'IBAN şirket adına olmalı. Başka bir şahıs adına dekont yüklenmiş.' },
+      { typeId:'doc_license',   uploadedAt:'2026-04-08T15:56:00', preview:'İşyeri Ruhsatı · PDF · 1.1 MB', flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'Faaliyet belgesi tasdik süresi geçmiş. Banka dekontu şirket değil şahıs adına.',
+    businessNote:'Faaliyet Belgenizin tasdik tarihi 6 aydan eski. Güncel tasdikli belgeyi yükleyin. Ayrıca Banka Hesap Dekontu şirket adına olmalı.',
+    history:[
+      { date:'2026-04-08T16:00:00', by:'İşletme', text:'Başvuru gönderildi' },
+      { date:'2026-04-09T10:00:00', by:'Admin',   text:'Eksik bildirim gönderildi (2 belge)' }
+    ]
+  },
+  {
+    id:'bap_008', status:'awaiting_response',
+    bizName:'Kumruhane', bizType:'Sokak Lezzetleri',
+    owner:'Ersin Polat', ownerPhone:'+905551208008', ownerEmail:'ersin@kumruhane.com',
+    taxNo:'6677889900', taxOffice:'Bornova Vergi Dairesi',
+    address:'Kazımdirik Mah. 364 Sok. No:14 Bornova/İzmir',
+    city:'İzmir', district:'Bornova',
+    branchCount:1, expectedOpenDate:'2026-04-25',
+    appliedAt:'2026-04-06T10:00:00',
+    respondedAt:'2026-04-07T14:20:00',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2026-04-06T09:45:00', preview:'Vergi Levhası · PDF · 980 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2026-04-06T09:48:00', preview:'Faaliyet Belgesi · PDF · 710 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:null,                 preview:null, flaggedIssue:true,  issueNote:'İmza Sirküleri eksik — lütfen yükleyin' },
+      { typeId:'doc_id',        uploadedAt:'2026-04-06T09:52:00', preview:'TC Kimlik · JPG · 390 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2026-04-06T09:54:00', preview:'IBAN · PDF · 270 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:null,                 preview:null, flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'İmza sirküleri hiç yüklenmemiş — zorunlu belge.',
+    businessNote:'İmza Sirküleri paketine eklenmemiş. Zorunlu bir belge olduğu için tamamlamanız gerekiyor.',
+    history:[
+      { date:'2026-04-06T10:00:00', by:'İşletme', text:'Başvuru gönderildi' },
+      { date:'2026-04-07T14:20:00', by:'Admin',   text:'Eksik bildirim gönderildi (1 belge)' }
+    ]
+  },
+
+  /* ── TAMAMLANAN (completed) ── */
+  {
+    id:'bap_009', status:'completed',
+    bizName:'Lezzet Mutfak', bizType:'Türk Mutfağı',
+    owner:'Ali Yılmaz', ownerPhone:'+905551001001', ownerEmail:'ali@lezzetmutfak.com',
+    taxNo:'0011223344', taxOffice:'Kadıköy Vergi Dairesi',
+    address:'Caferağa Mah. Moda Cad. No:15 Kadıköy/İstanbul',
+    city:'İstanbul', district:'Kadıköy',
+    branchCount:2, expectedOpenDate:'2025-06-15',
+    appliedAt:'2025-06-10T11:00:00', approvedAt:'2025-06-12T16:00:00',
+    bizId:'bz1',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2025-06-10T10:40:00', preview:'Vergi Levhası · PDF · 1.1 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2025-06-10T10:43:00', preview:'Faaliyet Belgesi · PDF · 820 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2025-06-10T10:46:00', preview:'İmza Sirküleri · PDF · 1.5 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2025-06-10T10:48:00', preview:'TC Kimlik · JPG · 420 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2025-06-10T10:50:00', preview:'IBAN · PDF · 290 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:'2025-06-10T10:52:00', preview:'İşyeri Ruhsatı · PDF · 1.3 MB', flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'Tüm belgeler eksiksiz. Ticari referanslar güçlü. Onay verildi.',
+    businessNote:'Başvurunuz onaylandı! Platforma hoş geldiniz. Giriş bilgilerinizi e-posta adresinize gönderdik.',
+    history:[
+      { date:'2025-06-10T11:00:00', by:'İşletme', text:'Başvuru gönderildi' },
+      { date:'2025-06-12T16:00:00', by:'Admin',   text:'Onaylandı ve aktifleştirildi' }
+    ]
+  },
+  {
+    id:'bap_010', status:'completed',
+    bizName:'Pide Palace', bizType:'Pide & Lahmacun',
+    owner:'Mehmet Demir', ownerPhone:'+905551002002', ownerEmail:'mehmet@pidepalace.com',
+    taxNo:'2233445511', taxOffice:'Üsküdar Vergi Dairesi',
+    address:'Beylerbeyi Mah. Sahil Yolu No:45 Üsküdar/İstanbul',
+    city:'İstanbul', district:'Üsküdar',
+    branchCount:3, expectedOpenDate:'2025-03-15',
+    appliedAt:'2025-03-10T09:00:00', approvedAt:'2025-03-12T11:30:00',
+    bizId:'bz2',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2025-03-10T08:40:00', preview:'Vergi Levhası · PDF · 1.0 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2025-03-10T08:43:00', preview:'Faaliyet Belgesi · PDF · 780 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2025-03-10T08:46:00', preview:'İmza Sirküleri · PDF · 1.4 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2025-03-10T08:48:00', preview:'TC Kimlik · JPG · 380 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2025-03-10T08:50:00', preview:'IBAN · PDF · 270 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:'2025-03-10T08:52:00', preview:'İşyeri Ruhsatı · PDF · 1.2 MB', flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'3 şubeli zincir. Tüm şubelerin ruhsatı ek belgelerde.',
+    businessNote:'Başvurunuz onaylandı! Platforma hoş geldiniz.',
+    history:[
+      { date:'2025-03-10T09:00:00', by:'İşletme', text:'Başvuru gönderildi' },
+      { date:'2025-03-12T11:30:00', by:'Admin',   text:'Onaylandı ve aktifleştirildi' }
+    ]
+  },
+  {
+    id:'bap_011', status:'completed',
+    bizName:'Kebapçı Hakkı', bizType:'Et & Kebap',
+    owner:'Hakkı Usta', ownerPhone:'+905551009009', ownerEmail:'hakki@kebapcihakki.com',
+    taxNo:'5544332299', taxOffice:'Şahinbey Vergi Dairesi',
+    address:'Merkez Mah. Hürriyet Cad. No:12 Şahinbey/Gaziantep',
+    city:'Gaziantep', district:'Şahinbey',
+    branchCount:4, expectedOpenDate:'2024-12-01',
+    appliedAt:'2024-11-25T13:00:00', approvedAt:'2024-11-28T10:00:00',
+    bizId:'bz9',
+    documents:[
+      { typeId:'doc_tax',       uploadedAt:'2024-11-25T12:40:00', preview:'Vergi Levhası · PDF · 1.2 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_activity',  uploadedAt:'2024-11-25T12:43:00', preview:'Faaliyet Belgesi · PDF · 850 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_signature', uploadedAt:'2024-11-25T12:46:00', preview:'İmza Sirküleri · PDF · 1.6 MB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_id',        uploadedAt:'2024-11-25T12:48:00', preview:'TC Kimlik · JPG · 410 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_bank',      uploadedAt:'2024-11-25T12:50:00', preview:'IBAN · PDF · 310 KB', flaggedIssue:false, issueNote:'' },
+      { typeId:'doc_license',   uploadedAt:'2024-11-25T12:52:00', preview:'4 Şube Ruhsatı · PDF · 3.4 MB', flaggedIssue:false, issueNote:'' }
+    ],
+    adminNote:'Premium üye adayı. 4 şubeli köklü işletme. Hızlı onay.',
+    businessNote:'Tebrikler, başvurunuz onaylandı! Premium plan detaylarını da inceleyebilirsiniz.',
+    history:[
+      { date:'2024-11-25T13:00:00', by:'İşletme', text:'Başvuru gönderildi' },
+      { date:'2024-11-28T10:00:00', by:'Admin',   text:'Onaylandı ve aktifleştirildi' }
+    ]
+  }
+];
