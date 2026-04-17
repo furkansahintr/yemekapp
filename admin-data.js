@@ -2399,3 +2399,94 @@ var ADMIN_PAYMENTS = [
     method:'bank', provider:'PayTR', providerRef:'PYT-TRF-2026-0416-5511',
     productDesc:'Reklam bütçesi — Akıllı Eşleşme yerleşimi', pendingReason:'Manuel admin onayı gerekli' }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   HIZLI MÜDAHALE — Kayıp Önleme Event'leri
+   ═══════════════════════════════════════════════════════════ */
+
+/* İptal sebepleri preset */
+var ADMIN_CANCEL_REASONS = [
+  { id:'expensive',      label:'Fiyat yüksek',                  color:'#EF4444' },
+  { id:'unused',          label:'Yeterince kullanmadım',        color:'#F97316' },
+  { id:'competitor',     label:'Rakibe geçtim',                 color:'#EC4899' },
+  { id:'technical',      label:'Teknik sorunlar',               color:'#F59E0B' },
+  { id:'no_need',        label:'İhtiyacım kalmadı',             color:'#6B7280' },
+  { id:'temporary',      label:'Geçici olarak duraklatıyorum',  color:'#3B82F6' },
+  { id:'privacy',        label:'Gizlilik endişeleri',           color:'#8B5CF6' },
+  { id:'other',          label:'Diğer',                          color:'#64748B' }
+];
+
+/* Retention event listesi */
+var ADMIN_RETENTION_EVENTS = [
+  /* ── KULLANICI EVENTS ── */
+  { id:'re_001', kind:'user', eventType:'premium_cancel', subjectId:'u4', subjectName:'Mert Özkan',
+    email:'mert@email.com', phone:'+905553334001',
+    membershipDays:124, totalSpent:295, cancelledAt:'2026-04-16T14:20:00',
+    reasonId:'expensive', reasonText:'Aylık ücret benim için yüksek — yılda 1-2 kez kullanıyorum',
+    status:'open' },
+  { id:'re_002', kind:'user', eventType:'account_delete', subjectId:'u11', subjectName:'Cem Arslan',
+    email:'cem@email.com', phone:'+905553334002',
+    activeDays:287, lastActivity:'2026-04-14T10:00:00', requestedAt:'2026-04-16T09:15:00',
+    reasonId:'privacy', reasonText:'GDPR hakkım çerçevesinde tüm verilerimin silinmesini istiyorum',
+    status:'pending_contact' },
+  { id:'re_003', kind:'user', eventType:'premium_cancel', subjectId:'u9', subjectName:'Aylin Kara',
+    email:'aylin@email.com', phone:'+905553334003',
+    membershipDays:182, totalSpent:418, cancelledAt:'2026-04-15T18:45:00',
+    reasonId:'unused', reasonText:'Son 2 aydır premium özellikleri açmadım',
+    status:'open' },
+  { id:'re_004', kind:'user', eventType:'account_delete', subjectId:'u17', subjectName:'Arda Koç',
+    email:'arda@email.com', phone:'+905553334004',
+    activeDays:45, lastActivity:'2026-04-15T22:00:00', requestedAt:'2026-04-15T22:30:00',
+    reasonId:'competitor', reasonText:'Başka bir uygulamaya geçiyorum',
+    status:'pending_contact' },
+  { id:'re_005', kind:'user', eventType:'premium_cancel', subjectId:'u2', subjectName:'Elif Demir',
+    email:'elif@email.com', phone:'+905553334005',
+    membershipDays:360, totalSpent:708, cancelledAt:'2026-04-15T11:30:00',
+    reasonId:'no_need', reasonText:'Çocuklarım büyüdü, artık o kadar yemek siparişi vermiyoruz',
+    status:'contacted' },
+  { id:'re_006', kind:'user', eventType:'account_delete', subjectId:'u16', subjectName:'Selin Er',
+    email:'selin@email.com', phone:'+905553334006',
+    activeDays:92, lastActivity:'2026-04-13T08:00:00', requestedAt:'2026-04-14T16:20:00',
+    reasonId:'technical', reasonText:'Uygulama sürekli donuyor',
+    status:'resolved' },
+  { id:'re_007', kind:'user', eventType:'premium_cancel', subjectId:'u5', subjectName:'Mert Özkan (ikinci hesap)',
+    email:'mert2@email.com', phone:'+905553334007',
+    membershipDays:31, totalSpent:59, cancelledAt:'2026-04-14T13:00:00',
+    reasonId:'temporary', reasonText:'Yaza kadar gerek yok, eylülde tekrar alırım',
+    status:'open' },
+
+  /* ── İŞLETME EVENTS ── */
+  { id:'re_008', kind:'biz', eventType:'premium_cancel', subjectId:'bz6', subjectName:'Pizza Napoli',
+    email:'emre@pizzanapoli.com', phone:'+905551006006',
+    membershipDays:215, totalSpent:5400, cancelledAt:'2026-04-16T12:30:00',
+    reasonId:'expensive', reasonText:'Plus plan aylık 1.250 TL benim için yüksek — daha uygun bir paket olsa kalırım',
+    status:'open' },
+  { id:'re_009', kind:'biz', eventType:'account_delete', subjectId:'bz8', subjectName:'Tantuni Evi',
+    email:'hasan@tantunievi.com', phone:'+905551008008',
+    activeDays:189, lastActivity:'2026-03-15T10:00:00', requestedAt:'2026-04-16T10:00:00',
+    reasonId:'other', reasonText:'Restoran kapanıyor, hesap artık gerekli değil',
+    status:'pending_contact' },
+  { id:'re_010', kind:'biz', eventType:'premium_cancel', subjectId:'bz15', subjectName:'Makarna Dükkanı',
+    email:'ece@makarnadukkani.com', phone:'+905551015015',
+    membershipDays:73, totalSpent:1500, cancelledAt:'2026-04-15T15:20:00',
+    reasonId:'unused', reasonText:'Premium özellikleri açmaya fırsat bulamadım',
+    status:'open' },
+  { id:'re_011', kind:'biz', eventType:'premium_cancel', subjectId:'bz3', subjectName:'Burger Lab',
+    email:'zeynep@burgerlab.com', phone:'+905551003003',
+    membershipDays:45, totalSpent:625, cancelledAt:'2026-04-14T20:00:00',
+    reasonId:'competitor', reasonText:'Yemeksepeti ile devam edeceğim',
+    status:'contacted' },
+  { id:'re_012', kind:'biz', eventType:'account_delete', subjectId:'bz14', subjectName:'Kumpir Evi',
+    email:'can@kumpirevi.com', phone:'+905551014014',
+    activeDays:120, lastActivity:'2026-04-13T12:00:00', requestedAt:'2026-04-15T18:00:00',
+    reasonId:'technical', reasonText:'Sipariş paneli sürekli donuyor, kullanamıyoruz',
+    status:'pending_contact' }
+];
+
+/* Geri kazanım teklif şablonları */
+var ADMIN_WINBACK_TEMPLATES = [
+  { id:'wb_discount_50', label:'%50 İndirimli 3 Aylık',        type:'discount', value:50, durationMonths:3,  color:'#8B5CF6' },
+  { id:'wb_free_month',  label:'1 Ay Ücretsiz Uzatma',          type:'free',      value:1,  durationMonths:1,  color:'#22C55E' },
+  { id:'wb_downgrade',   label:'Daha Uygun Plana Geçiş Öner',  type:'downgrade', value:0,  durationMonths:0,  color:'#3B82F6' },
+  { id:'wb_custom',      label:'Özel Taslak',                     type:'custom',    value:0,  durationMonths:0,  color:'#EC4899' }
+];

@@ -117,9 +117,11 @@ function renderAdminSettings() {
             : (M.blacklist ? M.blacklist.banned+' engelli' : '—')),
           action:"_admOpenBlacklist()" },
         { id:'incident',   label:'Hızlı Müdahale', icon:'solar:siren-bold',
-          tone:(M.incident && M.incident.status === 'critical' ? '#EF4444' : M.incident && M.incident.status === 'warning' ? '#F59E0B' : '#22C55E'),
-          summary:(M.incident && M.incident.status === 'critical' ? 'Sistem: Kritik' : M.incident && M.incident.status === 'warning' ? 'Sistem: Uyarı' : 'Sistem: Normal'),
-          action:"_admToast('Acil müdahale merkezi yakında','err')" }
+          tone:'#EF4444',
+          summary:((typeof ADMIN_RETENTION_EVENTS!=='undefined')
+            ? ADMIN_RETENTION_EVENTS.filter(function(e){return e.status==='open'||e.status==='pending_contact';}).length+' açık · kayıp önleme'
+            : (M.incident && M.incident.status === 'critical' ? 'Sistem: Kritik' : M.incident && M.incident.status === 'warning' ? 'Sistem: Uyarı' : 'Sistem: Normal')),
+          action:"_admOpenIncident()" }
       ]
     },
     {
