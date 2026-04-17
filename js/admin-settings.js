@@ -98,7 +98,7 @@ function renderAdminSettings() {
       tiles:[
         { id:'complaints', label:'Şikayet Yönetimi', icon:'solar:shield-warning-bold', tone:'#F59E0B',
           summary:openReports+' bekliyor',
-          action:"_admOpenReports()" },
+          action:"_admOpenComplaints()" },
         { id:'blacklist',  label:'Kara Liste', icon:'solar:user-block-rounded-bold', tone:'#6B7280',
           summary:((typeof ADMIN_PENALTIES!=='undefined')
             ? ADMIN_PENALTIES.filter(function(p){return p.type==='ban';}).length+' yasak • '+ADMIN_PENALTIES.filter(function(p){return p.type==='restriction';}).length+' engel'

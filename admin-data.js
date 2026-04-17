@@ -1141,3 +1141,168 @@ var ADMIN_PENALTY_HISTORY = [
   { id:'hist_011', subjectType:'biz', subjectId:'bz14', date:'2026-03-15T12:00:00', action:'warning',     reason:'Puan düşüşü', note:'Uyarı' },
   { id:'hist_012', subjectType:'biz', subjectId:'bz14', date:'2026-04-02T16:20:00', action:'restriction', reason:'Çoklu şikayet', note:'30 gün (mevcut)' }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   ŞİKAYET PANELİ — Kategoriler ve Zenginleştirilmiş Şikayetler
+   ═══════════════════════════════════════════════════════════ */
+
+var ADMIN_COMPLAINT_CATEGORIES = [
+  { id:'order',   label:'Sipariş Şikayeti',    icon:'solar:bag-check-bold',        color:'#3B82F6' },
+  { id:'content', label:'İçerik Şikayeti',     icon:'solar:gallery-bold',          color:'#8B5CF6' },
+  { id:'user',    label:'Kullanıcı Davranışı', icon:'solar:user-cross-rounded-bold', color:'#EF4444' }
+];
+
+/* Mevcut ADMIN_REPORTS kayıtlarına zengin şikayet verisi ekle + yeni kayıtlar */
+(function() {
+  if (typeof ADMIN_REPORTS === 'undefined') return;
+
+  // Eski 3 kayda category ve boş alanlar doldur (geriye dönük uyum)
+  var legacyMap = {
+    rp1: { category:'content', subject:'Spam içerik paylaşımı',   description:'Bu işletme aynı kampanyayı ard arda 7 kez paylaştı. Feed kirliliği yaratıyor.', reporterId:'u2', reporterAvatar:null,
+      evidence:{ kind:'post', postId:'p_spam_01', authorName:'Tantuni Evi', authorHandle:'@tantunievi', text:'🔥🔥 %50 İndirim sadece bugün! 🔥🔥 KAÇIRMA KAÇIRMA KAÇIRMA!', image:null, likes:2, comments:0, postedAt:'2026-04-15T22:10:00' } },
+    rp2: { category:'content', subject:'Hakaret içeren yorum',     description:'Bir müşteri yorumda küfürlü ifadeler kullandı.', reporterId:'u1', reporterAvatar:null,
+      evidence:{ kind:'review', reviewId:'rv_9812', reviewerName:'Anonim Kullanıcı', rating:1, text:'Yemek *** gibiydi, çalışanları *** bunlar! ASLA GİTMEYİN.', business:'Pizza Napoli', postedAt:'2026-04-15T14:20:00' } },
+    rp3: { category:'content', subject:'Yanıltıcı kampanya',        description:'"Ücretsiz teslimat" ilanı var ama kasada teslimat ücreti kesildi.', reporterId:'u5', reporterAvatar:null,
+      evidence:{ kind:'post', postId:'p_mis_03', authorName:'Kumpir Evi', authorHandle:'@kumpirevi', text:'Tüm siparişler ÜCRETSİZ TESLİMAT! 🚀', image:null, likes:45, comments:8, postedAt:'2026-04-13T09:00:00' },
+      adminNote:'İşletmeyle görüşüldü, kampanya detayında minimum sepet tutarı eksik bulundu. Uyarı verildi, gönderi güncellendi.',
+      userNote:'Şikayetiniz değerlendirilmiş olup işletme uyarılmıştır. Teslimat ücretiniz iade edildi.',
+      resolvedAt:'2026-04-14T15:30:00', resolvedBy:'Admin' }
+  };
+
+  for (var i = 0; i < ADMIN_REPORTS.length; i++) {
+    var rp = ADMIN_REPORTS[i];
+    var patch = legacyMap[rp.id] || {};
+    for (var k in patch) rp[k] = patch[k];
+    if (!rp.category) rp.category = 'content';
+    if (!rp.subject) rp.subject = rp.target || '';
+    if (!rp.reporterId) rp.reporterId = null;
+    if (!rp.description) rp.description = '';
+    if (!rp.adminNote) rp.adminNote = '';
+    if (!rp.userNote) rp.userNote = '';
+  }
+
+  // Yeni zengin şikayetler
+  var extra = [
+    {
+      id:'rp4', category:'order', type:'order', status:'pending', date:'2026-04-16T14:05:00',
+      reportedBy:'Sude Korkmaz', reporterId:'u3', reporterAvatar:null,
+      target:'Eksik ürün teslimi', subject:'Siparişim eksik geldi',
+      description:'3 farklı ürün siparişi verdim, kurye 1 ürünü getirmedi ama sistem "teslim edildi" yazıyor.',
+      evidence:{ kind:'order', orderId:'#104275', business:'Pizza Napoli', branch:'Nilüfer', total:160, items:['Margherita Pizza x1','Cola x1','Tiramisu x1 (EKSİK)'], courier:'Ahmet T.', deliveredAt:'2026-04-16T13:45:00', paymentMethod:'Kart' }
+    },
+    {
+      id:'rp5', category:'order', type:'order', status:'pending', date:'2026-04-16T11:30:00',
+      reportedBy:'Onur Çetin', reporterId:'u4', reporterAvatar:null,
+      target:'Yanlış ürün teslimi', subject:'İstediğim ürün yerine farklı ürün geldi',
+      description:'Lahmacun istemiştim, pide geldi. Kurye değişmem için geri dönmedi.',
+      evidence:{ kind:'order', orderId:'#104276', business:'Kebapçı Hakkı', branch:'Merkez', total:380, items:['Beyti Kebap x1','Pide x3 (YANLIŞ — Lahmacun olmalıydı)','Ayran x4'], courier:'Murat Y.', deliveredAt:'2026-04-16T11:15:00', paymentMethod:'Token' }
+    },
+    {
+      id:'rp6', category:'user', type:'user', status:'pending', date:'2026-04-16T09:20:00',
+      reportedBy:'İrem Yılmaz', reporterId:'u7', reporterAvatar:null,
+      target:'Hasan Yılmaz — spam mesaj',
+      subject:'Sürekli rahatsız edici DM atıyor',
+      description:'Bir yorumuma itirazdan başlayıp kişisel saldırıya dönüştü. Son 3 günde 40+ mesaj.',
+      evidence:{ kind:'user', userId:'u12', userName:'Hasan Yılmaz', userHandle:'@hasan_y', userAvatar:null, joinDate:'2025-09-10',
+        messages:[
+          { from:'Hasan Yılmaz', text:'Yorumun sildirirsin tatlım 😉', date:'2026-04-13T21:00:00' },
+          { from:'Hasan Yılmaz', text:'İstemediğim cevap aldığımda ne yaparım biliyor musun?', date:'2026-04-14T01:15:00' },
+          { from:'Hasan Yılmaz', text:'Eee cevap ver', date:'2026-04-14T08:30:00' },
+          { from:'Hasan Yılmaz', text:'(+37 mesaj daha)', date:'2026-04-16T09:10:00' }
+        ]
+      }
+    },
+    {
+      id:'rp7', category:'content', type:'story', status:'pending', date:'2026-04-16T07:45:00',
+      reportedBy:'Cem Arslan', reporterId:'u8', reporterAvatar:null,
+      target:'Uygunsuz görsel içerik',
+      subject:'Hikayede uygunsuz görsel',
+      description:'Gıda hijyenine aykırı, midemi bulandırıcı görsel paylaşılmış.',
+      evidence:{ kind:'story', storyId:'st_4417', authorName:'Vegan Kitchen', authorHandle:'@vegankitchen', text:'Bugünün taze malzemeleri!', image:'[görsel önizleme]', expired:false, postedAt:'2026-04-16T07:00:00' }
+    },
+    {
+      id:'rp8', category:'content', type:'recipe', status:'pending', date:'2026-04-15T20:10:00',
+      reportedBy:'Aylin Kara', reporterId:'u9', reporterAvatar:null,
+      target:'Tarif intihali',
+      subject:'Benim tarifim kopyalanmış',
+      description:'3 ay önce paylaştığım tarif, aynı görseller ve metinlerle başka bir kullanıcı tarafından tekrar yayımlanmış.',
+      evidence:{ kind:'recipe', recipeId:'rc_221', authorName:'Mert Özkan', authorHandle:'@mertusta', title:'Klasik Mantı', ingredients:8, steps:12, image:'[görsel]', postedAt:'2026-04-15T15:00:00' }
+    },
+    {
+      id:'rp9', category:'order', type:'order', status:'pending', date:'2026-04-15T18:30:00',
+      reportedBy:'Burak Yıldız', reporterId:'u10', reporterAvatar:null,
+      target:'Geç teslimat — ürün soğuk',
+      subject:'Sipariş 1.5 saat gecikti',
+      description:'Tahmini 30 dk yazıyordu, 90 dk sonra geldi. Yemek tamamen soğumuştu.',
+      evidence:{ kind:'order', orderId:'#104265', business:'Çiğ Köfte Express', branch:'Pendik', total:95, items:['Çiğ Köfte Dürüm x2','Şalgam x2'], courier:'Serkan A.', deliveredAt:'2026-04-15T18:20:00', paymentMethod:'Nakit' }
+    },
+    {
+      id:'rp10', category:'user', type:'user', status:'resolved', date:'2026-04-13T12:00:00',
+      reportedBy:'Elif Demir', reporterId:'u11', reporterAvatar:null,
+      target:'Murat Demir — spam yorum',
+      subject:'Aynı yorumu 50+ kez bıraktı',
+      description:'Kampanya linkli aynı yorumu farklı işletmelerin altına bıraktı.',
+      evidence:{ kind:'user', userId:'u18', userName:'Murat Demir', userHandle:'@mdemir', userAvatar:null, joinDate:'2025-12-01',
+        comments:[
+          { on:'Lezzet Mutfak', text:'Sen de şu linki dene kazan 💰 bit.ly/xxx', date:'2026-04-12T19:00:00' },
+          { on:'Pide Palace', text:'Sen de şu linki dene kazan 💰 bit.ly/xxx', date:'2026-04-12T19:02:00' },
+          { on:'Burger Lab',  text:'Sen de şu linki dene kazan 💰 bit.ly/xxx', date:'2026-04-12T19:03:00' },
+          { on:'(+48 aynı yorum daha)', text:'', date:'2026-04-12T20:00:00' }
+        ]
+      },
+      adminNote:'Tekrarlayan spam. 14 gün sipariş ve yorum yasağı uygulandı. Kara Liste #pen_003 ile bağlandı.',
+      userNote:'Bildirdiğiniz kullanıcı hakkında inceleme tamamlanmış ve 14 gün süreli kısıtlama uygulanmıştır. Katkınız için teşekkür ederiz.',
+      resolvedAt:'2026-04-14T09:30:00', resolvedBy:'Admin'
+    },
+    {
+      id:'rp11', category:'content', type:'post', status:'resolved', date:'2026-04-12T10:00:00',
+      reportedBy:'Zehra Aydın', reporterId:'u14', reporterAvatar:null,
+      target:'Yanlış bilgi — tarif',
+      subject:'Alerjen bilgisi eksik paylaşım',
+      description:'Gluten içeren tarifte "glutensiz" etiketi kullanılmış. Çocuğum reaksiyon verebilirdi.',
+      evidence:{ kind:'post', postId:'p_alj_08', authorName:'Tatlıcı Nene', authorHandle:'@tatlicinene', text:'Glutensiz kurabiyeler (tarif aşağıda!)', image:'[görsel]', likes:120, comments:18, postedAt:'2026-04-11T16:00:00' },
+      adminNote:'İşletme ile görüşüldü — etiketler düzeltildi. Kendisine alerjen sorumluluğu eğitimi önerildi.',
+      userNote:'Uyarınız önemliydi, teşekkürler. İşletme içerik ve etiketlerini güncelledi.',
+      resolvedAt:'2026-04-13T11:45:00', resolvedBy:'Admin'
+    },
+    {
+      id:'rp12', category:'order', type:'order', status:'resolved', date:'2026-04-10T21:15:00',
+      reportedBy:'Melis Tan', reporterId:'u15', reporterAvatar:null,
+      target:'İptal edilen sipariş — iade sorunu',
+      subject:'İade 5 gündür yapılmadı',
+      description:'İşletme stok yok deyip iptal etti ama 230₺ token iademi alamadım.',
+      evidence:{ kind:'order', orderId:'#104272', business:'Lezzet Mutfak', branch:'Beşiktaş', total:450, items:['Kuzu Tandır x2','Mercimek Çorba x2','Kadayıf x1'], cancelReason:'Malzeme stok tükendi', deliveredAt:null, paymentMethod:'Token' },
+      adminNote:'Finans ekibi ile görüşüldü, işlem sistem gecikmesi imiş. Token elle iade edildi.',
+      userNote:'230 token cüzdanınıza yatırılmıştır. Yaşattığımız gecikme için özür dileriz.',
+      resolvedAt:'2026-04-12T14:00:00', resolvedBy:'Admin'
+    },
+    {
+      id:'rp13', category:'user', type:'user', status:'pending', date:'2026-04-16T15:50:00',
+      reportedBy:'Selin Er', reporterId:'u16', reporterAvatar:null,
+      target:'Sahte hesap şüphesi',
+      subject:'Bu profil gerçek görünmüyor',
+      description:'Aynı görseli farklı 4 hesapta gördüm. Sahte hesap gibi duruyor.',
+      evidence:{ kind:'user', userId:'u_fake_01', userName:'Cansu Y.', userHandle:'@cansu_foodie', userAvatar:null, joinDate:'2026-04-10',
+        notes:'Hesap 6 gün önce açıldı, 80 takipçi kazandı ama hiç paylaşım yok. Bio boş. Profil fotoğrafı stok görsel.'
+      }
+    },
+    {
+      id:'rp14', category:'order', type:'order', status:'pending', date:'2026-04-16T10:00:00',
+      reportedBy:'Arda Koç', reporterId:'u17', reporterAvatar:null,
+      target:'Ücret farkı itirazı',
+      subject:'Sepetteki fiyat kasada arttı',
+      description:'Menüde 120₺ yazan ürün 145₺ kesildi.',
+      evidence:{ kind:'order', orderId:'#104282', business:'Waffle House', branch:'Bağdat Cad', total:145, items:['Çikolatalı Waffle x1','Çay x2'], menuPrice:120, chargedPrice:145, paymentMethod:'Kart' }
+    },
+    {
+      id:'rp15', category:'content', type:'story', status:'pending', date:'2026-04-16T12:20:00',
+      reportedBy:'Naz Demir', reporterId:'u19', reporterAvatar:null,
+      target:'Rakibe yönelik karalama',
+      subject:'Başka işletmeye karalama hikayesi',
+      description:'Bir işletmenin adını anarak kötü görsel paylaşımı yapılmış.',
+      evidence:{ kind:'story', storyId:'st_5812', authorName:'Pizza Napoli', authorHandle:'@pizzanapoli', text:'FALANCA PIZZA = ÇÖP 🤮', image:'[görsel]', expired:false, postedAt:'2026-04-16T11:30:00' }
+    }
+  ];
+
+  for (var j = 0; j < extra.length; j++) ADMIN_REPORTS.push(extra[j]);
+})();
