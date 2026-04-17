@@ -49,8 +49,8 @@ function renderAdminSettings() {
           summary:_admFmt(BIZ.length)+' kayıtlı • '+_admFmt(S.totalBranches || 0)+' şube',
           action:"_admMgmtOpenBusinesses()" },
         { id:'staff',      label:'Personel Sayfası', icon:'solar:users-group-rounded-bold', tone:'#8B5CF6',
-          summary:(M.staff ? _admFmt(M.staff.total)+' • '+_admFmt(M.staff.activeShifts)+' vardiya' : '—'),
-          action:"_admToast('Personel yönetimi yakında')" }
+          summary:((typeof ADMIN_STAFF!=='undefined') ? _admFmt(ADMIN_STAFF.length)+' personel • '+_admFmt((M.staff&&M.staff.activeShifts)||0)+' vardiya' : (M.staff ? _admFmt(M.staff.total)+' • '+_admFmt(M.staff.activeShifts)+' vardiya' : '—')),
+          action:"_admOpenStaff()" }
       ]
     },
     {

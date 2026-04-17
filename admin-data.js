@@ -672,3 +672,140 @@ var ADMIN_MGMT_METRICS = {
   reports:      { lastRun: 'Bugün 09:00' },
   adminUsers:   { total: 5 }
 };
+
+/* ═══════════════════════════════════════════════════════════
+   PERSONEL YÖNETİMİ — Seed Staff, Branches & Shifts
+   ═══════════════════════════════════════════════════════════ */
+
+/* Roller — Yetki sistemi ile uyumlu */
+var ADMIN_STAFF_ROLES = [
+  { id:'owner',       label:'İşletme Sahibi',    color:'#8B5CF6' },
+  { id:'manager',     label:'Şube Müdürü',       color:'#3B82F6' },
+  { id:'coordinator', label:'Koordinatör',       color:'#06B6D4' },
+  { id:'chef',        label:'Mutfak Sorumlusu',  color:'#F59E0B' },
+  { id:'waiter',      label:'Garson',            color:'#22C55E' },
+  { id:'cashier',     label:'Kasiyer',           color:'#EC4899' },
+  { id:'courier',     label:'Kurye',             color:'#EF4444' }
+];
+
+/* Şube kataloğu — ADMIN_BUSINESSES'in branchList'lerinden türetilir */
+var ADMIN_BRANCHES = (function() {
+  var out = [];
+  for (var i = 0; i < ADMIN_BUSINESSES.length; i++) {
+    var b = ADMIN_BUSINESSES[i];
+    if (!b.branchList) continue;
+    for (var j = 0; j < b.branchList.length; j++) {
+      out.push({
+        id: b.id + '_br' + (j + 1),
+        businessId: b.id,
+        businessName: b.name,
+        name: b.branchList[j],
+        city: b.city
+      });
+    }
+  }
+  return out;
+})();
+
+/* Vardiya üretici — her personel için geçmiş + gelecek 14 gün */
+function _admGenShifts(baseDate, workRate) {
+  var list = [];
+  var start = new Date(baseDate);
+  start.setDate(start.getDate() - 7);
+  var shiftTemplates = [
+    { start:'09:00', end:'17:00', label:'Gündüz' },
+    { start:'14:00', end:'22:00', label:'Akşam' },
+    { start:'22:00', end:'06:00', label:'Gece' },
+    { start:'08:00', end:'14:00', label:'Sabah' }
+  ];
+  for (var d = 0; d < 14; d++) {
+    var date = new Date(start);
+    date.setDate(start.getDate() + d);
+    // workRate: 0.0-1.0 arası çalışma yoğunluğu
+    if (((d * 7 + 3) % 10) / 10 > (1 - workRate)) {
+      var tpl = shiftTemplates[(d + Math.floor(workRate * 10)) % shiftTemplates.length];
+      var now = new Date(baseDate);
+      var status = date < now ? (Math.random() > 0.1 ? 'completed' : 'missed') : 'scheduled';
+      list.push({
+        date: date.toISOString().slice(0, 10),
+        start: tpl.start,
+        end: tpl.end,
+        label: tpl.label,
+        status: status
+      });
+    }
+  }
+  return list;
+}
+
+/* Personel listesi — 22 kişi, çoklu işletme/şube/rol */
+var ADMIN_STAFF = (function() {
+  var seed = [
+    { n:'Ahmet Yılmaz',     p:'+905551100101', e:'ahmet.yilmaz@lezzetmutfak.com',   biz:'bz1',  br:0, r:'waiter',      created:'2026-04-15T14:32:00' },
+    { n:'Elif Demir',       p:'+905551100102', e:'elif.demir@pidepalace.com',       biz:'bz2',  br:2, r:'manager',     created:'2026-04-12T09:15:00' },
+    { n:'Burak Çelik',      p:'+905551100103', e:'burak.celik@burgerlab.com',       biz:'bz3',  br:0, r:'chef',        created:'2026-04-10T11:00:00' },
+    { n:'Seda Kaya',        p:'+905551100104', e:'seda.kaya@sushimaster.com',       biz:'bz4',  br:1, r:'cashier',     created:'2026-04-08T16:45:00' },
+    { n:'Murat Polat',      p:'+905551100105', e:'murat.polat@cigkofte.com',        biz:'bz5',  br:3, r:'courier',     created:'2026-04-05T08:20:00' },
+    { n:'Gizem Aydın',      p:'+905551100106', e:'gizem.aydin@lezzetmutfak.com',    biz:'bz1',  br:1, r:'waiter',      created:'2026-04-03T13:10:00' },
+    { n:'Kerem Öztürk',     p:'+905551100107', e:'kerem.ozturk@kebapcihakki.com',   biz:'bz9',  br:0, r:'chef',        created:'2026-03-28T10:00:00' },
+    { n:'Aslı Güneş',       p:'+905551100108', e:'asli.gunes@dondurmababa.com',     biz:'bz12', br:1, r:'cashier',     created:'2026-03-25T15:30:00' },
+    { n:'Hakan Ak',         p:'+905551100109', e:'hakan.ak@pidepalace.com',         biz:'bz2',  br:0, r:'courier',     created:'2026-03-22T09:45:00' },
+    { n:'Nilay Şahin',      p:'+905551100110', e:'nilay.sahin@waffleuse.com',       biz:'bz7',  br:0, r:'waiter',      created:'2026-03-20T12:00:00' },
+    { n:'Onur Kılıç',       p:'+905551100111', e:'onur.kilic@cigkofte.com',         biz:'bz5',  br:0, r:'manager',     created:'2026-03-18T17:15:00' },
+    { n:'Deniz Koç',        p:'+905551100112', e:'deniz.koc@kebapcihakki.com',      biz:'bz9',  br:2, r:'courier',     created:'2026-03-15T08:30:00' },
+    { n:'Ceren Yıldız',     p:'+905551100113', e:'ceren.yildiz@tatlicinene.com',    biz:'bz13', br:1, r:'waiter',      created:'2026-03-12T14:20:00' },
+    { n:'Umut Er',          p:'+905551100114', e:'umut.er@lezzetmutfak.com',        biz:'bz1',  br:0, r:'courier',     created:'2026-03-10T11:40:00' },
+    { n:'Melis Kaya',       p:'+905551100115', e:'melis.kaya@sushimaster.com',      biz:'bz4',  br:0, r:'chef',        created:'2026-03-05T16:00:00' },
+    { n:'Tolga Arslan',     p:'+905551100116', e:'tolga.arslan@pidepalace.com',     biz:'bz2',  br:1, r:'waiter',      created:'2026-02-28T09:00:00' },
+    { n:'Pelin Doğan',      p:'+905551100117', e:'pelin.dogan@cigkofte.com',        biz:'bz5',  br:1, r:'coordinator', created:'2026-02-25T13:30:00' },
+    { n:'Cem Sönmez',       p:'+905551100118', e:'cem.sonmez@burgerlab.com',        biz:'bz3',  br:0, r:'waiter',      created:'2026-02-20T10:15:00' },
+    { n:'Büşra Kurt',       p:'+905551100119', e:'busra.kurt@makarnadukkani.com',   biz:'bz15', br:0, r:'cashier',     created:'2026-02-15T15:45:00' },
+    { n:'Emir Tunç',        p:'+905551100120', e:'emir.tunc@kebapcihakki.com',      biz:'bz9',  br:1, r:'chef',        created:'2026-02-10T08:30:00' },
+    { n:'Yasemin Bulut',    p:'+905551100121', e:'yasemin.bulut@donercibaba.com',   biz:'bz12', br:0, r:'waiter',      created:'2026-02-05T12:20:00' },
+    { n:'Kaan Özdemir',     p:'+905551100122', e:'kaan.ozdemir@lezzetmutfak.com',   biz:'bz1',  br:1, r:'manager',     created:'2026-01-28T14:00:00' }
+  ];
+  var out = [];
+  for (var i = 0; i < seed.length; i++) {
+    var s = seed[i];
+    var biz = ADMIN_BUSINESSES.find(function(b) { return b.id === s.biz; });
+    if (!biz || !biz.branchList) continue;
+    var branchIdx = Math.min(s.br, biz.branchList.length - 1);
+    var branchName = biz.branchList[branchIdx];
+    var branchId = s.biz + '_br' + (branchIdx + 1);
+    var surname = s.n.split(' ').pop().toLowerCase()
+      .replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ş/g,'s').replace(/ü/g,'u');
+    var idNum = 1000 + i;
+    out.push({
+      id: 'ast_' + String(idNum).padStart(4, '0'),
+      name: s.n,
+      phone: s.p,
+      email: s.e,
+      username: surname + '.' + (1000 + ((i * 37) % 9000)),
+      password: _admGenPassword(i),
+      avatar: null,
+      businessId: s.biz,
+      businessName: biz.name,
+      branchId: branchId,
+      branchName: branchName,
+      role: s.r,
+      status: 'active',
+      createdAt: s.created,
+      shifts: _admGenShifts('2026-04-17T12:00:00', 0.55 + (i % 5) * 0.08)
+    });
+  }
+  // En yeni en üstte
+  out.sort(function(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+  return out;
+})();
+
+/* Random password helper (seed-seçici, tutarlılık için index bazlı) */
+function _admGenPassword(seed) {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  var out = '';
+  var n = seed * 7919 + 104729;
+  for (var i = 0; i < 10; i++) {
+    n = (n * 1103515245 + 12345) & 0x7fffffff;
+    out += chars[n % chars.length];
+  }
+  return out;
+}
