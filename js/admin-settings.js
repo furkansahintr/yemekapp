@@ -49,8 +49,8 @@ function renderAdminSettings() {
           summary:_admFmt(BIZ.length)+' kayıtlı • '+_admFmt(S.totalBranches || 0)+' şube',
           action:"_admMgmtOpenBusinesses()" },
         { id:'staff',      label:'Personel Sayfası', icon:'solar:users-group-rounded-bold', tone:'#8B5CF6',
-          summary:(M.staff ? _admFmt(M.staff.total)+' • '+_admFmt(M.staff.activeShifts)+' vardiya' : '—'),
-          action:"_admToast('Personel yönetimi yakında')" }
+          summary:((typeof ADMIN_STAFF!=='undefined') ? _admFmt(ADMIN_STAFF.length)+' personel • '+_admFmt((M.staff&&M.staff.activeShifts)||0)+' vardiya' : (M.staff ? _admFmt(M.staff.total)+' • '+_admFmt(M.staff.activeShifts)+' vardiya' : '—')),
+          action:"_admOpenStaff()" }
       ]
     },
     {
@@ -67,11 +67,11 @@ function renderAdminSettings() {
           summary:(M.payments ? 'Bugün: +'+_admFmtTL(M.payments.todayTl) : '—'),
           action:"renderAdminFinance()" },
         { id:'commission', label:'Komisyon Ayarları', icon:'solar:pie-chart-2-bold', tone:'#EC4899',
-          summary:'Ort. %'+(S.platformCommission || 0).toFixed(1),
-          action:"_admOpenTierInfo()" },
+          summary:((typeof ADMIN_COMMISSION_RULES!=='undefined') ? ADMIN_COMMISSION_RULES.length+' aktif kural • Ort. %'+(S.platformCommission || 0).toFixed(1) : 'Ort. %'+(S.platformCommission || 0).toFixed(1)),
+          action:"_admOpenCommission()" },
         { id:'premium',    label:'Premium Plan & Ücret', icon:'solar:crown-bold', tone:'#A855F7',
-          summary:(M.premium ? _admFmt(M.premium.subscribers)+' premium üye' : '—'),
-          action:"_admToast('Premium plan yönetimi yakında')" }
+          summary:((typeof ADMIN_PREMIUM_MEMBERS!=='undefined') ? (ADMIN_PREMIUM_MEMBERS.biz.length+ADMIN_PREMIUM_MEMBERS.user.length)+' üye • '+ADMIN_PREMIUM_BIZ_PLANS.length+' katman' : (M.premium ? _admFmt(M.premium.subscribers)+' premium üye' : '—')),
+          action:"_admOpenPremium()" }
       ]
     },
     {
@@ -100,8 +100,10 @@ function renderAdminSettings() {
           summary:openReports+' bekliyor',
           action:"_admOpenReports()" },
         { id:'blacklist',  label:'Kara Liste', icon:'solar:user-block-rounded-bold', tone:'#6B7280',
-          summary:(M.blacklist ? M.blacklist.banned+' engelli' : '—'),
-          action:"_admToast('Kara liste yakında')" },
+          summary:((typeof ADMIN_PENALTIES!=='undefined')
+            ? ADMIN_PENALTIES.filter(function(p){return p.type==='ban';}).length+' yasak • '+ADMIN_PENALTIES.filter(function(p){return p.type==='restriction';}).length+' engel'
+            : (M.blacklist ? M.blacklist.banned+' engelli' : '—')),
+          action:"_admOpenBlacklist()" },
         { id:'incident',   label:'Hızlı Müdahale', icon:'solar:siren-bold',
           tone:(M.incident && M.incident.status === 'critical' ? '#EF4444' : M.incident && M.incident.status === 'warning' ? '#F59E0B' : '#22C55E'),
           summary:(M.incident && M.incident.status === 'critical' ? 'Sistem: Kritik' : M.incident && M.incident.status === 'warning' ? 'Sistem: Uyarı' : 'Sistem: Normal'),

@@ -672,3 +672,472 @@ var ADMIN_MGMT_METRICS = {
   reports:      { lastRun: 'Bugün 09:00' },
   adminUsers:   { total: 5 }
 };
+
+/* ═══════════════════════════════════════════════════════════
+   PERSONEL YÖNETİMİ — Seed Staff, Branches & Shifts
+   ═══════════════════════════════════════════════════════════ */
+
+/* Roller — Yetki sistemi ile uyumlu */
+var ADMIN_STAFF_ROLES = [
+  { id:'owner',       label:'İşletme Sahibi',    color:'#8B5CF6' },
+  { id:'manager',     label:'Şube Müdürü',       color:'#3B82F6' },
+  { id:'coordinator', label:'Koordinatör',       color:'#06B6D4' },
+  { id:'chef',        label:'Mutfak Sorumlusu',  color:'#F59E0B' },
+  { id:'waiter',      label:'Garson',            color:'#22C55E' },
+  { id:'cashier',     label:'Kasiyer',           color:'#EC4899' },
+  { id:'courier',     label:'Kurye',             color:'#EF4444' }
+];
+
+/* Şube kataloğu — ADMIN_BUSINESSES'in branchList'lerinden türetilir */
+var ADMIN_BRANCHES = (function() {
+  var out = [];
+  for (var i = 0; i < ADMIN_BUSINESSES.length; i++) {
+    var b = ADMIN_BUSINESSES[i];
+    if (!b.branchList) continue;
+    for (var j = 0; j < b.branchList.length; j++) {
+      out.push({
+        id: b.id + '_br' + (j + 1),
+        businessId: b.id,
+        businessName: b.name,
+        name: b.branchList[j],
+        city: b.city
+      });
+    }
+  }
+  return out;
+})();
+
+/* Vardiya üretici — her personel için geçmiş + gelecek 14 gün */
+function _admGenShifts(baseDate, workRate) {
+  var list = [];
+  var start = new Date(baseDate);
+  start.setDate(start.getDate() - 7);
+  var shiftTemplates = [
+    { start:'09:00', end:'17:00', label:'Gündüz' },
+    { start:'14:00', end:'22:00', label:'Akşam' },
+    { start:'22:00', end:'06:00', label:'Gece' },
+    { start:'08:00', end:'14:00', label:'Sabah' }
+  ];
+  for (var d = 0; d < 14; d++) {
+    var date = new Date(start);
+    date.setDate(start.getDate() + d);
+    // workRate: 0.0-1.0 arası çalışma yoğunluğu
+    if (((d * 7 + 3) % 10) / 10 > (1 - workRate)) {
+      var tpl = shiftTemplates[(d + Math.floor(workRate * 10)) % shiftTemplates.length];
+      var now = new Date(baseDate);
+      var status = date < now ? (Math.random() > 0.1 ? 'completed' : 'missed') : 'scheduled';
+      list.push({
+        date: date.toISOString().slice(0, 10),
+        start: tpl.start,
+        end: tpl.end,
+        label: tpl.label,
+        status: status
+      });
+    }
+  }
+  return list;
+}
+
+/* Personel listesi — 22 kişi, çoklu işletme/şube/rol */
+var ADMIN_STAFF = (function() {
+  var seed = [
+    { n:'Ahmet Yılmaz',     p:'+905551100101', e:'ahmet.yilmaz@lezzetmutfak.com',   biz:'bz1',  br:0, r:'waiter',      created:'2026-04-15T14:32:00' },
+    { n:'Elif Demir',       p:'+905551100102', e:'elif.demir@pidepalace.com',       biz:'bz2',  br:2, r:'manager',     created:'2026-04-12T09:15:00' },
+    { n:'Burak Çelik',      p:'+905551100103', e:'burak.celik@burgerlab.com',       biz:'bz3',  br:0, r:'chef',        created:'2026-04-10T11:00:00' },
+    { n:'Seda Kaya',        p:'+905551100104', e:'seda.kaya@sushimaster.com',       biz:'bz4',  br:1, r:'cashier',     created:'2026-04-08T16:45:00' },
+    { n:'Murat Polat',      p:'+905551100105', e:'murat.polat@cigkofte.com',        biz:'bz5',  br:3, r:'courier',     created:'2026-04-05T08:20:00' },
+    { n:'Gizem Aydın',      p:'+905551100106', e:'gizem.aydin@lezzetmutfak.com',    biz:'bz1',  br:1, r:'waiter',      created:'2026-04-03T13:10:00' },
+    { n:'Kerem Öztürk',     p:'+905551100107', e:'kerem.ozturk@kebapcihakki.com',   biz:'bz9',  br:0, r:'chef',        created:'2026-03-28T10:00:00' },
+    { n:'Aslı Güneş',       p:'+905551100108', e:'asli.gunes@dondurmababa.com',     biz:'bz12', br:1, r:'cashier',     created:'2026-03-25T15:30:00' },
+    { n:'Hakan Ak',         p:'+905551100109', e:'hakan.ak@pidepalace.com',         biz:'bz2',  br:0, r:'courier',     created:'2026-03-22T09:45:00' },
+    { n:'Nilay Şahin',      p:'+905551100110', e:'nilay.sahin@waffleuse.com',       biz:'bz7',  br:0, r:'waiter',      created:'2026-03-20T12:00:00' },
+    { n:'Onur Kılıç',       p:'+905551100111', e:'onur.kilic@cigkofte.com',         biz:'bz5',  br:0, r:'manager',     created:'2026-03-18T17:15:00' },
+    { n:'Deniz Koç',        p:'+905551100112', e:'deniz.koc@kebapcihakki.com',      biz:'bz9',  br:2, r:'courier',     created:'2026-03-15T08:30:00' },
+    { n:'Ceren Yıldız',     p:'+905551100113', e:'ceren.yildiz@tatlicinene.com',    biz:'bz13', br:1, r:'waiter',      created:'2026-03-12T14:20:00' },
+    { n:'Umut Er',          p:'+905551100114', e:'umut.er@lezzetmutfak.com',        biz:'bz1',  br:0, r:'courier',     created:'2026-03-10T11:40:00' },
+    { n:'Melis Kaya',       p:'+905551100115', e:'melis.kaya@sushimaster.com',      biz:'bz4',  br:0, r:'chef',        created:'2026-03-05T16:00:00' },
+    { n:'Tolga Arslan',     p:'+905551100116', e:'tolga.arslan@pidepalace.com',     biz:'bz2',  br:1, r:'waiter',      created:'2026-02-28T09:00:00' },
+    { n:'Pelin Doğan',      p:'+905551100117', e:'pelin.dogan@cigkofte.com',        biz:'bz5',  br:1, r:'coordinator', created:'2026-02-25T13:30:00' },
+    { n:'Cem Sönmez',       p:'+905551100118', e:'cem.sonmez@burgerlab.com',        biz:'bz3',  br:0, r:'waiter',      created:'2026-02-20T10:15:00' },
+    { n:'Büşra Kurt',       p:'+905551100119', e:'busra.kurt@makarnadukkani.com',   biz:'bz15', br:0, r:'cashier',     created:'2026-02-15T15:45:00' },
+    { n:'Emir Tunç',        p:'+905551100120', e:'emir.tunc@kebapcihakki.com',      biz:'bz9',  br:1, r:'chef',        created:'2026-02-10T08:30:00' },
+    { n:'Yasemin Bulut',    p:'+905551100121', e:'yasemin.bulut@donercibaba.com',   biz:'bz12', br:0, r:'waiter',      created:'2026-02-05T12:20:00' },
+    { n:'Kaan Özdemir',     p:'+905551100122', e:'kaan.ozdemir@lezzetmutfak.com',   biz:'bz1',  br:1, r:'manager',     created:'2026-01-28T14:00:00' }
+  ];
+  var out = [];
+  for (var i = 0; i < seed.length; i++) {
+    var s = seed[i];
+    var biz = ADMIN_BUSINESSES.find(function(b) { return b.id === s.biz; });
+    if (!biz || !biz.branchList) continue;
+    var branchIdx = Math.min(s.br, biz.branchList.length - 1);
+    var branchName = biz.branchList[branchIdx];
+    var branchId = s.biz + '_br' + (branchIdx + 1);
+    var surname = s.n.split(' ').pop().toLowerCase()
+      .replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ş/g,'s').replace(/ü/g,'u');
+    var idNum = 1000 + i;
+    out.push({
+      id: 'ast_' + String(idNum).padStart(4, '0'),
+      name: s.n,
+      phone: s.p,
+      email: s.e,
+      username: surname + '.' + (1000 + ((i * 37) % 9000)),
+      password: _admGenPassword(i),
+      avatar: null,
+      businessId: s.biz,
+      businessName: biz.name,
+      branchId: branchId,
+      branchName: branchName,
+      role: s.r,
+      status: 'active',
+      createdAt: s.created,
+      shifts: _admGenShifts('2026-04-17T12:00:00', 0.55 + (i % 5) * 0.08)
+    });
+  }
+  // En yeni en üstte
+  out.sort(function(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+  return out;
+})();
+
+/* Random password helper (seed-seçici, tutarlılık için index bazlı) */
+function _admGenPassword(seed) {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  var out = '';
+  var n = seed * 7919 + 104729;
+  for (var i = 0; i < 10; i++) {
+    n = (n * 1103515245 + 12345) & 0x7fffffff;
+    out += chars[n % chars.length];
+  }
+  return out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KOMİSYON AYARLARI — Kriterler, Kurallar, İptal Oranları
+   ═══════════════════════════════════════════════════════════ */
+
+/* Değerlendirme kriteri kataloğu — her kriter kendi "operator"leri ile */
+var ADMIN_COMMISSION_CRITERIA = [
+  {
+    id: 'rating',
+    label: 'İşletme Puanı',
+    icon: 'solar:star-bold',
+    color: '#F59E0B',
+    unit: '★',
+    ranges: [
+      { id: 'r_50',    label: '5.0 (Mükemmel)' },
+      { id: 'r_48_49', label: '4.8 – 4.9' },
+      { id: 'r_45_47', label: '4.5 – 4.7' },
+      { id: 'r_40_44', label: '4.0 – 4.4' },
+      { id: 'r_35_39', label: '3.5 – 3.9' },
+      { id: 'r_lt_35', label: '< 3.5' }
+    ]
+  },
+  {
+    id: 'monthlyOrders',
+    label: 'Aylık Sipariş Hacmi',
+    icon: 'solar:bag-check-bold',
+    color: '#3B82F6',
+    unit: '',
+    ranges: [
+      { id: 'o_gt2000',    label: '> 2.000' },
+      { id: 'o_1000_2000', label: '1.000 – 2.000' },
+      { id: 'o_500_999',   label: '500 – 999' },
+      { id: 'o_100_499',   label: '100 – 499' },
+      { id: 'o_lt100',     label: '< 100' }
+    ]
+  },
+  {
+    id: 'prepTime',
+    label: 'Ort. Hazırlık Süresi',
+    icon: 'solar:chef-hat-bold',
+    color: '#8B5CF6',
+    unit: 'dk',
+    ranges: [
+      { id: 'p_lt15',   label: '< 15 dk' },
+      { id: 'p_15_25',  label: '15 – 25 dk' },
+      { id: 'p_25_40',  label: '25 – 40 dk' },
+      { id: 'p_gt40',   label: '> 40 dk' }
+    ]
+  },
+  {
+    id: 'satisfaction',
+    label: 'Müşteri Memnuniyeti',
+    icon: 'solar:heart-bold',
+    color: '#EC4899',
+    unit: '%',
+    ranges: [
+      { id: 's_gt90',  label: '> %90' },
+      { id: 's_80_90', label: '%80 – %90' },
+      { id: 's_70_79', label: '%70 – %79' },
+      { id: 's_lt70',  label: '< %70' }
+    ]
+  },
+  {
+    id: 'branches',
+    label: 'Şube Sayısı',
+    icon: 'solar:buildings-bold',
+    color: '#06B6D4',
+    unit: '',
+    ranges: [
+      { id: 'b_1',     label: 'Tekil İşletme' },
+      { id: 'b_2_4',   label: '2 – 4 Şube' },
+      { id: 'b_5_10',  label: '5 – 10 Şube' },
+      { id: 'b_gt10',  label: '10+ Şube (Zincir)' }
+    ]
+  }
+];
+
+/* Aktif komisyon kuralları — kategori bazlı (online / masa) */
+var ADMIN_COMMISSION_RULES = [
+  /* ── Online Siparişler ── */
+  { id: 'cr_on_1', category: 'online', criterionA: { criterion:'rating',        range:'r_50' },      criterionB: { criterion:'satisfaction', range:'s_gt90' },  rate: 5.5, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_2', category: 'online', criterionA: { criterion:'rating',        range:'r_48_49' },   criterionB: { criterion:'monthlyOrders', range:'o_gt2000' }, rate: 7.0, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_3', category: 'online', criterionA: { criterion:'rating',        range:'r_45_47' },   criterionB: { criterion:'prepTime',     range:'p_lt15' },  rate: 9.0, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_4', category: 'online', criterionA: { criterion:'rating',        range:'r_40_44' },   criterionB: { criterion:'satisfaction', range:'s_80_90' }, rate: 11.0, updatedAt: '2026-03-20T10:00:00' },
+  { id: 'cr_on_5', category: 'online', criterionA: { criterion:'rating',        range:'r_35_39' },   criterionB: { criterion:'monthlyOrders', range:'o_100_499' }, rate: 13.0, updatedAt: '2026-03-20T10:00:00' },
+
+  /* ── Masa Siparişleri ── */
+  { id: 'cr_ma_1', category: 'masa', criterionA: { criterion:'rating',        range:'r_50' },      criterionB: { criterion:'prepTime',     range:'p_lt15' },  rate: 3.0, updatedAt: '2026-03-15T14:00:00' },
+  { id: 'cr_ma_2', category: 'masa', criterionA: { criterion:'rating',        range:'r_48_49' },   criterionB: { criterion:'satisfaction', range:'s_gt90' },  rate: 4.5, updatedAt: '2026-03-15T14:00:00' },
+  { id: 'cr_ma_3', category: 'masa', criterionA: { criterion:'rating',        range:'r_45_47' },   criterionB: { criterion:'branches',     range:'b_2_4' },  rate: 6.0, updatedAt: '2026-03-15T14:00:00' },
+  { id: 'cr_ma_4', category: 'masa', criterionA: { criterion:'rating',        range:'r_40_44' },   criterionB: { criterion:'monthlyOrders', range:'o_500_999' }, rate: 8.0, updatedAt: '2026-03-15T14:00:00' }
+];
+
+/* Dinamik İptal Komisyonları — mevcut komisyonun % */
+var ADMIN_CANCEL_COMMISSION = {
+  userCancel:   { label: 'Kullanıcı İptal — Hizmet Bedeli', rate: 50, description: 'Kullanıcı siparişi iptal ettiğinde, işletmeden mevcut komisyonun %X\'i token olarak kesilir.' },
+  bizCancel:    { label: 'İşletme İptal — Cayma Bedeli',    rate: 25, description: 'İşletme siparişi iptal ettiğinde, mevcut komisyonun %X\'i kadar ek ceza uygulanır.' },
+  updatedAt: '2026-03-20T10:00:00'
+};
+
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM PLAN — Özellik Katalogları, Planlar, Üyeler
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Kullanıcı Premium Özellik Kataloğu ── */
+var ADMIN_PREMIUM_USER_FEATURES = [
+  { id:'u_noads',       label:'Reklamsız Kullanım',         icon:'solar:shield-cross-bold',     description:'Tüm uygulamada reklam gösterilmez' },
+  { id:'u_recipes',     label:'Özel Tarif Erişimi',          icon:'solar:chef-hat-heart-bold',    description:'Şefe özel, sınırlı tarif arşivi' },
+  { id:'u_ai',          label:'AI Asistan (Süresiz)',        icon:'solar:magic-stick-3-bold',     description:'Aylık sorgu limiti yok' },
+  { id:'u_handsfree',   label:'Hands-Free Pişirme',          icon:'solar:microphone-bold',        description:'Sesli tarif yönlendirme' },
+  { id:'u_planner',     label:'Haftalık Planlama',           icon:'solar:calendar-bold',          description:'Özel menü + alışveriş listesi' },
+  { id:'u_bmi',         label:'BMI & Sağlık Analizi',        icon:'solar:heart-pulse-bold',       description:'Kişiye özel kalori önerisi' },
+  { id:'u_community',   label:'Özel Topluluk Erişimi',       icon:'solar:users-group-two-rounded-bold', description:'Şeflerle canlı soru-cevap' },
+  { id:'u_savings',     label:'Token Cashback +%5',          icon:'solar:wallet-money-bold',      description:'Her siparişte ekstra %5 cashback' },
+  { id:'u_priority',    label:'Öncelikli Destek',            icon:'solar:headphones-round-sound-bold', description:'7/24 hat önceliği' },
+  { id:'u_unlimited',   label:'Sınırsız Favori & Liste',     icon:'solar:heart-bold',             description:'Kayıt limiti yok' }
+];
+
+/* Aktif Kullanıcı Premium Planı */
+var ADMIN_PREMIUM_USER_PLAN = {
+  activeFeatures: ['u_noads','u_recipes','u_ai','u_handsfree','u_planner','u_bmi','u_savings','u_priority'],
+  pricing: { monthly: 59, yearly: 590 },
+  currency: '₺',
+  updatedAt: '2026-03-20T10:00:00'
+};
+
+/* ── İşletme Premium Özellik Kataloğu ── */
+var ADMIN_PREMIUM_BIZ_FEATURES = [
+  { id:'b_dashboard',    label:'Gelişmiş Dashboard',         icon:'solar:chart-2-bold' },
+  { id:'b_staff',        label:'Sınırsız Personel',           icon:'solar:users-group-rounded-bold' },
+  { id:'b_branches',     label:'Çoklu Şube Yönetimi',         icon:'solar:buildings-bold' },
+  { id:'b_kitchen',      label:'Mutfak İstasyonu Paneli',     icon:'solar:chef-hat-bold' },
+  { id:'b_tables',       label:'Masa & QR Menü Yönetimi',     icon:'solar:qr-code-bold' },
+  { id:'b_stock',        label:'Canlı Stok Takibi',           icon:'solar:boxes-bold' },
+  { id:'b_analytics',    label:'Satış & Trend Analizi',       icon:'solar:graph-up-bold' },
+  { id:'b_ai',           label:'AI Menü Optimizasyonu',       icon:'solar:magic-stick-3-bold' },
+  { id:'b_commission',   label:'İndirimli Komisyon',          icon:'solar:pie-chart-2-bold' },
+  { id:'b_ads',          label:'Reklam Alanı (Öne Çıkar)',    icon:'solar:megaphone-bold' },
+  { id:'b_support',      label:'7/24 Öncelikli Destek',       icon:'solar:headphones-round-sound-bold' },
+  { id:'b_api',          label:'API & Entegrasyon Erişimi',   icon:'solar:code-square-bold' },
+  { id:'b_branding',     label:'Beyaz Etiket (White-label)',  icon:'solar:crown-bold' },
+  { id:'b_coupons',      label:'Kupon & Kampanya Sihirbazı',  icon:'solar:tag-price-bold' }
+];
+
+/* İşletme Premium — 3 Katmanlı Plan */
+var ADMIN_PREMIUM_BIZ_PLANS = [
+  {
+    id:'tier_standard',
+    label:'Standart',
+    tagline:'Tek şube • Temel analitik',
+    tier:'silver',
+    accent:'#94A3B8',
+    accentSoft:'#CBD5E1',
+    features:['b_dashboard','b_staff','b_tables','b_stock','b_commission'],
+    pricing:{ monthly:500, yearly:5000 },
+    updatedAt:'2026-03-15T10:00:00'
+  },
+  {
+    id:'tier_plus',
+    label:'Plus',
+    tagline:'Çoklu şube • Gelişmiş raporlar',
+    tier:'plus',
+    accent:'#8B5CF6',
+    accentSoft:'#C4B5FD',
+    features:['b_dashboard','b_staff','b_branches','b_kitchen','b_tables','b_stock','b_analytics','b_commission','b_coupons'],
+    pricing:{ monthly:1250, yearly:12500 },
+    updatedAt:'2026-03-15T10:00:00'
+  },
+  {
+    id:'tier_pro',
+    label:'Pro',
+    tagline:'Kurumsal • Tam paket + API',
+    tier:'gold',
+    accent:'#F59E0B',
+    accentSoft:'#FCD34D',
+    features:['b_dashboard','b_staff','b_branches','b_kitchen','b_tables','b_stock','b_analytics','b_ai','b_commission','b_ads','b_support','b_api','b_branding','b_coupons'],
+    pricing:{ monthly:2800, yearly:28000 },
+    updatedAt:'2026-03-15T10:00:00'
+  }
+];
+
+/* ── Premium Üye Listesi — biz (ADMIN_BUSINESSES plan:'premium') ve user (ADMIN_USERS isPremium) türevli ── */
+var ADMIN_PREMIUM_MEMBERS = (function() {
+  var out = { biz: [], user: [] };
+
+  // İşletme üyeleri
+  var bizPlanAssign = {
+    bz1:'tier_plus', bz2:'tier_pro', bz4:'tier_plus', bz5:'tier_pro',
+    bz7:'tier_standard', bz9:'tier_pro', bz12:'tier_plus', bz13:'tier_pro'
+  };
+  if (typeof ADMIN_BUSINESSES !== 'undefined') {
+    for (var i = 0; i < ADMIN_BUSINESSES.length; i++) {
+      var b = ADMIN_BUSINESSES[i];
+      if (b.plan !== 'premium') continue;
+      var tier = bizPlanAssign[b.id] || 'tier_standard';
+      out.biz.push({
+        id: 'mbz_' + b.id,
+        bizId: b.id,
+        name: b.name,
+        owner: b.owner,
+        tier: tier,
+        startDate: b.joinDate,
+        endDate: b.planExpiry,
+        billingCycle: (i % 3 === 0 ? 'yearly' : 'monthly')
+      });
+    }
+  }
+
+  // Kullanıcı üyeleri — ADMIN_USERS.isPremium
+  if (typeof ADMIN_USERS !== 'undefined') {
+    var billingCycles = ['monthly','yearly','monthly','yearly','monthly'];
+    var cy = 0;
+    for (var u = 0; u < ADMIN_USERS.length; u++) {
+      var usr = ADMIN_USERS[u];
+      if (!usr.isPremium) continue;
+      var start = usr.joinDate || '2025-08-01';
+      var end = new Date(start);
+      end.setFullYear(end.getFullYear() + 1);
+      out.user.push({
+        id: 'mur_' + usr.id,
+        userId: usr.id,
+        name: usr.name,
+        email: usr.email,
+        avatar: null,
+        startDate: (start instanceof Date) ? start.toISOString().slice(0,10) : start,
+        endDate: end.toISOString().slice(0,10),
+        billingCycle: billingCycles[cy++ % billingCycles.length]
+      });
+    }
+  }
+
+  return out;
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   KARA LİSTE — Kısıtlama Kataloğu, Aktif Cezalar, Sabıka Kaydı
+   ═══════════════════════════════════════════════════════════ */
+
+/* Engelleme modunda kullanılabilecek kısıtlama toggle'ları */
+var ADMIN_PENALTY_RESTRICTIONS = [
+  { id:'no_recipe',      label:'Tarif paylaşımı',       icon:'solar:chef-hat-bold',           description:'Yeni tarif yükleyemez ve paylaşamaz' },
+  { id:'no_post',        label:'İçerik paylaşımı',      icon:'solar:gallery-bold',            description:'Hikaye, gönderi veya yorum paylaşamaz' },
+  { id:'no_order',       label:'Online sipariş',        icon:'solar:bag-check-bold',          description:'Online sipariş vermesi engellenir' },
+  { id:'no_table_order', label:'Masa siparişi',         icon:'solar:table-2-bold',            description:'QR/Masa üzerinden sipariş veremez' },
+  { id:'no_waiter_call', label:'Garson çağırma',        icon:'solar:bell-bold',               description:'Restoranda garson çağırma özelliği kapatılır' },
+  { id:'no_ai',          label:'Yapay Zeka asistanı',   icon:'solar:magic-stick-3-bold',      description:'AI asistan ve öneri sistemini kullanamaz' },
+  { id:'no_like',        label:'Beğenme / Yorum',       icon:'solar:heart-bold',              description:'Diğer içeriklere beğeni veya yorum yapamaz' }
+];
+
+/* Ceza sebebi preset'leri (wizard için) */
+var ADMIN_PENALTY_REASONS = [
+  'Uygunsuz içerik paylaşımı',
+  'Taciz veya hakaret',
+  'Spam / tekrar eden gönderi',
+  'Sahte değerlendirme',
+  'Ödeme sorunu / iade suistimali',
+  'Platform kurallarını ihlal',
+  'Kullanıcı şikayeti (çoklu)',
+  'Diğer'
+];
+
+/* Aktif ceza kaydı */
+var ADMIN_PENALTIES = [
+  /* ── Kullanıcı cezaları ── */
+  {
+    id:'pen_001', subjectType:'user', subjectId:'u6', subjectName:'Zehra Aydın',
+    type:'ban', reason:'Taciz veya hakaret',
+    createdAt:'2026-03-20T10:00:00', expiresAt:null,
+    userNote:'Platform kurallarını ihlal nedeniyle hesabınız kalıcı olarak askıya alınmıştır.',
+    adminNote:'Birden fazla şikayet aldıktan sonra kalıcı ban uygulandı. 3 farklı kullanıcıdan taciz raporu.',
+    restrictions:[],
+    appliedBy:'Admin'
+  },
+  {
+    id:'pen_002', subjectType:'user', subjectId:'u12', subjectName:'Hasan Yılmaz',
+    type:'restriction', reason:'Sahte değerlendirme',
+    createdAt:'2026-04-05T14:30:00', expiresAt:'2026-05-05T14:30:00',
+    userNote:'Sahte yorum tespiti nedeniyle 30 gün boyunca yorum yapamayacaksınız.',
+    adminNote:'Aynı işletmeye 5 farklı hesaptan yorum bırakmış. 3. uyarı.',
+    restrictions:['no_like','no_post'],
+    appliedBy:'Admin'
+  },
+  {
+    id:'pen_003', subjectType:'user', subjectId:'u18', subjectName:'Murat Demir',
+    type:'restriction', reason:'Spam / tekrar eden gönderi',
+    createdAt:'2026-04-10T08:15:00', expiresAt:'2026-04-24T08:15:00',
+    userNote:'Spam içerik nedeniyle 14 gün sipariş veremeyeceksiniz.',
+    adminNote:'Sürekli aynı kampanyayı spam şeklinde paylaşıyor.',
+    restrictions:['no_order','no_post','no_like'],
+    appliedBy:'Admin'
+  },
+  /* ── İşletme cezaları ── */
+  {
+    id:'pen_004', subjectType:'biz', subjectId:'bz8', subjectName:'Tantuni Evi',
+    type:'ban', reason:'Ödeme sorunu / iade suistimali',
+    createdAt:'2026-03-10T09:00:00', expiresAt:null,
+    userNote:'İşletmeniz platform kurallarını ihlal nedeniyle askıya alınmıştır.',
+    adminNote:'Ödeme ihtilafı, müşteriye ulaşmama, token geri ödeme gerçekleşmedi.',
+    restrictions:[],
+    appliedBy:'Admin'
+  },
+  {
+    id:'pen_005', subjectType:'biz', subjectId:'bz14', subjectName:'Kumpir Evi',
+    type:'restriction', reason:'Kullanıcı şikayeti (çoklu)',
+    createdAt:'2026-04-02T16:20:00', expiresAt:'2026-05-02T16:20:00',
+    userNote:'30 gün boyunca öne çıkan listelerden kaldırıldınız.',
+    adminNote:'Puanı 3.2\'ye düştü, son ayda 12 olumsuz yorum.',
+    restrictions:['no_post'],
+    appliedBy:'Admin'
+  }
+];
+
+/* Sabıka kaydı / geçmiş uyarılar — subjectId bazlı */
+var ADMIN_PENALTY_HISTORY = [
+  /* u6 — Zehra (şu an ban) */
+  { id:'hist_001', subjectType:'user', subjectId:'u6', date:'2025-11-04T10:00:00', action:'warning',     reason:'Uygunsuz yorum', note:'Yazılı uyarı' },
+  { id:'hist_002', subjectType:'user', subjectId:'u6', date:'2026-01-15T14:20:00', action:'restriction', reason:'Yorumda hakaret', note:'7 gün engel' },
+  { id:'hist_003', subjectType:'user', subjectId:'u6', date:'2026-03-20T10:00:00', action:'ban',         reason:'Taciz/hakaret', note:'Kalıcı ban' },
+  /* u12 — Hasan */
+  { id:'hist_004', subjectType:'user', subjectId:'u12', date:'2025-12-10T11:30:00', action:'warning',     reason:'Sahte yorum', note:'Uyarı' },
+  { id:'hist_005', subjectType:'user', subjectId:'u12', date:'2026-02-08T09:15:00', action:'restriction', reason:'Sahte yorum (tekrar)', note:'14 gün yorum engeli' },
+  { id:'hist_006', subjectType:'user', subjectId:'u12', date:'2026-04-05T14:30:00', action:'restriction', reason:'Sahte yorum', note:'30 gün engel (mevcut)' },
+  /* u18 — Murat */
+  { id:'hist_007', subjectType:'user', subjectId:'u18', date:'2026-04-10T08:15:00', action:'restriction', reason:'Spam', note:'İlk ihlal' },
+  /* bz8 — Tantuni Evi */
+  { id:'hist_008', subjectType:'biz', subjectId:'bz8', date:'2025-12-20T10:00:00', action:'warning',     reason:'Geç teslimat', note:'Uyarı' },
+  { id:'hist_009', subjectType:'biz', subjectId:'bz8', date:'2026-02-01T14:00:00', action:'restriction', reason:'İade sorunu', note:'15 gün öncelik kaybı' },
+  { id:'hist_010', subjectType:'biz', subjectId:'bz8', date:'2026-03-10T09:00:00', action:'ban',         reason:'Ödeme suistimali', note:'Kalıcı askı' },
+  /* bz14 — Kumpir Evi */
+  { id:'hist_011', subjectType:'biz', subjectId:'bz14', date:'2026-03-15T12:00:00', action:'warning',     reason:'Puan düşüşü', note:'Uyarı' },
+  { id:'hist_012', subjectType:'biz', subjectId:'bz14', date:'2026-04-02T16:20:00', action:'restriction', reason:'Çoklu şikayet', note:'30 gün (mevcut)' }
+];
