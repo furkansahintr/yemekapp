@@ -1793,3 +1793,192 @@ var ADMIN_NOTIF_FILTERS = {
     { id:'inactive', label:'30+ gündür aktif değil', days:-30 }
   ]
 };
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN AYARLARI — Roller, Görevler, Modüller, Yetki Matrisi,
+                     Adminler, Aktivite Logu
+   ═══════════════════════════════════════════════════════════ */
+
+/* Roller — hiyerarşik sıra: en üst Süper Admin */
+var ADMIN_PANEL_ROLES = [
+  { id:'super_admin', label:'Süper Admin',    color:'#EF4444', critical:true,
+    description:'Tam yetki • Tüm modüllere erişim + sistem ayarları' },
+  { id:'admin',       label:'Admin',          color:'#8B5CF6', critical:false,
+    description:'Çoğu modüle erişim • Hassas ayarlar yok' },
+  { id:'support',     label:'Destek',         color:'#3B82F6', critical:false,
+    description:'Kullanıcı destek ve şikayet yönetimi' },
+  { id:'crisis',      label:'Kriz Yönetimi',  color:'#F97316', critical:false,
+    description:'Acil müdahale, güvenlik olayları, hızlı reaksiyon' },
+  { id:'finance',     label:'Finans',         color:'#22C55E', critical:false,
+    description:'Ödeme, token, komisyon raporları' },
+  { id:'content',     label:'İçerik Editörü', color:'#EC4899', critical:false,
+    description:'Tarif, gönderi, kampanya moderasyonu' }
+];
+
+/* Görev (Pozisyon) tanımları */
+var ADMIN_PANEL_TASKS = [
+  { id:'tsk_ops',       label:'Operasyon',        description:'Sipariş akışı, operasyonel izleme' },
+  { id:'tsk_support',   label:'Destek',           description:'Kullanıcı destek talepleri' },
+  { id:'tsk_crisis',    label:'Kriz Müdahale',    description:'Acil olaylar, güvenlik' },
+  { id:'tsk_finance',   label:'Finans',           description:'Ödeme ve muhasebe' },
+  { id:'tsk_content',   label:'İçerik & Moderasyon', description:'Tarif ve gönderi onayı' },
+  { id:'tsk_ads',       label:'Reklam',           description:'Kampanya ve reklam yönetimi' },
+  { id:'tsk_system',    label:'Sistem Yönetimi',  description:'Platform geneli ayarlar' }
+];
+
+/* Platform modülleri — yetki matrisi için */
+var ADMIN_PANEL_MODULES = [
+  { id:'mod_dashboard',    label:'Dashboard',         icon:'solar:chart-2-bold' },
+  { id:'mod_users',        label:'Kullanıcılar',      icon:'solar:users-group-two-rounded-bold' },
+  { id:'mod_businesses',   label:'İşletmeler',        icon:'solar:shop-bold' },
+  { id:'mod_orders',       label:'Siparişler',        icon:'solar:bag-check-bold' },
+  { id:'mod_recipes',      label:'Tarifler',          icon:'solar:chef-hat-heart-bold' },
+  { id:'mod_complaints',   label:'Şikayet Yönetimi',  icon:'solar:shield-warning-bold' },
+  { id:'mod_blacklist',    label:'Kara Liste',        icon:'solar:user-block-rounded-bold' },
+  { id:'mod_finance',      label:'Finans & Ödeme',    icon:'solar:card-bold' },
+  { id:'mod_commission',   label:'Komisyon',          icon:'solar:pie-chart-2-bold' },
+  { id:'mod_premium',      label:'Premium Plan',      icon:'solar:crown-bold' },
+  { id:'mod_ads',          label:'Reklam Alanı',      icon:'solar:gallery-wide-bold' },
+  { id:'mod_notifications',label:'Bildirim Merkezi',  icon:'solar:bell-bing-bold' },
+  { id:'mod_bizapps',      label:'İşletme Başvuruları', icon:'solar:inbox-in-bold' },
+  { id:'mod_reports',      label:'Raporlama',         icon:'solar:document-text-bold' },
+  { id:'mod_admin',        label:'Admin Ayarları',    icon:'solar:shield-user-bold', sensitive:true }
+];
+
+/* Yetki matrisi — role × module × [view, edit, delete] */
+var ADMIN_PANEL_PERMISSIONS = (function() {
+  var m = {};
+
+  // Süper Admin — her şey tam yetki
+  m.super_admin = {};
+  for (var i = 0; i < ADMIN_PANEL_MODULES.length; i++) {
+    m.super_admin[ADMIN_PANEL_MODULES[i].id] = { view:true, edit:true, delete:true };
+  }
+
+  // Admin — her şey var ama Admin Ayarları yok
+  m.admin = {};
+  for (var j = 0; j < ADMIN_PANEL_MODULES.length; j++) {
+    var mod = ADMIN_PANEL_MODULES[j];
+    m.admin[mod.id] = mod.sensitive
+      ? { view:false, edit:false, delete:false }
+      : { view:true, edit:true, delete:false };
+  }
+
+  // Destek — kullanıcı + şikayet + kara liste + siparişler (view ağırlıklı)
+  m.support = {
+    mod_dashboard:    { view:true,  edit:false, delete:false },
+    mod_users:        { view:true,  edit:true,  delete:false },
+    mod_businesses:   { view:true,  edit:false, delete:false },
+    mod_orders:       { view:true,  edit:true,  delete:false },
+    mod_recipes:      { view:true,  edit:false, delete:false },
+    mod_complaints:   { view:true,  edit:true,  delete:false },
+    mod_blacklist:    { view:true,  edit:true,  delete:false },
+    mod_finance:      { view:false, edit:false, delete:false },
+    mod_commission:   { view:false, edit:false, delete:false },
+    mod_premium:      { view:true,  edit:false, delete:false },
+    mod_ads:          { view:false, edit:false, delete:false },
+    mod_notifications:{ view:true,  edit:false, delete:false },
+    mod_bizapps:      { view:true,  edit:false, delete:false },
+    mod_reports:      { view:true,  edit:false, delete:false },
+    mod_admin:        { view:false, edit:false, delete:false }
+  };
+
+  // Kriz — çok geniş ama finans yok
+  m.crisis = {
+    mod_dashboard:    { view:true,  edit:false, delete:false },
+    mod_users:        { view:true,  edit:true,  delete:false },
+    mod_businesses:   { view:true,  edit:true,  delete:false },
+    mod_orders:       { view:true,  edit:true,  delete:true  },
+    mod_recipes:      { view:true,  edit:true,  delete:true  },
+    mod_complaints:   { view:true,  edit:true,  delete:false },
+    mod_blacklist:    { view:true,  edit:true,  delete:true  },
+    mod_finance:      { view:false, edit:false, delete:false },
+    mod_commission:   { view:false, edit:false, delete:false },
+    mod_premium:      { view:true,  edit:false, delete:false },
+    mod_ads:          { view:true,  edit:true,  delete:false },
+    mod_notifications:{ view:true,  edit:true,  delete:false },
+    mod_bizapps:      { view:true,  edit:true,  delete:false },
+    mod_reports:      { view:true,  edit:false, delete:false },
+    mod_admin:        { view:false, edit:false, delete:false }
+  };
+
+  // Finans
+  m.finance = {
+    mod_dashboard:    { view:true,  edit:false, delete:false },
+    mod_users:        { view:true,  edit:false, delete:false },
+    mod_businesses:   { view:true,  edit:false, delete:false },
+    mod_orders:       { view:true,  edit:false, delete:false },
+    mod_recipes:      { view:false, edit:false, delete:false },
+    mod_complaints:   { view:false, edit:false, delete:false },
+    mod_blacklist:    { view:false, edit:false, delete:false },
+    mod_finance:      { view:true,  edit:true,  delete:false },
+    mod_commission:   { view:true,  edit:true,  delete:false },
+    mod_premium:      { view:true,  edit:true,  delete:false },
+    mod_ads:          { view:true,  edit:false, delete:false },
+    mod_notifications:{ view:false, edit:false, delete:false },
+    mod_bizapps:      { view:true,  edit:false, delete:false },
+    mod_reports:      { view:true,  edit:false, delete:false },
+    mod_admin:        { view:false, edit:false, delete:false }
+  };
+
+  // İçerik Editörü
+  m.content = {
+    mod_dashboard:    { view:true,  edit:false, delete:false },
+    mod_users:        { view:true,  edit:false, delete:false },
+    mod_businesses:   { view:true,  edit:false, delete:false },
+    mod_orders:       { view:false, edit:false, delete:false },
+    mod_recipes:      { view:true,  edit:true,  delete:true  },
+    mod_complaints:   { view:true,  edit:true,  delete:false },
+    mod_blacklist:    { view:false, edit:false, delete:false },
+    mod_finance:      { view:false, edit:false, delete:false },
+    mod_commission:   { view:false, edit:false, delete:false },
+    mod_premium:      { view:false, edit:false, delete:false },
+    mod_ads:          { view:true,  edit:true,  delete:false },
+    mod_notifications:{ view:true,  edit:true,  delete:false },
+    mod_bizapps:      { view:false, edit:false, delete:false },
+    mod_reports:      { view:true,  edit:false, delete:false },
+    mod_admin:        { view:false, edit:false, delete:false }
+  };
+
+  return m;
+})();
+
+/* Admin listesi */
+var ADMIN_PANEL_ADMINS = [
+  { id:'adm_001', firstName:'Furkan',   lastName:'Şahin',     email:'furkan@superresto.com',    phone:'+905559990001', birthDate:'1992-03-15',
+    taskId:'tsk_system',  roleId:'super_admin', status:'active', createdAt:'2025-01-10T09:00:00' },
+  { id:'adm_002', firstName:'Elif',     lastName:'Kaya',      email:'elif@superresto.com',      phone:'+905559990002', birthDate:'1990-07-22',
+    taskId:'tsk_ops',     roleId:'admin',       status:'active', createdAt:'2025-02-20T10:30:00' },
+  { id:'adm_003', firstName:'Murat',    lastName:'Demir',     email:'murat@superresto.com',     phone:'+905559990003', birthDate:'1988-11-05',
+    taskId:'tsk_support', roleId:'support',     status:'active', createdAt:'2025-03-15T14:00:00' },
+  { id:'adm_004', firstName:'Aslı',     lastName:'Polat',     email:'asli@superresto.com',      phone:'+905559990004', birthDate:'1994-05-30',
+    taskId:'tsk_crisis',  roleId:'crisis',      status:'active', createdAt:'2025-04-01T11:15:00' },
+  { id:'adm_005', firstName:'Kemal',    lastName:'Özdemir',   email:'kemal@superresto.com',     phone:'+905559990005', birthDate:'1985-09-18',
+    taskId:'tsk_finance', roleId:'finance',     status:'active', createdAt:'2025-05-10T09:45:00' },
+  { id:'adm_006', firstName:'Selin',    lastName:'Arslan',    email:'selin@superresto.com',     phone:'+905559990006', birthDate:'1993-12-02',
+    taskId:'tsk_content', roleId:'content',     status:'active', createdAt:'2025-06-25T16:20:00' },
+  { id:'adm_007', firstName:'Onur',     lastName:'Yılmaz',    email:'onur@superresto.com',      phone:'+905559990007', birthDate:'1991-04-14',
+    taskId:'tsk_support', roleId:'support',     status:'inactive', createdAt:'2025-07-08T13:00:00' }
+];
+
+/* Aktivite Logu — Read-only (silinemez) */
+var ADMIN_PANEL_ACTIVITY_LOG = [
+  { id:'log_001', adminId:'adm_001', date:'2026-04-16T14:32:00', action:'role_change',   target:'adm_002', detail:'Elif Kaya rolü: Destek → Admin' },
+  { id:'log_002', adminId:'adm_001', date:'2026-04-16T13:15:00', action:'user_ban',      target:'u6',       detail:'Zehra Aydın kalıcı olarak yasaklandı' },
+  { id:'log_003', adminId:'adm_003', date:'2026-04-16T11:20:00', action:'complaint_resolved', target:'rp_spam_01', detail:'Şikayet RP10 çözüldü (Murat Demir hk.)' },
+  { id:'log_004', adminId:'adm_002', date:'2026-04-16T10:00:00', action:'biz_approved',  target:'bz1',      detail:'Lezzet Mutfak başvurusu onaylandı' },
+  { id:'log_005', adminId:'adm_004', date:'2026-04-15T22:45:00', action:'biz_suspended', target:'bz8',      detail:'Tantuni Evi askıya alındı (ödeme ihlali)' },
+  { id:'log_006', adminId:'adm_006', date:'2026-04-15T18:30:00', action:'recipe_approved', target:'rc_042', detail:'Klasik Mantı tarifi yayına alındı' },
+  { id:'log_007', adminId:'adm_005', date:'2026-04-15T16:00:00', action:'commission_updated', target:'cr_on_2', detail:'Online komisyon kuralı %7 olarak güncellendi' },
+  { id:'log_008', adminId:'adm_001', date:'2026-04-15T14:00:00', action:'admin_created', target:'adm_007',  detail:'Onur Yılmaz admin olarak eklendi (Destek)' },
+  { id:'log_009', adminId:'adm_003', date:'2026-04-15T11:45:00', action:'user_restricted', target:'u12',    detail:'Hasan Yılmaz 14 gün yorum engeli uygulandı' },
+  { id:'log_010', adminId:'adm_002', date:'2026-04-14T20:15:00', action:'notification_sent', target:'bulk_12k', detail:'12.400 kullanıcıya push bildirim gönderildi' },
+  { id:'log_011', adminId:'adm_001', date:'2026-04-14T15:00:00', action:'permission_updated', target:'support', detail:'Destek rolüne Kara Liste düzenleme yetkisi eklendi' },
+  { id:'log_012', adminId:'adm_006', date:'2026-04-14T12:30:00', action:'ad_campaign_cancelled', target:'ac_009', detail:'Makarna Dükkanı reklam kampanyası iptal edildi' },
+  { id:'log_013', adminId:'adm_004', date:'2026-04-14T09:00:00', action:'login',         target:null,       detail:'Sisteme giriş yaptı (İstanbul)' },
+  { id:'log_014', adminId:'adm_003', date:'2026-04-13T17:20:00', action:'complaint_resolved', target:'rp11', detail:'Şikayet RP11 çözüldü (alerjen uyarısı)' },
+  { id:'log_015', adminId:'adm_002', date:'2026-04-13T13:00:00', action:'biz_rejected_partial', target:'bap_006', detail:'Vegan Dükkan başvurusu için eksik bildirim gönderildi' },
+  { id:'log_016', adminId:'adm_001', date:'2026-04-13T10:00:00', action:'task_created',  target:'tsk_ads',   detail:'"Reklam" görevi sisteme eklendi' },
+  { id:'log_017', adminId:'adm_005', date:'2026-04-12T16:30:00', action:'premium_plan_updated', target:'tier_pro', detail:'Pro paket aylık ücreti ₺2.800 olarak güncellendi' },
+  { id:'log_018', adminId:'adm_001', date:'2026-04-12T09:30:00', action:'super_admin_granted', target:'adm_001', detail:'İlk süper admin hesabı aktifleştirildi' }
+];
