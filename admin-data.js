@@ -2159,3 +2159,51 @@ var ADMIN_REPORT_RETENTION = {
   ],
   averageD30: 46
 };
+
+/* ═══════════════════════════════════════════════════════════
+   TOKEN YÖNETİMİ — Konfigürasyon ve Zenginleştirilmiş Ledger
+   ═══════════════════════════════════════════════════════════ */
+
+var ADMIN_TOKEN_CONFIG = {
+  exchangeRate: 1.00,        // 1 Token = 1.00 TL
+  currency: '₺',
+  lowBalanceThreshold: 500,  // Bu eşiğin altı düşük bakiye
+  warningThreshold: 2000     // Bu eşiğin altı uyarı
+};
+
+/* Her işletmeye eksik yerlerde ledger genişletmesi yap + "gift" gibi yeni tiplerle zenginleştir */
+(function() {
+  if (typeof ADMIN_BUSINESSES === 'undefined') return;
+
+  // Her işletme için eğer walletHistory yoksa boş array yap
+  for (var i = 0; i < ADMIN_BUSINESSES.length; i++) {
+    var b = ADMIN_BUSINESSES[i];
+    if (!b.walletHistory) b.walletHistory = [];
+  }
+
+  // Ekstra ledger kayıtları (admin hediye + bonus + earn) — gerçekçi görünüm için
+  var extras = [
+    { bizId:'bz1',  date:'2026-04-10T09:30:00', type:'gift',        amount:500,    desc:'Sadakat ödülü — Admin hediyesi', byAdmin:true },
+    { bizId:'bz2',  date:'2026-04-08T14:00:00', type:'gift',        amount:1000,   desc:'Kampanya başarısı — Admin hediyesi', byAdmin:true },
+    { bizId:'bz9',  date:'2026-04-05T10:00:00', type:'gift',        amount:2500,   desc:'Top #1 Performans Ligi ödülü', byAdmin:true },
+    { bizId:'bz13', date:'2026-04-12T16:20:00', type:'gift',        amount:800,    desc:'5.0 puan başarısı ödülü', byAdmin:true },
+    { bizId:'bz1',  date:'2026-04-12T10:00:00', type:'earn',        amount:350,    desc:'Müşteri beğeni bonusu' },
+    { bizId:'bz2',  date:'2026-04-11T11:00:00', type:'earn',        amount:820,    desc:'Haftalık aktivite bonusu' },
+    { bizId:'bz5',  date:'2026-04-09T08:00:00', type:'commission',  amount:-180,   desc:'Sipariş komisyonu #104250' },
+    { bizId:'bz5',  date:'2026-04-08T20:00:00', type:'commission',  amount:-95,    desc:'Sipariş komisyonu #104248' },
+    { bizId:'bz9',  date:'2026-04-13T09:00:00', type:'topup',       amount:5000,   desc:'Token yükleme (5000 TL paket)' },
+    { bizId:'bz12', date:'2026-04-07T13:30:00', type:'refund',      amount:230,    desc:'Kullanıcı iptal iadesi #104265' },
+    { bizId:'bz8',  date:'2026-04-15T12:00:00', type:'penalty',     amount:-500,   desc:'Platform ihlali — Admin cezası', byAdmin:true },
+    { bizId:'bz14', date:'2026-04-14T14:00:00', type:'penalty',     amount:-250,   desc:'Puan düşüşü cezası', byAdmin:true },
+    { bizId:'bz3',  date:'2026-04-11T15:45:00', type:'gift',        amount:300,    desc:'Yeni üye hoşgeldin ödülü', byAdmin:true },
+    { bizId:'bz4',  date:'2026-04-10T11:30:00', type:'commission',  amount:-145,   desc:'Sipariş komisyonu #104245' },
+    { bizId:'bz7',  date:'2026-04-09T19:15:00', type:'earn',        amount:180,    desc:'Yorum etkileşim bonusu' },
+    { bizId:'bz10', date:'2026-04-16T08:30:00', type:'commission',  amount:-110,   desc:'Sipariş komisyonu #104270' }
+  ];
+
+  for (var e = 0; e < extras.length; e++) {
+    var ex = extras[e];
+    var biz = ADMIN_BUSINESSES.find(function(b) { return b.id === ex.bizId; });
+    if (biz) biz.walletHistory.push(ex);
+  }
+})();
