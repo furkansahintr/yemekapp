@@ -224,8 +224,73 @@ function _dacCloseConfirm() {
   setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
 }
 
+/* ═══ P5 — OTP Doğrulama ═══ */
 function _dacOpenOtp() {
-  if (typeof _admToast === 'function') _admToast('OTP doğrulama yakında...', 'ok');
+  _dacCloseConfirm();
+  _dac.otp = '';
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'dacOtpModal';
+  m.className = 'dac-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _dacCloseOtp(); };
+
+  // Telefonun son 2 hanesi göster
+  var masked = '+90 *** *** ** 42';
+
+  m.innerHTML = '<div class="dac-modal">'
+    + '<div class="dac-otp">'
+    + '<div class="dac-otp-close" onclick="_dacCloseOtp()"><iconify-icon icon="solar:close-circle-bold" style="font-size:22px;color:var(--text-muted)"></iconify-icon></div>'
+    + '<div class="dac-otp-ico"><iconify-icon icon="solar:shield-keyhole-bold" style="font-size:36px;color:#8B5CF6"></iconify-icon></div>'
+    + '<div class="dac-otp-title">Güvenlik Doğrulaması</div>'
+    + '<div class="dac-otp-body">' + masked + ' numaralı telefonuna <b>6 haneli kod</b> gönderdik. Hesap sahibi olduğunu doğrulamak için kodu gir.</div>'
+    + '<div class="dac-otp-input-wrap">'
+    + '<input class="dac-otp-input" type="text" maxlength="6" placeholder="• • • • • •" '
+    + 'oninput="_dac.otp=this.value.replace(/\\D/g,\'\');this.value=_dac.otp;_dacUpdateOtpBtn()" id="dacOtpInput">'
+    + '</div>'
+    + '<button class="dac-otp-resend" onclick="_dacResendOtp()">'
+    + '<iconify-icon icon="solar:restart-linear" style="font-size:12px"></iconify-icon>Kodu Yeniden Gönder</button>'
+    + '<div class="dac-otp-hint"><iconify-icon icon="solar:lock-keyhole-minimalistic-linear" style="font-size:12px"></iconify-icon>Alternatif: Şifreni girerek de doğrulayabilirsin.</div>'
+    + '<div class="dac-confirm-btns">'
+    + '<button class="dac-btn-ghost" onclick="_dacCloseOtp();_dacOpenConfirm()">Geri</button>'
+    + '<button class="dac-btn-danger dac-btn-danger--small disabled" id="dacOtpSubmit" onclick="_dacSubmitOtp()">'
+    + '<iconify-icon icon="solar:check-circle-bold" style="font-size:13px"></iconify-icon>Doğrula & Sil</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){
+    m.classList.add('open');
+    var inp = document.getElementById('dacOtpInput');
+    if (inp) inp.focus();
+  });
+}
+
+function _dacCloseOtp() {
+  var m = document.getElementById('dacOtpModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
+}
+
+function _dacUpdateOtpBtn() {
+  var btn = document.getElementById('dacOtpSubmit');
+  if (!btn) return;
+  var valid = _dac.otp && _dac.otp.length === 6;
+  btn.classList.toggle('disabled', !valid);
+}
+
+function _dacResendOtp() {
+  if (typeof _admToast === 'function') _admToast('Yeni kod gönderildi', 'ok');
+}
+
+function _dacSubmitOtp() {
+  if (!_dac.otp || _dac.otp.length !== 6) return;
+  _dacCloseOtp();
+  _dacCompleteDeletion();
+}
+
+function _dacCompleteDeletion() {
+  if (typeof _admToast === 'function') _admToast('Hesap askıya alındı (P6 stub)', 'ok');
 }
 
 function _dacOpenSupport() {
