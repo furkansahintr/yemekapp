@@ -150,6 +150,25 @@ function renderBizMyBusiness() {
           + '</div>';
       })()}
 
+      <!-- Şubeyi Kapat (Komisyon Ayarları altı) -->
+      ${(function(){
+        var _visibleBranches = isManager
+          ? BIZ_BRANCHES.filter(function(b){ return b.id === bizActiveBranch; })
+          : BIZ_BRANCHES;
+        if (!_visibleBranches.length) return '';
+        var _tb = _visibleBranches[0];
+        return '<div onclick="openBizBranchDeletePage(\'' + _tb.id + '\')" style="background:linear-gradient(135deg,rgba(239,68,68,.05),var(--bg-phone));border:1px solid rgba(239,68,68,.22);border-radius:var(--r-xl);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-top:2px">'
+          + '<div style="width:40px;height:40px;border-radius:var(--r-lg);background:rgba(239,68,68,.12);color:#EF4444;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+          + '<iconify-icon icon="solar:shop-minus-bold" style="font-size:22px"></iconify-icon>'
+          + '</div>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="font:var(--fw-semibold) var(--fs-md)/1.1 var(--font);color:#DC2626">Bu Şubeyi Kalıcı Olarak Sil</div>'
+          + '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">Menü, personel ve saatler yayından kalkar · 30 gün geri alma</div>'
+          + '</div>'
+          + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:#EF4444"></iconify-icon>'
+          + '</div>';
+      })()}
+
       <!-- Cüzdanım -->
       ${(typeof _wltPreviewTileHtml === 'function') ? _wltPreviewTileHtml() : ''}
 
@@ -159,6 +178,16 @@ function renderBizMyBusiness() {
         ${bizSettingsItem('solar:bell-linear', 'Bildirim Ayarları', '', '')}
         ${bizSettingsItem('solar:link-circle-linear', 'Entegrasyonlar', 'POS, muhasebe, kargo', '')}
         ${bizCurrentRole === 'owner' ? bizSettingsItem('solar:lock-password-linear', 'Güvenlik', 'Şifre & iki adımlı doğrulama', '') : ''}
+        ${bizCurrentRole === 'owner' ? `
+        <div onclick="openBizBusinessDeletePage()" style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;background:linear-gradient(90deg,rgba(239,68,68,.04),transparent)">
+          <iconify-icon icon="solar:shield-cross-bold" style="font-size:20px;color:#EF4444"></iconify-icon>
+          <div style="flex:1">
+            <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:#DC2626">İşletme Hesabını ve Tüm Şubeleri Sil</div>
+            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">Tam veda · 3 aşamalı güvenlik · 30 gün geri alma</div>
+          </div>
+          <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:#EF4444"></iconify-icon>
+        </div>
+        ` : ''}
         <div style="padding:14px 16px;display:flex;align-items:center;gap:12px">
           <iconify-icon icon="solar:moon-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
           <span style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Koyu Tema</span>

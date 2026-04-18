@@ -1679,3 +1679,51 @@ if (typeof module !== 'undefined' && module.exports) {
     BIZ_DELIVERY_ZONES
   };
 }
+
+/* ═══════════════════════════════════════════════════════════
+   BIZ DELETION — Şube + Genel İşletme Silme (İşletme tarafı)
+   ═══════════════════════════════════════════════════════════ */
+
+// Şube silme engeline girecek aktif kayıt sayaçları (prototip)
+// Her şube id'si için canlı operasyonel durum
+var BIZ_BRANCH_DELETION_GATE = {
+  'b1': { activeOrders: 8,  pendingReservations: 3, undelivered: 2, staff: 12 },
+  'b2': { activeOrders: 0,  pendingReservations: 0, undelivered: 0, staff: 7  },
+  'b3': { activeOrders: 2,  pendingReservations: 1, undelivered: 0, staff: 9  },
+  'b4': { activeOrders: 0,  pendingReservations: 0, undelivered: 0, staff: 4  }
+};
+
+// Şube/işletme silme sebepleri (3 aşamalı flow başlangıcı)
+var BIZ_DELETE_REASONS = [
+  { id:'low_profit',    icon:'solar:chart-square-linear',         label:'Ticari olarak kârlı değil' },
+  { id:'relocate',      icon:'solar:transfer-horizontal-linear',  label:'Farklı lokasyona taşınıyorum' },
+  { id:'seasonal',      icon:'solar:calendar-linear',             label:'Sezonluk kapanış' },
+  { id:'platform_issue',icon:'solar:danger-triangle-linear',      label:'Platformda sorun yaşıyorum' },
+  { id:'commission',    icon:'solar:pie-chart-2-linear',          label:'Komisyon oranları yüksek' },
+  { id:'ownership',     icon:'solar:user-id-linear',              label:'Sahiplik değişti / satıldı' },
+  { id:'quit_business', icon:'solar:exit-linear',                 label:'İşletmecilikten çekiliyorum' },
+  { id:'other',         icon:'solar:chat-round-line-linear',      label:'Diğer / belirtmek istemiyorum' }
+];
+
+// Şube silme askıya alma state — branchId bazlı
+// null | { branchId, scheduledAt, deleteAt, reasons, note, staffNotified }
+var BIZ_BRANCH_DELETION_STATE = null;
+
+// Genel işletme silme askıya alma state
+// null | { scheduledAt, deleteAt, reasons, note, tokenAtStart, branchCount }
+var BIZ_ACCOUNT_DELETION_STATE = null;
+
+// İşletme başarı metrikleri (ikna katmanı için)
+var BIZ_ACCOUNT_STATS = {
+  totalOrders: 18420,
+  totalRevenue: 2840650,         // TL
+  avgRating: 4.7,
+  totalReviews: 2340,
+  followers: 15210,
+  yearsActive: 3,
+  cityRank: 2,                   // 'Kadıköy burger en iyi #2'
+  cityScope: 'Kadıköy Burger',
+  topBadge: '🥈 Şehrin 2. en iyi burgeri',
+  walletTokens: 1450,
+  branchCount: 4
+};
