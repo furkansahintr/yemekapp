@@ -2490,3 +2490,226 @@ var ADMIN_WINBACK_TEMPLATES = [
   { id:'wb_downgrade',   label:'Daha Uygun Plana Geçiş Öner',  type:'downgrade', value:0,  durationMonths:0,  color:'#3B82F6' },
   { id:'wb_custom',      label:'Özel Taslak',                     type:'custom',    value:0,  durationMonths:0,  color:'#EC4899' }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   COMMUNITY — Topluluk Analizleri
+   13 Top-10 listesi • time × region filtreli
+   ═══════════════════════════════════════════════════════════ */
+
+var ADMIN_COMMUNITY_REGIONS = [
+  { id:'all',       label:'Tüm Türkiye',  city:null },
+  { id:'istanbul',  label:'İstanbul',      city:'İstanbul' },
+  { id:'ankara',    label:'Ankara',        city:'Ankara' },
+  { id:'izmir',     label:'İzmir',         city:'İzmir' },
+  { id:'bodrum',    label:'Bodrum',        city:'Muğla' },
+  { id:'kadikoy',   label:'Kadıköy',       city:'İstanbul/Kadıköy' }
+];
+
+var ADMIN_COMMUNITY_TIME = [
+  { id:'day',   label:'Günlük',  sub:'Son 24 saat' },
+  { id:'week',  label:'Haftalık',sub:'Son 7 gün' },
+  { id:'month', label:'Aylık',   sub:'Son 30 gün' }
+];
+
+// Helper: zaman × bölge etkiyle sayıyı ölçeklendir
+function _admCmScale(base, time, region) {
+  var tMult = time === 'day' ? 0.08 : time === 'week' ? 0.45 : 1.0;
+  var rMult = region === 'all' ? 1.0
+    : region === 'istanbul' ? 0.52
+    : region === 'ankara' ? 0.21
+    : region === 'izmir' ? 0.17
+    : region === 'bodrum' ? 0.07
+    : region === 'kadikoy' ? 0.14
+    : 1.0;
+  return Math.max(1, Math.round(base * tMult * rMult));
+}
+
+// Baseline listeler — zaman/bölge faktörüyle ölçeklenir
+var ADMIN_COMMUNITY_BASE = {
+  // 1. En çok aranan tarifler
+  searchRecipes: [
+    { id:'r_manti',     name:'Mantı',              v:48250, kind:'recipe' },
+    { id:'r_lahmacun',  name:'Lahmacun',           v:42180, kind:'recipe' },
+    { id:'r_adana',     name:'Adana Kebap',        v:38940, kind:'recipe' },
+    { id:'r_iskender',  name:'İskender',           v:35210, kind:'recipe' },
+    { id:'r_kofte',     name:'Ev Köftesi',         v:31870, kind:'recipe' },
+    { id:'r_pilav',     name:'İç Pilav',           v:28430, kind:'recipe' },
+    { id:'r_cheesecake',name:'Cheesecake',         v:24910, kind:'recipe' },
+    { id:'r_dolma',     name:'Yaprak Sarma',       v:22560, kind:'recipe' },
+    { id:'r_borek',     name:'Su Böreği',          v:20130, kind:'recipe' },
+    { id:'r_pizza_ev',  name:'Ev Yapımı Pizza',    v:18420, kind:'recipe' }
+  ],
+  // 2. En çok aranan menü itemleri
+  searchMenu: [
+    { id:'m_bigburger', name:'Big Burger Menu',      biz:'Burger Lab',      v:12400, kind:'menu' },
+    { id:'m_iskender',  name:'İskender Porsiyon',    biz:'Kebapçı Hacı',    v:11820, kind:'menu' },
+    { id:'m_carbonara', name:'Carbonara',            biz:'La Pasta',        v:10910, kind:'menu' },
+    { id:'m_peppsalami',name:'Pepperoni Pizza',      biz:'Pizza House',     v: 9680, kind:'menu' },
+    { id:'m_sushi_set', name:'Philadelphia Set',     biz:'Sushi Bar',       v: 8740, kind:'menu' },
+    { id:'m_cheesecake',name:'San Sebastian',        biz:'Şekerci Atelier', v: 7920, kind:'menu' },
+    { id:'m_doner',     name:'Döner Dürüm',          biz:'Dönerci Mehmet',  v: 7460, kind:'menu' },
+    { id:'m_mangal',    name:'Karışık Mangal',       biz:'Mangal Evi',      v: 6310, kind:'menu' },
+    { id:'m_mantip',    name:'Kayseri Mantısı',      biz:'Anadolu Sofrası', v: 5890, kind:'menu' },
+    { id:'m_waffle',    name:'Meyveli Waffle',       biz:'Waffle Dükkanı',  v: 5120, kind:'menu' }
+  ],
+  // 3. En çok kaydedilen tarifler
+  savedRecipes: [
+    { id:'r_lahmacun',  name:'Lahmacun',           v:18420, kind:'recipe' },
+    { id:'r_cheesecake',name:'Cheesecake',         v:16290, kind:'recipe' },
+    { id:'r_manti',     name:'Mantı',              v:15740, kind:'recipe' },
+    { id:'r_pilav',     name:'İç Pilav',           v:13110, kind:'recipe' },
+    { id:'r_borek',     name:'Su Böreği',          v:11530, kind:'recipe' },
+    { id:'r_kofte',     name:'Ev Köftesi',         v: 9840, kind:'recipe' },
+    { id:'r_adana',     name:'Adana Kebap',        v: 8720, kind:'recipe' },
+    { id:'r_iskender',  name:'İskender',           v: 7510, kind:'recipe' },
+    { id:'r_dolma',     name:'Yaprak Sarma',       v: 6980, kind:'recipe' },
+    { id:'r_pizza_ev',  name:'Ev Yapımı Pizza',    v: 5720, kind:'recipe' }
+  ],
+  // 4. En çok beğenilen tarifler
+  likedRecipes: [
+    { id:'r_cheesecake',name:'Cheesecake',         v:24120, kind:'recipe' },
+    { id:'r_manti',     name:'Mantı',              v:22480, kind:'recipe' },
+    { id:'r_lahmacun',  name:'Lahmacun',           v:19950, kind:'recipe' },
+    { id:'r_borek',     name:'Su Böreği',          v:17230, kind:'recipe' },
+    { id:'r_pizza_ev',  name:'Ev Yapımı Pizza',    v:15640, kind:'recipe' },
+    { id:'r_kofte',     name:'Ev Köftesi',         v:13820, kind:'recipe' },
+    { id:'r_pilav',     name:'İç Pilav',           v:11510, kind:'recipe' },
+    { id:'r_iskender',  name:'İskender',           v:10240, kind:'recipe' },
+    { id:'r_adana',     name:'Adana Kebap',        v: 8710, kind:'recipe' },
+    { id:'r_dolma',     name:'Yaprak Sarma',       v: 7520, kind:'recipe' }
+  ],
+  // 5. En çok yorum alan tarifler
+  commentedRecipes: [
+    { id:'r_manti',     name:'Mantı',              v: 3240, kind:'recipe' },
+    { id:'r_cheesecake',name:'Cheesecake',         v: 2810, kind:'recipe' },
+    { id:'r_borek',     name:'Su Böreği',          v: 2460, kind:'recipe' },
+    { id:'r_lahmacun',  name:'Lahmacun',           v: 2180, kind:'recipe' },
+    { id:'r_pilav',     name:'İç Pilav',           v: 1920, kind:'recipe' },
+    { id:'r_kofte',     name:'Ev Köftesi',         v: 1740, kind:'recipe' },
+    { id:'r_pizza_ev',  name:'Ev Yapımı Pizza',    v: 1580, kind:'recipe' },
+    { id:'r_iskender',  name:'İskender',           v: 1340, kind:'recipe' },
+    { id:'r_dolma',     name:'Yaprak Sarma',       v: 1190, kind:'recipe' },
+    { id:'r_adana',     name:'Adana Kebap',        v: 1040, kind:'recipe' }
+  ],
+  // 6. En çok paylaşılan tarifler
+  sharedRecipes: [
+    { id:'r_lahmacun',  name:'Lahmacun',           v: 5420, kind:'recipe' },
+    { id:'r_cheesecake',name:'Cheesecake',         v: 4810, kind:'recipe' },
+    { id:'r_manti',     name:'Mantı',              v: 4560, kind:'recipe' },
+    { id:'r_borek',     name:'Su Böreği',          v: 3940, kind:'recipe' },
+    { id:'r_pizza_ev',  name:'Ev Yapımı Pizza',    v: 3520, kind:'recipe' },
+    { id:'r_kofte',     name:'Ev Köftesi',         v: 3180, kind:'recipe' },
+    { id:'r_iskender',  name:'İskender',           v: 2840, kind:'recipe' },
+    { id:'r_pilav',     name:'İç Pilav',           v: 2610, kind:'recipe' },
+    { id:'r_dolma',     name:'Yaprak Sarma',       v: 2310, kind:'recipe' },
+    { id:'r_adana',     name:'Adana Kebap',        v: 1980, kind:'recipe' }
+  ],
+  // 7. En çok kaydedilen menü itemleri
+  savedMenu: [
+    { id:'m_cheesecake',name:'San Sebastian',        biz:'Şekerci Atelier', v: 4210, kind:'menu' },
+    { id:'m_iskender',  name:'İskender Porsiyon',    biz:'Kebapçı Hacı',    v: 3840, kind:'menu' },
+    { id:'m_bigburger', name:'Big Burger Menu',      biz:'Burger Lab',      v: 3510, kind:'menu' },
+    { id:'m_carbonara', name:'Carbonara',            biz:'La Pasta',        v: 2910, kind:'menu' },
+    { id:'m_peppsalami',name:'Pepperoni Pizza',      biz:'Pizza House',     v: 2680, kind:'menu' },
+    { id:'m_mantip',    name:'Kayseri Mantısı',      biz:'Anadolu Sofrası', v: 2240, kind:'menu' },
+    { id:'m_sushi_set', name:'Philadelphia Set',     biz:'Sushi Bar',       v: 2020, kind:'menu' },
+    { id:'m_doner',     name:'Döner Dürüm',          biz:'Dönerci Mehmet',  v: 1760, kind:'menu' },
+    { id:'m_mangal',    name:'Karışık Mangal',       biz:'Mangal Evi',      v: 1540, kind:'menu' },
+    { id:'m_waffle',    name:'Meyveli Waffle',       biz:'Waffle Dükkanı',  v: 1290, kind:'menu' }
+  ],
+  // 8. En çok beğenilen menü itemleri
+  likedMenu: [
+    { id:'m_bigburger', name:'Big Burger Menu',      biz:'Burger Lab',      v: 8920, kind:'menu' },
+    { id:'m_carbonara', name:'Carbonara',            biz:'La Pasta',        v: 7610, kind:'menu' },
+    { id:'m_cheesecake',name:'San Sebastian',        biz:'Şekerci Atelier', v: 7180, kind:'menu' },
+    { id:'m_iskender',  name:'İskender Porsiyon',    biz:'Kebapçı Hacı',    v: 6540, kind:'menu' },
+    { id:'m_peppsalami',name:'Pepperoni Pizza',      biz:'Pizza House',     v: 5910, kind:'menu' },
+    { id:'m_sushi_set', name:'Philadelphia Set',     biz:'Sushi Bar',       v: 4840, kind:'menu' },
+    { id:'m_waffle',    name:'Meyveli Waffle',       biz:'Waffle Dükkanı',  v: 4120, kind:'menu' },
+    { id:'m_doner',     name:'Döner Dürüm',          biz:'Dönerci Mehmet',  v: 3780, kind:'menu' },
+    { id:'m_mangal',    name:'Karışık Mangal',       biz:'Mangal Evi',      v: 3210, kind:'menu' },
+    { id:'m_mantip',    name:'Kayseri Mantısı',      biz:'Anadolu Sofrası', v: 2740, kind:'menu' }
+  ],
+  // 9. En çok yorum alan menü itemleri
+  commentedMenu: [
+    { id:'m_bigburger', name:'Big Burger Menu',      biz:'Burger Lab',      v: 1820, kind:'menu' },
+    { id:'m_iskender',  name:'İskender Porsiyon',    biz:'Kebapçı Hacı',    v: 1540, kind:'menu' },
+    { id:'m_carbonara', name:'Carbonara',            biz:'La Pasta',        v: 1320, kind:'menu' },
+    { id:'m_cheesecake',name:'San Sebastian',        biz:'Şekerci Atelier', v: 1180, kind:'menu' },
+    { id:'m_peppsalami',name:'Pepperoni Pizza',      biz:'Pizza House',     v:  980, kind:'menu' },
+    { id:'m_sushi_set', name:'Philadelphia Set',     biz:'Sushi Bar',       v:  810, kind:'menu' },
+    { id:'m_mangal',    name:'Karışık Mangal',       biz:'Mangal Evi',      v:  710, kind:'menu' },
+    { id:'m_mantip',    name:'Kayseri Mantısı',      biz:'Anadolu Sofrası', v:  610, kind:'menu' },
+    { id:'m_doner',     name:'Döner Dürüm',          biz:'Dönerci Mehmet',  v:  540, kind:'menu' },
+    { id:'m_waffle',    name:'Meyveli Waffle',       biz:'Waffle Dükkanı',  v:  470, kind:'menu' }
+  ],
+  // 10. En çok paylaşılan menü itemleri
+  sharedMenu: [
+    { id:'m_bigburger', name:'Big Burger Menu',      biz:'Burger Lab',      v: 2740, kind:'menu' },
+    { id:'m_peppsalami',name:'Pepperoni Pizza',      biz:'Pizza House',     v: 2410, kind:'menu' },
+    { id:'m_cheesecake',name:'San Sebastian',        biz:'Şekerci Atelier', v: 2180, kind:'menu' },
+    { id:'m_carbonara', name:'Carbonara',            biz:'La Pasta',        v: 1920, kind:'menu' },
+    { id:'m_iskender',  name:'İskender Porsiyon',    biz:'Kebapçı Hacı',    v: 1670, kind:'menu' },
+    { id:'m_sushi_set', name:'Philadelphia Set',     biz:'Sushi Bar',       v: 1420, kind:'menu' },
+    { id:'m_waffle',    name:'Meyveli Waffle',       biz:'Waffle Dükkanı',  v: 1210, kind:'menu' },
+    { id:'m_doner',     name:'Döner Dürüm',          biz:'Dönerci Mehmet',  v: 1080, kind:'menu' },
+    { id:'m_mangal',    name:'Karışık Mangal',       biz:'Mangal Evi',      v:  920, kind:'menu' },
+    { id:'m_mantip',    name:'Kayseri Mantısı',      biz:'Anadolu Sofrası', v:  780, kind:'menu' }
+  ],
+  // 11. En çok takipçi kazanan profiller
+  topFollowed: [
+    { id:'usr_001', name:'Chef Ayşe Demir',  sub:'@chefayse · Şef',         v: 18420, kind:'user' },
+    { id:'usr_002', name:'Burger Lab',       sub:'@burgerlab · İşletme',    v: 15210, kind:'biz'  },
+    { id:'usr_003', name:'Mehmet Usta',      sub:'@mehmetusta · Şef',       v: 13840, kind:'user' },
+    { id:'usr_004', name:'Kebapçı Hacı',     sub:'@kebapcihaci · İşletme',  v: 12650, kind:'biz'  },
+    { id:'usr_005', name:'Gurme Elif',       sub:'@gurmeelif · Kullanıcı',  v: 11320, kind:'user' },
+    { id:'usr_006', name:'La Pasta',         sub:'@lapasta · İşletme',      v:  9840, kind:'biz'  },
+    { id:'usr_007', name:'Tatlı Dürdane',    sub:'@durdane · Kullanıcı',    v:  8510, kind:'user' },
+    { id:'usr_008', name:'Sushi Bar',        sub:'@sushibar · İşletme',     v:  7420, kind:'biz'  },
+    { id:'usr_009', name:'Cem Öztürk',       sub:'@cemozturk · Şef',        v:  6310, kind:'user' },
+    { id:'usr_010', name:'Pizza House',      sub:'@pizzahouse · İşletme',   v:  5480, kind:'biz'  }
+  ],
+  // 12. En çok sipariş veren kullanıcılar (Sadık müşteriler)
+  topBuyers: [
+    { id:'usr_101', name:'Furkan Şahin',    sub:'furkan.s@cmp · 248 sipariş',  v:248, unit:'sipariş', kind:'user' },
+    { id:'usr_102', name:'Zeynep Kaya',     sub:'zeynep.k · 214 sipariş',       v:214, unit:'sipariş', kind:'user' },
+    { id:'usr_103', name:'Burak Yılmaz',    sub:'burak.y · 198 sipariş',        v:198, unit:'sipariş', kind:'user' },
+    { id:'usr_104', name:'Elif Doğan',      sub:'elif.d · 176 sipariş',         v:176, unit:'sipariş', kind:'user' },
+    { id:'usr_105', name:'Emre Çelik',      sub:'emre.c · 154 sipariş',         v:154, unit:'sipariş', kind:'user' },
+    { id:'usr_106', name:'Selin Aydın',     sub:'selin.a · 142 sipariş',        v:142, unit:'sipariş', kind:'user' },
+    { id:'usr_107', name:'Can Özdemir',     sub:'can.o · 128 sipariş',          v:128, unit:'sipariş', kind:'user' },
+    { id:'usr_108', name:'Melis Arslan',    sub:'melis.a · 116 sipariş',        v:116, unit:'sipariş', kind:'user' },
+    { id:'usr_109', name:'Onur Şimşek',     sub:'onur.s · 104 sipariş',         v:104, unit:'sipariş', kind:'user' },
+    { id:'usr_110', name:'Deniz Kurt',      sub:'deniz.k · 92 sipariş',         v: 92, unit:'sipariş', kind:'user' }
+  ],
+  // 13. En çok sipariş satan işletmeler
+  topSellers: [
+    { id:'biz_001', name:'Burger Lab',       sub:'Kadıköy · 18K sipariş',   v:18420, unit:'sipariş', kind:'biz' },
+    { id:'biz_002', name:'Kebapçı Hacı',     sub:'Fatih · 15K sipariş',     v:15210, unit:'sipariş', kind:'biz' },
+    { id:'biz_003', name:'La Pasta',         sub:'Beşiktaş · 13K sipariş',  v:13840, unit:'sipariş', kind:'biz' },
+    { id:'biz_004', name:'Pizza House',      sub:'Şişli · 12K sipariş',     v:12650, unit:'sipariş', kind:'biz' },
+    { id:'biz_005', name:'Sushi Bar',        sub:'Şişli · 11K sipariş',     v:11320, unit:'sipariş', kind:'biz' },
+    { id:'biz_006', name:'Dönerci Mehmet',   sub:'Üsküdar · 9.8K sipariş',  v: 9840, unit:'sipariş', kind:'biz' },
+    { id:'biz_007', name:'Şekerci Atelier',  sub:'Bebek · 8.5K sipariş',    v: 8510, unit:'sipariş', kind:'biz' },
+    { id:'biz_008', name:'Mangal Evi',       sub:'Bakırköy · 7.4K sipariş', v: 7420, unit:'sipariş', kind:'biz' },
+    { id:'biz_009', name:'Anadolu Sofrası',  sub:'Maltepe · 6.3K sipariş',  v: 6310, unit:'sipariş', kind:'biz' },
+    { id:'biz_010', name:'Waffle Dükkanı',   sub:'Caddebostan · 5.5K sipariş', v:5480, unit:'sipariş', kind:'biz' }
+  ]
+};
+
+// Kart tanımları (görsel)
+var ADMIN_COMMUNITY_CARDS = [
+  { id:'searchRecipes',    title:'En Çok Aranan Tarifler',       icon:'solar:magnifer-bold',         color:'#F65013', group:'Arama',    unit:'arama' },
+  { id:'searchMenu',       title:'En Çok Aranan Menü',           icon:'solar:magnifer-zoom-in-bold', color:'#F59E0B', group:'Arama',    unit:'arama' },
+  { id:'savedRecipes',     title:'En Çok Kaydedilen Tarifler',   icon:'solar:bookmark-bold',         color:'#3B82F6', group:'Tarif',    unit:'kaydetme' },
+  { id:'likedRecipes',     title:'En Çok Beğenilen Tarifler',    icon:'solar:heart-bold',            color:'#EC4899', group:'Tarif',    unit:'beğeni' },
+  { id:'commentedRecipes', title:'En Çok Yorum Alan Tarifler',   icon:'solar:chat-round-dots-bold',  color:'#06B6D4', group:'Tarif',    unit:'yorum' },
+  { id:'sharedRecipes',    title:'En Çok Paylaşılan Tarifler',   icon:'solar:share-bold',            color:'#8B5CF6', group:'Tarif',    unit:'paylaşım' },
+  { id:'savedMenu',        title:'En Çok Kaydedilen Menü',       icon:'solar:bookmark-bold',         color:'#3B82F6', group:'Menü',     unit:'kaydetme' },
+  { id:'likedMenu',        title:'En Çok Beğenilen Menü',        icon:'solar:heart-bold',            color:'#EC4899', group:'Menü',     unit:'beğeni' },
+  { id:'commentedMenu',    title:'En Çok Yorum Alan Menü',       icon:'solar:chat-round-dots-bold',  color:'#06B6D4', group:'Menü',     unit:'yorum' },
+  { id:'sharedMenu',       title:'En Çok Paylaşılan Menü',       icon:'solar:share-bold',            color:'#8B5CF6', group:'Menü',     unit:'paylaşım' },
+  { id:'topFollowed',      title:'En Çok Takipçi Kazanan',       icon:'solar:users-group-rounded-bold',color:'#22C55E',group:'Liderler', unit:'takipçi' },
+  { id:'topBuyers',        title:'En Sadık Müşteriler',          icon:'solar:bag-smile-bold',        color:'#F59E0B', group:'Liderler', unit:'sipariş' },
+  { id:'topSellers',       title:'En Çok Satan İşletmeler',      icon:'solar:shop-2-bold',           color:'#10B981', group:'Liderler', unit:'sipariş' }
+];
