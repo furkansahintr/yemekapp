@@ -175,8 +175,57 @@ function _dacToggleReason(id) {
   _dacRenderBody();
 }
 
+/* ═══ P4 — Onay Modal ═══ */
 function _dacOpenConfirm() {
-  if (typeof _admToast === 'function') _admToast('Onay modal yakında...', 'ok');
+  _dacCloseAllModals();
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'dacConfirmModal';
+  m.className = 'dac-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _dacCloseConfirm(); };
+
+  var now = new Date();
+  var deleteAt = new Date(now.getTime() + 30 * 86400000);
+  var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var deleteDateStr = deleteAt.getDate() + ' ' + months[deleteAt.getMonth()] + ' ' + deleteAt.getFullYear();
+
+  m.innerHTML = '<div class="dac-modal">'
+    + '<div class="dac-confirm">'
+    + '<div class="dac-confirm-emoji">👋</div>'
+    + '<div class="dac-confirm-title">Seni çok özleyeceğiz...</div>'
+    + '<div class="dac-confirm-body">'
+    + 'Hesabın <b>30 gün boyunca dondurulacak</b> ve bu sürenin sonunda kalıcı olarak silinecektir. '
+    + 'Bu süre zarfında dilediğin an giriş yaparak her şeye kaldığın yerden devam edebilirsin.'
+    + '</div>'
+    + '<div class="dac-confirm-dates">'
+    + '<div class="dac-dr"><span>Askıya alınır</span><b>Bugün</b></div>'
+    + '<div class="dac-dr-arrow"><iconify-icon icon="solar:arrow-right-linear" style="font-size:14px;color:var(--text-muted)"></iconify-icon></div>'
+    + '<div class="dac-dr"><span>Kalıcı silinir</span><b>' + deleteDateStr + '</b></div>'
+    + '</div>'
+    + '<div class="dac-confirm-hint">'
+    + '<iconify-icon icon="solar:info-circle-bold" style="font-size:13px;color:#8B5CF6"></iconify-icon>'
+    + '<span>30 gün içinde giriş yaparsan silme işlemi <b>otomatik iptal olur</b>.</span>'
+    + '</div>'
+    + '<div class="dac-confirm-btns">'
+    + '<button class="dac-btn-ghost" onclick="_dacCloseConfirm()">Vazgeç</button>'
+    + '<button class="dac-btn-danger dac-btn-danger--small" onclick="_dacOpenOtp()">'
+    + 'Devam Et <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:13px"></iconify-icon></button>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+
+function _dacCloseConfirm() {
+  var m = document.getElementById('dacConfirmModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
+}
+
+function _dacOpenOtp() {
+  if (typeof _admToast === 'function') _admToast('OTP doğrulama yakında...', 'ok');
 }
 
 function _dacOpenSupport() {
