@@ -1305,3 +1305,88 @@ var USER_RESERVATIONS = [
     createdAt: '2026-03-20T15:00:00'
   }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   SOCIAL FINANCE — Grup İşlemleri & Hesap Bölme
+   ═══════════════════════════════════════════════════════════ */
+
+// Kullanıcının arkadaşları (grup davetlerinden)
+var USER_FRIENDS = [
+  { id:'u_me',      name:'Furkan (Sen)',     avatar:'https://i.pravatar.cc/80?img=12', isMe:true  },
+  { id:'u_muh',     name:'M. Salih',         avatar:'https://i.pravatar.cc/80?img=53', isMe:false },
+  { id:'u_zeynep',  name:'Zeynep K.',        avatar:'https://i.pravatar.cc/80?img=47', isMe:false },
+  { id:'u_burak',   name:'Burak Y.',         avatar:'https://i.pravatar.cc/80?img=33', isMe:false },
+  { id:'u_elif',    name:'Elif D.',          avatar:'https://i.pravatar.cc/80?img=48', isMe:false },
+  { id:'u_can',     name:'Can Ö.',           avatar:'https://i.pravatar.cc/80?img=15', isMe:false },
+  { id:'u_selin',   name:'Selin A.',         avatar:'https://i.pravatar.cc/80?img=36', isMe:false }
+];
+
+// Aktif grup siparişi (ongoing)
+var ACTIVE_GROUP_ORDER = {
+  id:'grp_01',
+  code:'FRK-9842',
+  name:'Akşam Yemeği',
+  venue:'Burger Lab',
+  venueDistrict:'Kadıköy',
+  createdAt:'2026-04-18T19:42:00',
+  leaderId:'u_me',
+  paymentMode:'split',       // 'split' (herkes kendi) | 'leader' (lider hepsini öder)
+  members:['u_me','u_muh','u_zeynep','u_burak'],
+  items:[
+    { id:'it_01', name:'Big Burger Menu',    price:145, qty:1, addedBy:'u_me',     addedAt:'19:43' },
+    { id:'it_02', name:'Chicken Burger',     price:125, qty:1, addedBy:'u_muh',    addedAt:'19:44' },
+    { id:'it_03', name:'Patates Kızartması', price: 45, qty:2, addedBy:'u_zeynep', addedAt:'19:45' },
+    { id:'it_04', name:'Cola 330ml',         price: 25, qty:3, addedBy:'u_burak',  addedAt:'19:46' },
+    { id:'it_05', name:'Cheesecake',         price: 85, qty:1, addedBy:'u_me',     addedAt:'19:48' }
+  ]
+};
+
+// Aktif masa (QR ile bağlandığı) — Hesap Bölme akışı için
+var ACTIVE_TABLE_BILL = {
+  tableNo:5,
+  venue:'La Pasta',
+  district:'Beşiktaş',
+  sessionStart:'20:05',
+  items:[
+    { id:'bi_01', name:'Carbonara',            price:185, qty:1, consumers:['u_me'] },
+    { id:'bi_02', name:'Margherita Pizza',     price:165, qty:1, consumers:['u_zeynep'] },
+    { id:'bi_03', name:'Sezar Salata',         price: 95, qty:1, consumers:['u_me','u_zeynep'] },
+    { id:'bi_04', name:'Ev Limonatası',        price: 45, qty:2, consumers:['u_me','u_elif'] },
+    { id:'bi_05', name:'Tiramisu',             price: 85, qty:1, consumers:['u_elif'] }
+  ],
+  people:['u_me','u_zeynep','u_elif'],   // masadaki kişiler
+  paid:185                                  // şimdiye kadar ödenen
+};
+
+// Kullanıcı token + kart bakiyesi
+var USER_WALLET = {
+  tokens: 240,        // 1 token = ₺1
+  cards: [
+    { id:'c_01', brand:'Visa',       last4:'4821', primary:true  },
+    { id:'c_02', brand:'Mastercard', last4:'9134', primary:false }
+  ]
+};
+
+// Geçmiş gruplar
+var PAST_GROUP_ORDERS = [
+  {
+    id:'grp_hist_01', code:'OFS-7721', name:'Ofis Cuma Grubu',
+    venue:'Kebapçı Hacı', lastUsed:'2026-04-11T12:30:00',
+    memberCount:5, total:485, frequent:true
+  },
+  {
+    id:'grp_hist_02', code:'MAC-4402', name:'Maç Akşamı',
+    venue:'Pizza House', lastUsed:'2026-04-06T20:15:00',
+    memberCount:4, total:340, frequent:true
+  },
+  {
+    id:'grp_hist_03', code:'FRT-3310', name:'Fatih Toplantı',
+    venue:'Burger Lab', lastUsed:'2026-03-28T13:00:00',
+    memberCount:6, total:612, frequent:false
+  },
+  {
+    id:'grp_hist_04', code:'DFM-8801', name:'Doğum Günü',
+    venue:'Sushi Bar', lastUsed:'2026-03-15T21:00:00',
+    memberCount:8, total:1280, frequent:false
+  }
+];
