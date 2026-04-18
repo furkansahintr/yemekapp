@@ -130,8 +130,53 @@ function _dacRenderMain() {
     + 'Destek Al <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:14px"></iconify-icon></button>'
     + '</div>';
 
+  // Anket (Neden gidiyorsun?)
+  h += '<div class="dac-survey">'
+    + '<div class="dac-survey-head">'
+    + '<iconify-icon icon="solar:chat-square-call-bold" style="font-size:15px;color:#64748B"></iconify-icon>'
+    + '<div><div class="dac-survey-title">Neden gidiyorsun?</div>'
+    + '<div class="dac-survey-sub">Birden fazla seçebilirsin. Seni geri kazanmak için elimizden geleni yapalım.</div></div>'
+    + '</div>'
+    + '<div class="dac-survey-grid">';
+  for (var s = 0; s < DELETE_SURVEY_OPTIONS.length; s++) {
+    var opt = DELETE_SURVEY_OPTIONS[s];
+    var sel = !!_dac.selectedReasons[opt.id];
+    h += '<div class="dac-survey-chip' + (sel ? ' selected' : '') + '" onclick="_dacToggleReason(\'' + opt.id + '\')">'
+      + '<iconify-icon icon="' + opt.icon + '" style="font-size:14px"></iconify-icon>'
+      + '<span>' + _dacEsc(opt.label) + '</span>'
+      + (sel ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:14px;color:#10B981"></iconify-icon>' : '')
+      + '</div>';
+  }
+  h += '</div>';
+
+  // Not alanı
+  h += '<textarea class="dac-survey-note" maxlength="200" placeholder="(Opsiyonel) Kısaca anlatmak ister misin?" '
+    + 'oninput="_dac.surveyNote=this.value" id="dacNoteInput">' + _dacEsc(_dac.surveyNote) + '</textarea>';
+  h += '</div>';
+
+  // Final veda CTA — kırmızımsı tehlike butonu
+  h += '<div class="dac-final">'
+    + '<div class="dac-final-note">'
+    + '<iconify-icon icon="solar:shield-warning-bold" style="font-size:14px;color:#EF4444"></iconify-icon>'
+    + '<span>Silme onayının ardından hesabın <b>30 gün</b> askıya alınır, bu süre bitince <b>kalıcı silinir</b>.</span>'
+    + '</div>'
+    + '<button class="dac-btn-danger" onclick="_dacOpenConfirm()">'
+    + '<iconify-icon icon="solar:trash-bin-trash-bold" style="font-size:16px"></iconify-icon>'
+    + 'Hesabımı Kalıcı Olarak Sil</button>'
+    + '<button class="dac-btn-ghost" onclick="_dacClose()">Vazgeç, Kalıyorum</button>'
+    + '</div>';
+
   h += '</div>';
   return h;
+}
+
+function _dacToggleReason(id) {
+  _dac.selectedReasons[id] = !_dac.selectedReasons[id];
+  _dacRenderBody();
+}
+
+function _dacOpenConfirm() {
+  if (typeof _admToast === 'function') _admToast('Onay modal yakında...', 'ok');
 }
 
 function _dacOpenSupport() {
