@@ -393,3 +393,27 @@ function _dacCancelDeletion() {
   _dac.view = 'main';
   _dacRenderBody();
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Styles — P7.1-P7.3 parça parça
+   ═══════════════════════════════════════════════════════════ */
+function _dacInjectStyles() {
+  if (document.getElementById('dacStyles')) return;
+  var s = document.createElement('style');
+  s.id = 'dacStyles';
+  var parts = [];
+
+  // ── P7.1 Layout + header + pastel background ──
+  parts.push(
+    '.dac-overlay{color:var(--text-primary);background:linear-gradient(180deg,#FDF4FF 0%,#FEF3F2 40%,var(--bg-phone) 100%)}',
+    '.dac-header{position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(255,255,255,.78);backdrop-filter:blur(10px);border-bottom:1px solid rgba(236,72,153,.1);z-index:5}',
+    '.dac-back{width:34px;height:34px;border-radius:10px;background:rgba(236,72,153,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);transition:transform .15s}',
+    '.dac-back:active{transform:scale(.94)}',
+    '.dac-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--text-primary)}',
+    '.dac-sub{font-size:11px;color:var(--text-muted);margin-top:1px;font-style:italic}',
+    '.dac-wrap{padding:16px 14px 32px;display:flex;flex-direction:column;gap:14px}'
+  );
+
+  s.textContent = parts.join('\n');
+  document.head.appendChild(s);
+}
