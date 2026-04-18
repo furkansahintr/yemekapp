@@ -289,8 +289,71 @@ function _dacSubmitOtp() {
   _dacCompleteDeletion();
 }
 
+/* ═══ P6 — Başarı & Askıya Alma ═══ */
 function _dacCompleteDeletion() {
-  if (typeof _admToast === 'function') _admToast('Hesap askıya alındı (P6 stub)', 'ok');
+  var now = new Date();
+  var deleteAt = new Date(now.getTime() + 30 * 86400000);
+
+  ACCOUNT_DELETION_STATE = {
+    scheduledAt: now.toISOString(),
+    deleteAt: deleteAt.toISOString(),
+    reasons: Object.keys(_dac.selectedReasons).filter(function(k){ return _dac.selectedReasons[k]; }),
+    note: _dac.surveyNote || ''
+  };
+
+  // Admin-incident feed (lokal, prototip)
+  if (typeof ADMIN_RETENTION_EVENTS !== 'undefined' && Array.isArray(ADMIN_RETENTION_EVENTS)) {
+    ADMIN_RETENTION_EVENTS.unshift({
+      id: 'evt_del_' + Date.now().toString(36),
+      type: 'account_deletion',
+      userId: (typeof AUTH !== 'undefined' && AUTH.user && AUTH.user.name) ? AUTH.user.name : 'Kullanıcı',
+      reasons: ACCOUNT_DELETION_STATE.reasons,
+      note: ACCOUNT_DELETION_STATE.note,
+      status: 'open',
+      createdAt: now.toISOString()
+    });
+  }
+
+  _dacOpenSuccess();
+}
+
+function _dacOpenSuccess() {
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'dacSuccessModal';
+  m.className = 'dac-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _dacCloseSuccess(); };
+
+  var deleteAt = new Date(ACCOUNT_DELETION_STATE.deleteAt);
+  var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var deleteDateStr = deleteAt.getDate() + ' ' + months[deleteAt.getMonth()] + ' ' + deleteAt.getFullYear();
+
+  m.innerHTML = '<div class="dac-modal">'
+    + '<div class="dac-success">'
+    + '<div class="dac-success-ico"><iconify-icon icon="solar:hand-heart-bold" style="font-size:56px;color:#EC4899"></iconify-icon></div>'
+    + '<div class="dac-success-title">Kendine iyi bak 💜</div>'
+    + '<div class="dac-success-body">'
+    + 'Hesabın <b>30 gün</b> boyunca askıda kalacak. '
+    + '<b>' + deleteDateStr + '</b> tarihinde kalıcı olarak silinecek. '
+    + 'Bu süre içinde giriş yaparsan her şey kaldığın yerden devam eder.'
+    + '</div>'
+    + '<div class="dac-success-tip">'
+    + '<iconify-icon icon="solar:sparkles-bold" style="font-size:14px;color:#F59E0B"></iconify-icon>'
+    + '<span>Seni bekliyor olacağız. Kapımız her zaman açık.</span>'
+    + '</div>'
+    + '<button class="dac-btn-primary dac-btn-wide" onclick="_dacCloseSuccess();_dac.view=\'suspended\';_dacRenderBody()">'
+    + 'Anladım, Görüşürüz</button>'
+    + '</div>'
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+
+function _dacCloseSuccess() {
+  var m = document.getElementById('dacSuccessModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
 }
 
 function _dacOpenSupport() {
@@ -302,14 +365,26 @@ function _dacOpenSupport() {
 function _dacRenderSuspended() {
   var s = ACCOUNT_DELETION_STATE;
   var daysLeft = Math.max(0, Math.ceil((new Date(s.deleteAt) - new Date()) / 86400000));
-  return '<div class="dac-wrap">'
-    + '<div class="dac-susp-card">'
-    + '<iconify-icon icon="solar:moon-sleep-bold" style="font-size:48px;color:#8B5CF6"></iconify-icon>'
+  var deleteAt = new Date(s.deleteAt);
+  var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var deleteDateStr = deleteAt.getDate() + ' ' + months[deleteAt.getMonth()] + ' ' + deleteAt.getFullYear();
+
+  var h = '<div class="dac-wrap">';
+  h += '<div class="dac-susp-card">'
+    + '<iconify-icon icon="solar:moon-sleep-bold" style="font-size:56px;color:#8B5CF6"></iconify-icon>'
     + '<div class="dac-susp-title">Hesabın askıya alındı</div>'
     + '<div class="dac-susp-sub">Kalıcı silinmeye <b>' + daysLeft + ' gün</b> kaldı</div>'
-    + '<button class="dac-btn-primary" onclick="_dacCancelDeletion()">Vazgeç & Geri Dön</button>'
+    + '<div class="dac-susp-countdown">'
+    + '<div class="dac-countdown-num">' + daysLeft + '</div>'
+    + '<div class="dac-countdown-lbl">GÜN</div>'
     + '</div>'
+    + '<div class="dac-susp-date">Silinme tarihi: <b>' + deleteDateStr + '</b></div>'
+    + '<button class="dac-btn-primary dac-btn-wide" onclick="_dacCancelDeletion()">'
+    + '<iconify-icon icon="solar:heart-bold" style="font-size:15px"></iconify-icon>Vazgeç & Geri Dön</button>'
+    + '<div class="dac-susp-hint">Hoş geldin seni bekliyorduk, bu butona tıklaman yeterli.</div>'
     + '</div>';
+  h += '</div>';
+  return h;
 }
 
 function _dacCancelDeletion() {
