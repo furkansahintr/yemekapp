@@ -1148,3 +1148,160 @@ var USER_ACHIEVEMENT_PROGRESS = {
   weekStart: '2026-04-14T00:00:00',  // Pazartesi 14 Nisan 2026
   earnedIds: ['social_bronze','critic_bronze','taste_explorer','night_owl']
 };
+
+/* ═══════════════════════════════════════════════════════════
+   RESERVATIONS — Rezervasyon Yönetimi (Kullanıcı)
+   ═══════════════════════════════════════════════════════════ */
+
+// Rezervasyon yapılabilen işletmeler (masa krokisi + token + kapalı günler)
+var RESERVATION_VENUES = [
+  {
+    id: 'v_burgerlab',
+    name: 'Burger Lab',
+    district: 'Kadıköy, İstanbul',
+    img: 'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=160&h=160&fit=crop',
+    rating: 4.7,
+    tokenCost: 50,       // Rezervasyon başına bloke edilecek token
+    closedDays: [1],     // 0=Pazar, 1=Pzt — haftada 1 gün kapalı
+    fullDates: ['2026-04-19', '2026-04-25'],  // kapasitesi dolu günler
+    tables: [
+      { id: 'T1', label: 'Masa 1', capacity: 2, area: 'Salon',   status: 'available' },
+      { id: 'T2', label: 'Masa 2', capacity: 2, area: 'Salon',   status: 'available' },
+      { id: 'T3', label: 'Masa 3', capacity: 4, area: 'Salon',   status: 'occupied' },
+      { id: 'T4', label: 'Masa 4', capacity: 4, area: 'Salon',   status: 'available' },
+      { id: 'T5', label: 'Masa 5', capacity: 6, area: 'Bahçe',   status: 'available' },
+      { id: 'T6', label: 'Masa 6', capacity: 2, area: 'Bahçe',   status: 'available' },
+      { id: 'T7', label: 'Masa 7', capacity: 4, area: 'Bahçe',   status: 'occupied' },
+      { id: 'T8', label: 'Masa 8', capacity: 8, area: 'VIP',     status: 'available' }
+    ]
+  },
+  {
+    id: 'v_kebapcihaci',
+    name: 'Kebapçı Hacı',
+    district: 'Fatih, İstanbul',
+    img: 'https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?w=160&h=160&fit=crop',
+    rating: 4.9,
+    tokenCost: 75,
+    closedDays: [],
+    fullDates: ['2026-04-20'],
+    tables: [
+      { id: 'T1', label: 'Masa 1', capacity: 2, area: 'Salon',   status: 'available' },
+      { id: 'T2', label: 'Masa 2', capacity: 4, area: 'Salon',   status: 'available' },
+      { id: 'T3', label: 'Masa 3', capacity: 4, area: 'Salon',   status: 'available' },
+      { id: 'T4', label: 'Masa 4', capacity: 6, area: 'Salon',   status: 'occupied' },
+      { id: 'T5', label: 'Masa 5', capacity: 8, area: 'Teras',   status: 'available' },
+      { id: 'T6', label: 'Masa 6', capacity: 4, area: 'Teras',   status: 'available' }
+    ]
+  },
+  {
+    id: 'v_pizzahouse',
+    name: 'Pizza House',
+    district: 'Beşiktaş, İstanbul',
+    img: 'https://i.pravatar.cc/160?img=60',
+    rating: 4.5,
+    tokenCost: 40,
+    closedDays: [2],
+    fullDates: [],
+    tables: [
+      { id: 'T1', label: 'Masa 1', capacity: 2, area: 'Salon',   status: 'available' },
+      { id: 'T2', label: 'Masa 2', capacity: 2, area: 'Salon',   status: 'available' },
+      { id: 'T3', label: 'Masa 3', capacity: 4, area: 'Salon',   status: 'available' },
+      { id: 'T4', label: 'Masa 4', capacity: 4, area: 'Bahçe',   status: 'available' },
+      { id: 'T5', label: 'Masa 5', capacity: 6, area: 'Bahçe',   status: 'occupied' }
+    ]
+  },
+  {
+    id: 'v_sushibar',
+    name: 'Sushi Bar',
+    district: 'Şişli, İstanbul',
+    img: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=160&h=160&fit=crop',
+    rating: 4.8,
+    tokenCost: 120,
+    closedDays: [],
+    fullDates: ['2026-04-22', '2026-04-23'],
+    tables: [
+      { id: 'T1', label: 'Masa 1', capacity: 2, area: 'Bar',     status: 'available' },
+      { id: 'T2', label: 'Masa 2', capacity: 2, area: 'Bar',     status: 'available' },
+      { id: 'T3', label: 'Masa 3', capacity: 4, area: 'Salon',   status: 'available' },
+      { id: 'T4', label: 'Masa 4', capacity: 6, area: 'VIP',     status: 'available' },
+      { id: 'T5', label: 'Masa 5', capacity: 8, area: 'VIP',     status: 'occupied' }
+    ]
+  },
+  {
+    id: 'v_tatlici',
+    name: 'Şekerci Atelier',
+    district: 'Bebek, İstanbul',
+    img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=160&h=160&fit=crop',
+    rating: 4.6,
+    tokenCost: 30,
+    closedDays: [1],
+    fullDates: [],
+    tables: [
+      { id: 'T1', label: 'Masa 1', capacity: 2, area: 'Salon',   status: 'available' },
+      { id: 'T2', label: 'Masa 2', capacity: 2, area: 'Salon',   status: 'available' },
+      { id: 'T3', label: 'Masa 3', capacity: 4, area: 'Salon',   status: 'available' },
+      { id: 'T4', label: 'Masa 4', capacity: 4, area: 'Pencere', status: 'available' }
+    ]
+  }
+];
+
+// Kullanıcının rezervasyonları
+// status: 'pending' (bekliyor) | 'confirmed' (onaylı) | 'completed' (tamamlandı) | 'cancelled' (iptal)
+var USER_RESERVATIONS = [
+  {
+    id: 'res_001',
+    venueId: 'v_burgerlab', venueName: 'Burger Lab', district: 'Kadıköy',
+    date: '2026-04-24', time: '20:00', guests: 2,
+    tableId: 'T5', tableLabel: 'Masa 5', area: 'Bahçe',
+    tokenBlocked: 50,
+    status: 'confirmed',
+    createdAt: '2026-04-14T10:25:00'
+  },
+  {
+    id: 'res_002',
+    venueId: 'v_kebapcihaci', venueName: 'Kebapçı Hacı', district: 'Fatih',
+    date: '2026-04-27', time: '19:30', guests: 4,
+    tableId: 'T2', tableLabel: 'Masa 2', area: 'Salon',
+    tokenBlocked: 75,
+    status: 'confirmed',
+    createdAt: '2026-04-16T14:12:00'
+  },
+  {
+    id: 'res_003',
+    venueId: 'v_sushibar', venueName: 'Sushi Bar', district: 'Şişli',
+    date: '2026-04-19', time: '21:00', guests: 2,
+    tableId: 'T1', tableLabel: 'Masa 1', area: 'Bar',
+    tokenBlocked: 120,
+    status: 'pending',
+    createdAt: '2026-04-17T18:44:00'
+  },
+  // Geçmiş
+  {
+    id: 'res_101',
+    venueId: 'v_pizzahouse', venueName: 'Pizza House', district: 'Beşiktaş',
+    date: '2026-04-10', time: '20:30', guests: 3,
+    tableId: 'T3', tableLabel: 'Masa 3', area: 'Salon',
+    tokenBlocked: 40,
+    status: 'completed',
+    createdAt: '2026-04-05T11:30:00'
+  },
+  {
+    id: 'res_102',
+    venueId: 'v_tatlici', venueName: 'Şekerci Atelier', district: 'Bebek',
+    date: '2026-04-08', time: '16:00', guests: 2,
+    tableId: 'T2', tableLabel: 'Masa 2', area: 'Salon',
+    tokenBlocked: 30,
+    status: 'cancelled',
+    cancelReason: 'Kullanıcı iptali · <24sa · token işletmeye aktarıldı',
+    createdAt: '2026-04-07T09:15:00'
+  },
+  {
+    id: 'res_103',
+    venueId: 'v_burgerlab', venueName: 'Burger Lab', district: 'Kadıköy',
+    date: '2026-03-28', time: '21:00', guests: 4,
+    tableId: 'T4', tableLabel: 'Masa 4', area: 'Salon',
+    tokenBlocked: 50,
+    status: 'completed',
+    createdAt: '2026-03-20T15:00:00'
+  }
+];
