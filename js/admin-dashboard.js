@@ -35,6 +35,23 @@ function renderAdminDashboard() {
     html += _asupTileHtml();
   }
 
+  /* Yapay Zeka Asistanı — Tile */
+  html += '<div onclick="_admOpenAI()" style="position:relative;border-radius:var(--r-xl);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;overflow:hidden;background:linear-gradient(135deg,#8B5CF6 0%,#3B82F6 50%,#06B6D4 100%);box-shadow:0 6px 18px rgba(139,92,246,.25)">'
+    + '<div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18) 0%,rgba(255,255,255,0) 70%)"></div>'
+    + '<div style="position:absolute;bottom:-25px;left:-15px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,rgba(255,255,255,0) 70%)"></div>'
+    + '<div style="position:relative;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0;backdrop-filter:blur(8px)">'
+    + '<iconify-icon icon="solar:magic-stick-3-bold" style="font-size:22px;color:#fff"></iconify-icon>'
+    + '</div>'
+    + '<div style="flex:1;position:relative">'
+    + '<div style="display:flex;align-items:center;gap:6px">'
+    + '<span style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:#fff">Yapay Zeka Asistanı</span>'
+    + '<span style="font:var(--fw-semibold) 9px/1 var(--font);color:#8B5CF6;background:#fff;padding:3px 6px;border-radius:var(--r-full);letter-spacing:.4px">YENİ</span>'
+    + '</div>'
+    + '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:rgba(255,255,255,.85);margin-top:4px">Doğal dille analiz ve onaylı aksiyon</div>'
+    + '</div>'
+    + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:rgba(255,255,255,.7);flex-shrink:0;position:relative"></iconify-icon>'
+    + '</div>';
+
   html += '<div style="height:20px"></div></div>';
 
   /* Pulse animasyonu inject */
