@@ -740,3 +740,164 @@ function _wltShareStep4() {
     + '</div>';
   return h;
 }
+
+/* ═══ P4 — İşlem Detay + Şikayet ═══ */
+function _wltOpenDetail(id) {
+  _wltCloseAll();
+  _wlt.detailId = id;
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'wltDetailModal';
+  m.className = 'wlt-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _wltCloseDetail(); };
+  m.innerHTML = '<div class="wlt-modal wlt-modal--compact"><div id="wltDetailBody"></div></div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+  _wltRenderDetail();
+}
+
+function _wltCloseDetail() {
+  var m = document.getElementById('wltDetailModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
+  _wlt.detailId = null;
+}
+
+function _wltRenderDetail() {
+  var body = document.getElementById('wltDetailBody');
+  if (!body) return;
+  var t = _wltTx(_wlt.detailId);
+  if (!t) return;
+
+  var meta = _wltSourceMeta(t.source);
+  var isIn = t.direction === 'in';
+  var sign = isIn ? '+' : '-';
+  var amountColor = isIn ? '#10B981' : '#8B5CF6';
+  var gradient = isIn
+    ? 'linear-gradient(135deg,#059669,#10B981)'
+    : 'linear-gradient(135deg,#7C3AED,#A855F7)';
+
+  var h = '<div class="wlt-det-hero" style="background:' + gradient + '">'
+    + '<div class="wlt-close" onclick="_wltCloseDetail()"><iconify-icon icon="solar:close-circle-bold" style="font-size:20px;color:#fff"></iconify-icon></div>'
+    + '<div class="wlt-det-source"><iconify-icon icon="' + meta.icon + '" style="font-size:14px"></iconify-icon>' + _wltEsc(meta.label) + '</div>'
+    + '<div class="wlt-det-amount">' + sign + _wltFmt(t.amount) + ' <span>🪙</span></div>'
+    + '<div class="wlt-det-amount-tl">' + (isIn ? 'Gelen' : 'Giden') + ' · ' + _wltFmtTL(t.amount) + '</div>'
+    + '<div class="wlt-det-cp">' + _wltEsc(t.counterparty) + '</div>'
+    + '<div class="wlt-det-date">' + _wltFmtDate(t.date) + '</div>'
+    + '</div>';
+
+  h += '<div class="wlt-det-body">';
+
+  // Bakiye karşılaştırma
+  h += '<div class="wlt-bal-compare">'
+    + '<div class="wlt-bc-row">'
+    + '<div class="wlt-bc-lbl">Önceki Bakiye</div>'
+    + '<div class="wlt-bc-val">' + _wltFmt(t.balanceBefore) + ' 🪙</div>'
+    + '</div>'
+    + '<div class="wlt-bc-arrow">'
+    + '<iconify-icon icon="solar:arrow-down-linear" style="font-size:14px;color:' + amountColor + '"></iconify-icon>'
+    + '<span style="color:' + amountColor + ';font-weight:700">' + sign + _wltFmt(t.amount) + '</span>'
+    + '</div>'
+    + '<div class="wlt-bc-row wlt-bc-row--hl">'
+    + '<div class="wlt-bc-lbl">Sonraki Bakiye</div>'
+    + '<div class="wlt-bc-val">' + _wltFmt(t.balanceAfter) + ' 🪙</div>'
+    + '</div>'
+    + '</div>';
+
+  // Detay bilgileri
+  h += '<div class="wlt-sum-card" style="margin-top:10px">'
+    + '<div class="wlt-sum-row"><span>İşlem ID</span><b class="wlt-mono">' + _wltEsc(t.id.toUpperCase()) + '</b></div>'
+    + '<div class="wlt-sum-row"><span>Kanal</span><b>' + _wltEsc(t.channel) + '</b></div>'
+    + '<div class="wlt-sum-row"><span>Tarih</span><b>' + new Date(t.date).toLocaleString('tr-TR') + '</b></div>'
+    + (t.note ? '<div class="wlt-sum-row"><span>Açıklama</span><b style="text-align:right;max-width:60%">' + _wltEsc(t.note) + '</b></div>' : '')
+    + '</div>';
+
+  // Aksiyonlar
+  h += '<div class="wlt-det-actions">'
+    + '<button class="wlt-btn-ghost wlt-btn-wide" onclick="_wltCopyTxId(\'' + t.id + '\')">'
+    + '<iconify-icon icon="solar:copy-bold" style="font-size:14px"></iconify-icon>ID Kopyala</button>'
+    + '<button class="wlt-btn-danger-ghost wlt-btn-wide" onclick="_wltOpenComplaint(\'' + t.id + '\')">'
+    + '<iconify-icon icon="solar:flag-bold" style="font-size:14px"></iconify-icon>İşlemi Şikayet Et</button>'
+    + '</div>';
+
+  h += '</div>';
+  body.innerHTML = h;
+}
+
+function _wltCopyTxId(id) {
+  if (navigator.clipboard) navigator.clipboard.writeText(id.toUpperCase());
+  if (typeof _admToast === 'function') _admToast('İşlem ID kopyalandı', 'ok');
+}
+
+function _wltOpenComplaint(id) {
+  var phone = document.getElementById('phone');
+  var existing = document.getElementById('wltCompModal');
+  if (existing) existing.remove();
+
+  var m = document.createElement('div');
+  m.id = 'wltCompModal';
+  m.className = 'wlt-confirm-backdrop';
+  m.onclick = function(e){ if (e.target === m) { m.classList.remove('open'); setTimeout(function(){m.remove();}, 240); } };
+  m.innerHTML = '<div class="wlt-confirm">'
+    + '<div class="wlt-confirm-icon" style="background:rgba(239,68,68,.12);color:#EF4444">'
+    + '<iconify-icon icon="solar:flag-bold" style="font-size:28px"></iconify-icon>'
+    + '</div>'
+    + '<div class="wlt-confirm-title">İşlemi Şikayet Et</div>'
+    + '<div class="wlt-confirm-msg">Bu işlemle ilgili şüpheli bir durum varsa Destek ekibimize iletilecektir. Şikayetin inceleme altına alınır ve gerekirse tutar iade edilir.</div>'
+    + '<div class="wlt-confirm-meta">İşlem ID: <b>' + _wltEsc(id.toUpperCase()) + '</b></div>'
+    + '<textarea class="wlt-inp wlt-textarea" placeholder="Kısaca ne olduğunu anlat..." id="wltCompReason"></textarea>'
+    + '<div class="wlt-confirm-btns">'
+    + '<button class="wlt-btn-ghost" onclick="document.getElementById(\'wltCompModal\').classList.remove(\'open\');setTimeout(function(){document.getElementById(\'wltCompModal\').remove();},240)">Vazgeç</button>'
+    + '<button class="wlt-btn-danger" onclick="_wltSubmitComplaint(\'' + id + '\')">Şikayeti Gönder</button>'
+    + '</div></div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+
+function _wltSubmitComplaint(id) {
+  var reason = (document.getElementById('wltCompReason') || {}).value || '';
+  var m = document.getElementById('wltCompModal');
+  if (m) { m.classList.remove('open'); setTimeout(function(){ m.remove(); }, 240); }
+  if (typeof _admToast === 'function') _admToast('Şikayet kaydedildi · Destek ekibi inceleyecek', 'ok');
+}
+
+/* ═══ P4.5 — Info Popup (Yasal Uyarı) ═══ */
+function _wltOpenInfo() {
+  _wltCloseAll();
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'wltInfoModal';
+  m.className = 'wlt-confirm-backdrop';
+  m.onclick = function(e){ if (e.target === m) _wltCloseInfo(); };
+  m.innerHTML = '<div class="wlt-confirm wlt-info-modal">'
+    + '<div class="wlt-confirm-icon" style="background:rgba(16,185,129,.12);color:#10B981">'
+    + '<iconify-icon icon="solar:info-circle-bold" style="font-size:30px"></iconify-icon>'
+    + '</div>'
+    + '<div class="wlt-confirm-title">Token Hakkında</div>'
+    + '<div class="wlt-info-body">'
+    + '<div class="wlt-info-row">'
+    + '<iconify-icon icon="solar:check-circle-bold" style="font-size:15px;color:#22C55E;flex-shrink:0;margin-top:2px"></iconify-icon>'
+    + '<span><b>Yapabildiklerin:</b> Token satın alabilir, arkadaşlarına hediye edebilirsin. Premium üyelik, sipariş veya rezervasyon oluşturmak için kullanabilirsin.</span>'
+    + '</div>'
+    + '<div class="wlt-info-row">'
+    + '<iconify-icon icon="solar:close-circle-bold" style="font-size:15px;color:#EF4444;flex-shrink:0;margin-top:2px"></iconify-icon>'
+    + '<span><b>Yapamayacakların:</b> Tokenlar <b>gerçek paraya çevrilemez</b> ve satılamaz. Satışı kesinlikle yasaktır.</span>'
+    + '</div>'
+    + '<div class="wlt-info-row">'
+    + '<iconify-icon icon="solar:shield-check-bold" style="font-size:15px;color:#8B5CF6;flex-shrink:0;margin-top:2px"></iconify-icon>'
+    + '<span><b>Güvenlik:</b> Token transferi sadece karşılıklı takipleştiğin arkadaşlar arasında yapılabilir. Günlük gönderim limiti bulunur.</span>'
+    + '</div>'
+    + '</div>'
+    + '<button class="wlt-btn-primary wlt-btn-wide" onclick="_wltCloseInfo()">Anladım</button>'
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+
+function _wltCloseInfo() {
+  var m = document.getElementById('wltInfoModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
+}
