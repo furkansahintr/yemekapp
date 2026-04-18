@@ -958,6 +958,25 @@ function _wltInjectStyles() {
     '.wlt-limit-fill{height:100%;background:linear-gradient(90deg,#8B5CF6,#A855F7);border-radius:999px;transition:width .4s ease}'
   );
 
+  // ── P5.3 İşlem geçmişi listesi ──
+  parts.push(
+    '/* Transaction list */',
+    '.wlt-tx-head{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--text-primary);padding:6px 2px 0}',
+    '.wlt-tx-head span:first-of-type{flex:1}',
+    '.wlt-tx-count{font-size:10px;font-weight:700;background:var(--bg-phone-secondary);color:var(--text-muted);padding:2px 8px;border-radius:6px}',
+    '.wlt-tx-list{background:var(--bg-phone);border:1px solid var(--border-soft);border-radius:14px;overflow:hidden}',
+    '.wlt-tx{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--border-soft);cursor:pointer;transition:background .15s}',
+    '.wlt-tx:last-child{border-bottom:none}',
+    '.wlt-tx:hover,.wlt-tx:active{background:var(--bg-phone-secondary)}',
+    '.wlt-tx-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}',
+    '.wlt-tx-cp{font-size:12.5px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.wlt-tx-meta{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text-muted);margin-top:2px}',
+    '.wlt-tx-channel{font-weight:600}',
+    '.wlt-tx-sep{opacity:.7}',
+    '.wlt-tx-amount{font-size:13.5px;font-weight:800;flex-shrink:0;font-variant-numeric:tabular-nums;text-align:right}',
+    '.wlt-tx-unit{font-size:11px;margin-left:1px}'
+  );
+
   s.textContent = parts.join('\n');
   document.head.appendChild(s);
 }
