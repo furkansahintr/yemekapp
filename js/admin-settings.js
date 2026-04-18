@@ -35,7 +35,12 @@ function renderAdminSettings() {
       summary:((typeof ADMIN_BIZ_APPLICATIONS!=='undefined')
         ? ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='pending';}).length+' yeni • '+ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='awaiting_response';}).length+' cevap bekliyor'
         : (M.bizApplications && M.bizApplications.pending ? M.bizApplications.pending+' Yeni Başvuru' : '—')),
-      action:"_admOpenBizApps()" }
+      action:"_admOpenBizApps()" },
+    { id:'aiAssistantMgmt', label:'Yapay Zeka Asistanı', icon:'solar:magic-stick-3-bold', tone:'#8B5CF6',
+      summary:((typeof ADMIN_AI_PROMPTS!=='undefined')
+        ? ADMIN_AI_PROMPTS.length+' hızlı komut • Stratejik analiz'
+        : 'Analiz • Aksiyon • Onay'),
+      action:"_admOpenAI()" }
   ];
 
   /* ═══ 5 GRUP ═══ */

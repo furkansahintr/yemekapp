@@ -2713,3 +2713,173 @@ var ADMIN_COMMUNITY_CARDS = [
   { id:'topBuyers',        title:'En Sadık Müşteriler',          icon:'solar:bag-smile-bold',        color:'#F59E0B', group:'Liderler', unit:'sipariş' },
   { id:'topSellers',       title:'En Çok Satan İşletmeler',      icon:'solar:shop-2-bold',           color:'#10B981', group:'Liderler', unit:'sipariş' }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   AI ASSISTANT — Yapay Zeka Asistanı (Admin)
+   Chat tabanlı komut arayüzü · salt okuma + aksiyon trigger
+   ═══════════════════════════════════════════════════════════ */
+
+// Hızlı prompt'lar (chat üstünde chip olarak)
+var ADMIN_AI_PROMPTS = [
+  { icon:'solar:calendar-date-bold',       label:'Bugünün özeti',           prompt:'Bugünün platform özetini çıkar' },
+  { icon:'solar:danger-triangle-bold',     label:'Sorunlu işletmeler',      prompt:'Son hafta en çok şikayet alan işletmeleri listele' },
+  { icon:'solar:chart-square-bold',        label:'Düşen bölgeler',          prompt:'Geçen aya göre sipariş düşüşü olan bölgeleri çıkar' },
+  { icon:'solar:gift-bold',                label:'Kampanya kurgula',        prompt:'Sadık kullanıcılara token hediye kampanyası kurgula' },
+  { icon:'solar:magnifer-zoom-in-bold',    label:'Trend menü',              prompt:'Son bir haftada en çok aranan 3 menü itemini bul, reklam vermemiş işletmelere bildir' },
+  { icon:'solar:moon-sleep-bold',          label:'Pasif kullanıcılar',      prompt:'Bodrum bölgesindeki aktif olmayan kullanıcılara %10 indirim bildirimi taslakla' }
+];
+
+// Senaryo kütüphanesi — anahtar kelime eşleştirmesiyle yanıt + aksiyon
+// Her senaryo: keywords (regex) · intro · analysis (tablo) · action (buton + meta)
+var ADMIN_AI_SCENARIOS = [
+  {
+    id:'trend_menu',
+    keywords:['trend','en çok aranan','top menü','reklam vermemiş'],
+    intro:'Son 7 günün arama verisini tarıyorum...',
+    buildResponse: function() {
+      return {
+        text:'Son 1 haftada en çok aranan 3 menü itemini buldum ve bu ürünleri satan ama henüz reklam vermemiş 5 işletmeyi listeledim. Aşağıda bildirimin taslağını hazırladım — onaylarsan gönderiyorum.',
+        analysis: {
+          title:'Trend Menü Analizi',
+          rows:[
+            { label:'#1 Big Burger Menu',   value:'12.4K arama',  note:'Burger Lab' },
+            { label:'#2 İskender Porsiyon', value:'11.8K arama',  note:'Kebapçı Hacı' },
+            { label:'#3 Carbonara',         value:'10.9K arama',  note:'La Pasta' },
+            { label:'Reklam vermeyen biz.', value:'5 işletme',    note:'Hedef kitle' }
+          ]
+        },
+        action: {
+          type:'notification',
+          label:'Bildirimi Gönder',
+          target:'5 işletme',
+          preview:'"Bu ürününüz şu anda trend! Reklam vererek arama sonuçlarında öne çıkmak ister misiniz?"',
+          channel:'Push + E-posta'
+        }
+      };
+    }
+  },
+  {
+    id:'inactive_users',
+    keywords:['aktif olmayan','pasif','uyuyan','bodrum','indirim','geri kazan'],
+    intro:'Pasif kullanıcı listesi hazırlanıyor...',
+    buildResponse: function() {
+      return {
+        text:'Bodrum bölgesinde son 30 gündür sipariş vermemiş 247 kullanıcı buldum. %10 indirim içeren bir bildirim taslağı hazırladım. Onayın ile gönderim başlar.',
+        analysis: {
+          title:'Pasif Kullanıcı Analizi',
+          rows:[
+            { label:'Bölge',              value:'Bodrum',        note:'Muğla' },
+            { label:'Pasif kullanıcı',    value:'247 kişi',      note:'>30 gün sipariş yok' },
+            { label:'Ort. sepet (eski)',  value:'₺185',          note:'Son 6 ayda' },
+            { label:'Tahmini geri dönüş', value:'%18-22',        note:'Benzer kampanyalardan' }
+          ]
+        },
+        action: {
+          type:'notification',
+          label:'Taslağı Onayla & Gönder',
+          target:'247 kullanıcı',
+          preview:'"Seni özledik! Bodrum\'daki favori lezzetlerinde %10 indirim senin için tanımlı. 7 gün geçerli 🧡"',
+          channel:'Uygulama Bildirimi'
+        }
+      };
+    }
+  },
+  {
+    id:'daily_summary',
+    keywords:['bugün özet','günün özeti','bugünkü','günlük özet'],
+    intro:'Günlük metrikleri toplarken sabrını rica ederim...',
+    buildResponse: function() {
+      return {
+        text:'Bugünün platform özeti hazır. Sipariş hacmi dünküne göre +%4.2 artışta. Destek talepleri normal seyir, ödeme hattında 2 kritik hata var — ayrı uyarı açtım.',
+        analysis: {
+          title:'Bugünün Özeti',
+          rows:[
+            { label:'Siparişler',    value:'4.824',   note:'+%4.2 ↑' },
+            { label:'Gelir',         value:'₺612.400', note:'Hedef: ₺580K' },
+            { label:'Yeni kullanıcı',value:'312',     note:'-%1.1 ↓' },
+            { label:'Açık destek',   value:'18',      note:'Ort. 2sa yanıt' },
+            { label:'Ödeme hatası',  value:'2 kritik',note:'Müdahale bekliyor' }
+          ]
+        },
+        action: null
+      };
+    }
+  },
+  {
+    id:'problem_bizs',
+    keywords:['sorunlu işletme','şikayet','çok şikayet','kırmızı alarm'],
+    intro:'Şikayet verilerini analiz ediyorum...',
+    buildResponse: function() {
+      return {
+        text:'Son 7 günde ortalamanın üzerinde şikayet alan 4 işletme tespit ettim. Bunlardan ikisi kritik seviyede — uyarı SMS\'i hazırladım.',
+        analysis: {
+          title:'Şikayet Sıcak Noktaları',
+          rows:[
+            { label:'Dönerci Mehmet', value:'12 şikayet',  note:'Gecikme + soğuk yemek' },
+            { label:'Pizza Palace',   value:'9 şikayet',   note:'Yanlış sipariş' },
+            { label:'Burger Max',     value:'7 şikayet',   note:'Hijyen' },
+            { label:'La Pasta',       value:'6 şikayet',   note:'Paketleme' }
+          ]
+        },
+        action: {
+          type:'sms',
+          label:'Uyarı SMS\'i Gönder',
+          target:'4 işletme sahibi',
+          preview:'"Son 7 günde şikayet oranınız yükseldi. Detaylar için panelden rapora göz atın, destek ekibimiz sizinle iletişime geçecek."',
+          channel:'SMS'
+        }
+      };
+    }
+  },
+  {
+    id:'region_drop',
+    keywords:['düşüş','azalma','bölge düşüş','azalan bölge'],
+    intro:'Bölgesel sipariş verilerini kıyaslıyorum...',
+    buildResponse: function() {
+      return {
+        text:'Geçen aya göre sipariş hacmi düşen 3 bölge var. En kritik düşüş İzmir\'de (-%14). Buralardaki işletmeler için toplam %7 komisyon indirimi destek kampanyası öneriyorum.',
+        analysis: {
+          title:'Bölgesel Düşüş',
+          rows:[
+            { label:'İzmir',      value:'-%14.2', note:'Eski: 8.2K → Yeni: 7.0K sipariş' },
+            { label:'Antalya',    value:'-%8.6',  note:'Mevsimsel etki' },
+            { label:'Eskişehir',  value:'-%5.1',  note:'Rekabet baskısı' }
+          ]
+        },
+        action: {
+          type:'campaign',
+          label:'Destek Kampanyası Başlat',
+          target:'3 bölge, ~420 işletme',
+          preview:'30 gün boyunca %7 komisyon indirimi + öne çıkarma kredisi',
+          channel:'Otomatik aktivasyon'
+        }
+      };
+    }
+  },
+  {
+    id:'loyal_gift',
+    keywords:['sadık','token hediye','ödül','en çok sipariş veren'],
+    intro:'En sadık müşterileri topluyorum...',
+    buildResponse: function() {
+      return {
+        text:'En çok sipariş veren ilk 10 kullanıcıyı belirledim. Hepsine moral olması için 100 token hediye etmeyi öneriyorum — toplam maliyet: 1.000 token (≈ ₺500 mock değer).',
+        analysis: {
+          title:'Sadık Müşteri Ödülü',
+          rows:[
+            { label:'Top 10 kullanıcı', value:'1.748 sipariş', note:'Son 6 ay' },
+            { label:'Hediye/kişi',      value:'100 token',     note:'Bir defalık' },
+            { label:'Toplam maliyet',   value:'1.000 token',   note:'Platform bütçesinden' },
+            { label:'Retention etkisi', value:'+%27',          note:'Tahmini (benchmark)' }
+          ]
+        },
+        action: {
+          type:'token_grant',
+          label:'Token Hediyesini Dağıt',
+          target:'Top 10 kullanıcı',
+          preview:'"Platformun en sadık üyelerinden birisin! Sana teşekkür olarak 100 token hediye ettik 🎁"',
+          channel:'Cüzdan + Bildirim'
+        }
+      };
+    }
+  }
+];
