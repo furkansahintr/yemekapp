@@ -201,8 +201,75 @@ function _bbdStep3() {
   return h;
 }
 
+/* ═══ P4 — Başarı + Personel Bildirim + Askıya Alma ═══ */
 function _bbdCompleteBranchDeletion() {
-  if (typeof _admToast === 'function') _admToast('Başarı akışı (P4) yakında...', 'ok');
+  var g = _bbdGate(_bbd.branchId);
+  var now = new Date();
+  var deleteAt = new Date(now.getTime() + 30 * 86400000);
+
+  BIZ_BRANCH_DELETION_STATE = {
+    branchId: _bbd.branchId,
+    scheduledAt: now.toISOString(),
+    deleteAt: deleteAt.toISOString(),
+    reasons: Object.keys(_bbd.selectedReasons).filter(function(k){ return _bbd.selectedReasons[k]; }),
+    note: _bbd.note || '',
+    staffNotified: g.staff || 0
+  };
+
+  // Şube statüsünü 'closing' yap (yayından kalksın, canlı gözüksün)
+  var br = _bbdBranch(_bbd.branchId);
+  if (br) br.status = 'closing';
+
+  _bbd.step = 4;
+  _bbdRenderSuccess();
+}
+
+function _bbdRenderSuccess() {
+  var body = document.getElementById('bbdBody');
+  if (!body) return;
+  var br = _bbdBranch(_bbd.branchId);
+  var s = BIZ_BRANCH_DELETION_STATE;
+  var deleteAt = new Date(s.deleteAt);
+  var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var dateStr = deleteAt.getDate() + ' ' + months[deleteAt.getMonth()] + ' ' + deleteAt.getFullYear();
+
+  var h = '<div class="bbd-wrap">';
+  h += '<div class="bbd-success">'
+    + '<div class="bbd-succ-ico"><iconify-icon icon="solar:shield-check-bold" style="font-size:52px;color:#3B82F6"></iconify-icon></div>'
+    + '<div class="bbd-succ-title">Şube askıya alındı</div>'
+    + '<div class="bbd-succ-sub"><b>' + _bbdEsc(br ? br.name : 'Şube') + '</b> artık yayında değil. '
+    + '<b>' + dateStr + '</b> tarihinde kalıcı olarak silinecek.</div>'
+    + '<div class="bbd-succ-box">'
+    + '<div class="bbd-sr"><span>Menüler</span><b>Yayından kaldırıldı</b></div>'
+    + '<div class="bbd-sr"><span>Çalışma saatleri</span><b>Kapalı</b></div>'
+    + '<div class="bbd-sr"><span>Rezervasyon alımı</span><b>Durduruldu</b></div>'
+    + '<div class="bbd-sr bbd-sr--hl"><span>Personel bildirimi</span><b>' + s.staffNotified + ' kişiye gönderildi ✓</b></div>'
+    + '</div>';
+
+  // Personel bildirim mesajı örneği
+  if (s.staffNotified > 0) {
+    h += '<div class="bbd-staff-notice">'
+      + '<iconify-icon icon="solar:letter-opened-bold" style="font-size:15px;color:#8B5CF6"></iconify-icon>'
+      + '<div><div class="bbd-staff-lbl">Personele gönderilen bildirim:</div>'
+      + '<div class="bbd-staff-msg">"Çalıştığınız şube kapatılmıştır. Profiliniz <b>genel kullanıcıya</b> dönüştürülmüştür. Yeni bir işletmede çalışmaya devam edebilirsiniz."</div>'
+      + '</div></div>';
+  }
+
+  h += '<button class="bbd-btn-primary bbd-btn-wide" onclick="_bbdCancelBranchDeletion()">'
+    + '<iconify-icon icon="solar:restart-bold" style="font-size:15px"></iconify-icon>İşlemi İptal Et & Geri Al</button>';
+
+  h += '<button class="bbd-btn-ghost bbd-btn-wide" onclick="_bbdClose()">Kapat</button>';
+  h += '</div>';
+  h += '</div>';
+  body.innerHTML = h;
+}
+
+function _bbdCancelBranchDeletion() {
+  BIZ_BRANCH_DELETION_STATE = null;
+  var br = _bbdBranch(_bbd.branchId);
+  if (br) br.status = 'open';
+  if (typeof _admToast === 'function') _admToast('Şube geri açıldı · Personel bilgilendirildi', 'ok');
+  _bbdClose();
 }
 
 function _bbdRenderBlocker(br, g) {
