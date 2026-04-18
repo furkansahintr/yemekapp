@@ -1118,6 +1118,32 @@ function _wltInjectStyles() {
     '.wlt-warn-note b{font-weight:700}'
   );
 
+  // ── P5.7 Detay modal ──
+  parts.push(
+    '/* Detail hero (dynamic gradient on element) */',
+    '.wlt-det-hero{position:relative;padding:22px 16px 18px;color:#fff;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}',
+    '.wlt-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.22);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;cursor:pointer}',
+    '.wlt-det-source{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(0,0,0,.22);border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.3px;backdrop-filter:blur(4px)}',
+    '.wlt-det-amount{font-size:40px;font-weight:800;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.22);font-variant-numeric:tabular-nums;margin-top:6px}',
+    '.wlt-det-amount span{font-size:26px;margin-left:2px}',
+    '.wlt-det-amount-tl{font-size:11.5px;opacity:.9}',
+    '.wlt-det-cp{font-size:15px;font-weight:700;margin-top:8px;text-shadow:0 1px 2px rgba(0,0,0,.15)}',
+    '.wlt-det-date{font-size:10.5px;opacity:.82;margin-top:1px}',
+    '/* Detail body */',
+    '.wlt-det-body{padding:14px 16px 18px;display:flex;flex-direction:column;gap:10px}',
+    '/* Balance compare */',
+    '.wlt-bal-compare{background:var(--bg-phone-secondary);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}',
+    '.wlt-bc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0}',
+    '.wlt-bc-lbl{font-size:11.5px;color:var(--text-muted);font-weight:600}',
+    '.wlt-bc-val{font-size:13.5px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums}',
+    '.wlt-bc-row--hl .wlt-bc-val{color:#10B981;font-size:16px;font-weight:800}',
+    '.wlt-bc-arrow{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}',
+    '/* Detail actions */',
+    '.wlt-det-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}',
+    '/* Mono ID */',
+    '.wlt-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.5px;font-size:11.5px}'
+  );
+
   s.textContent = parts.join('\n');
   document.head.appendChild(s);
 }
