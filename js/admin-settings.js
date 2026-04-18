@@ -90,8 +90,10 @@ function renderAdminSettings() {
           summary:_admFmt(REC.length)+' tarif • '+pendingRecipes+' bekliyor',
           action:"adminSwitchTab('adminRecipes')" },
         { id:'community',    label:'Topluluk Analizleri', icon:'solar:hashtag-chat-bold', tone:'#06B6D4',
-          summary:(M.community ? '%'+M.community.engagementPct+' etkileşim' : '—'),
-          action:"_admToast('Topluluk analizleri yakında')" },
+          summary:((typeof ADMIN_COMMUNITY_CARDS!=='undefined')
+            ? ADMIN_COMMUNITY_CARDS.length+' kategori • Top 10 liste'
+            : (M.community ? '%'+M.community.engagementPct+' etkileşim' : '—')),
+          action:"_admOpenCommunity()" },
         { id:'ads',          label:'Reklam Alanı', icon:'solar:gallery-wide-bold', tone:'#8B5CF6',
           summary:((typeof ADMIN_AD_CAMPAIGNS!=='undefined')
             ? ADMIN_AD_CAMPAIGNS.filter(function(c){return c.status==='active';}).length+' aktif • '+ADMIN_AD_PLACEMENTS.length+' yerleşim'
