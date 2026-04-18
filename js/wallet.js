@@ -923,6 +923,41 @@ function _wltInjectStyles() {
     '.wlt-sec-lbl{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text-primary);padding-left:2px;margin-top:4px}'
   );
 
+  // ── P5.2 Balance kartı + quick actions + daily limit ──
+  parts.push(
+    '/* Balance card */',
+    '.wlt-bal-card{position:relative;border-radius:20px;padding:18px;background:linear-gradient(135deg,#064E3B 0%,#059669 45%,#10B981 100%);color:#fff;overflow:hidden;box-shadow:0 8px 24px rgba(5,150,105,.3)}',
+    '.wlt-bal-shine{position:absolute;top:-50%;right:-15%;width:60%;height:200%;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);transform:rotate(22deg);pointer-events:none;animation:wltShine 4.5s ease-in-out infinite}',
+    '@keyframes wltShine{0%,100%{opacity:.2}50%{opacity:.55}}',
+    '.wlt-bal-top{position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;z-index:1}',
+    '.wlt-bal-lbl{font-size:11.5px;font-weight:600;opacity:.9;letter-spacing:.4px;text-transform:uppercase}',
+    '.wlt-bal-info{width:28px;height:28px;border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:transform .15s}',
+    '.wlt-bal-info:active{transform:scale(.92)}',
+    '.wlt-bal-val{position:relative;display:flex;align-items:baseline;gap:6px;z-index:1;text-shadow:0 1px 3px rgba(0,0,0,.2)}',
+    '.wlt-coin{font-size:26px;line-height:1}',
+    '.wlt-bal-num{font-size:42px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}',
+    '.wlt-bal-unit{font-size:13px;font-weight:700;opacity:.85;letter-spacing:.3px;margin-left:2px}',
+    '.wlt-bal-tl{position:relative;font-size:11.5px;opacity:.85;margin-top:4px;z-index:1}',
+    '.wlt-bal-bottom{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.22);z-index:1}',
+    '.wlt-stat-lbl{font-size:10px;opacity:.85;font-weight:600;letter-spacing:.3px}',
+    '.wlt-stat-val{font-size:14.5px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}',
+    '/* Quick actions */',
+    '.wlt-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
+    '.wlt-action{padding:13px 14px;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit;text-align:left;transition:transform .15s,box-shadow .2s}',
+    '.wlt-action:active{transform:scale(.97)}',
+    '.wlt-action--primary{background:linear-gradient(135deg,#10B981,#059669);color:#fff;box-shadow:0 3px 10px rgba(16,185,129,.3)}',
+    '.wlt-action--secondary{background:linear-gradient(135deg,#8B5CF6,#7C3AED);color:#fff;box-shadow:0 3px 10px rgba(139,92,246,.3)}',
+    '.wlt-act-lbl{font-size:13px;font-weight:700;line-height:1.2}',
+    '.wlt-act-sub{font-size:10.5px;opacity:.85;margin-top:2px}',
+    '/* Daily limit */',
+    '.wlt-limit{padding:10px 12px;background:var(--bg-phone-secondary);border-radius:12px;display:flex;flex-direction:column;gap:7px}',
+    '.wlt-limit-head{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-primary);font-weight:600}',
+    '.wlt-limit-head span{flex:1}',
+    '.wlt-limit-val{font-weight:800;color:#8B5CF6;font-variant-numeric:tabular-nums}',
+    '.wlt-limit-bar{height:5px;background:var(--bg-phone);border-radius:999px;overflow:hidden}',
+    '.wlt-limit-fill{height:100%;background:linear-gradient(90deg,#8B5CF6,#A855F7);border-radius:999px;transition:width .4s ease}'
+  );
+
   s.textContent = parts.join('\n');
   document.head.appendChild(s);
 }
