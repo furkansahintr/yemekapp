@@ -72,7 +72,72 @@ function _dacRenderBody() {
   var body = document.getElementById('dacBody');
   if (!body) return;
   if (_dac.view === 'suspended') body.innerHTML = _dacRenderSuspended();
-  else body.innerHTML = '<div class="dac-wrap"><div class="dac-empty-placeholder">Veda sayfası hazırlanıyor...</div></div>';
+  else body.innerHTML = _dacRenderMain();
+}
+
+function _dacRenderMain() {
+  var h = '<div class="dac-wrap">';
+
+  // Empatik giriş mesajı
+  h += '<div class="dac-intro">'
+    + '<iconify-icon icon="solar:sad-square-bold" style="font-size:34px;color:#EC4899"></iconify-icon>'
+    + '<div class="dac-intro-title">Gerçekten gidiyor musun?</div>'
+    + '<div class="dac-intro-body">Sana özel hazırladığımız bu koleksiyondan ayrılmadan önce, birkaç şeyi hatırlatmak isteriz.</div>'
+    + '</div>';
+
+  // Token uyarısı (bakiye varsa)
+  var tokens = (typeof USER_WALLET !== 'undefined' && USER_WALLET.tokens) ? USER_WALLET.tokens : 0;
+  if (tokens > 0) {
+    h += '<div class="dac-token-warn">'
+      + '<div class="dac-token-icon"><iconify-icon icon="solar:danger-triangle-bold" style="font-size:22px"></iconify-icon></div>'
+      + '<div style="flex:1">'
+      + '<div class="dac-token-title">Dikkat! <b>' + tokens + ' tokenin</b> yanacak</div>'
+      + '<div class="dac-token-body">Silme işlemi tamamlanınca bu tokenlar <b>kalıcı olarak yok edilecektir</b>. Lütfen kullan ya da bir arkadaşınla paylaş.</div>'
+      + '<div class="dac-token-actions">'
+      + '<button class="dac-btn-mini" onclick="_dacClose();if(typeof openWalletPage==\'function\')openWalletPage()">'
+      + '<iconify-icon icon="solar:wallet-bold" style="font-size:13px"></iconify-icon>Cüzdana Git</button>'
+      + '<button class="dac-btn-mini dac-btn-mini--violet" onclick="_dacClose();if(typeof openWalletPage==\'function\'){openWalletPage();setTimeout(function(){if(typeof _wltOpenShare===\'function\')_wltOpenShare()},400)}">'
+      + '<iconify-icon icon="solar:users-group-rounded-bold" style="font-size:13px"></iconify-icon>Arkadaşa Gönder</button>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // Retention kartları
+  h += '<div class="dac-retention">';
+  for (var i = 0; i < DELETE_RETENTION_MESSAGES.length; i++) {
+    var r = DELETE_RETENTION_MESSAGES[i];
+    h += '<div class="dac-ret-card" style="border-left:3px solid ' + r.tone + '">'
+      + '<div class="dac-ret-ico" style="background:' + r.tone + '15;color:' + r.tone + '">'
+      + '<iconify-icon icon="' + r.icon + '" style="font-size:22px"></iconify-icon>'
+      + '</div>'
+      + '<div style="flex:1">'
+      + '<div class="dac-ret-title">' + _dacEsc(r.title) + '</div>'
+      + '<div class="dac-ret-body">' + _dacEsc(r.body) + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+  h += '</div>';
+
+  // Destek Al CTA
+  h += '<div class="dac-support">'
+    + '<div class="dac-support-ico"><iconify-icon icon="solar:chat-round-dots-bold" style="font-size:24px;color:#8B5CF6"></iconify-icon></div>'
+    + '<div style="flex:1">'
+    + '<div class="dac-support-title">Bir sorun mu var?</div>'
+    + '<div class="dac-support-body">Silmeden önce yaşadığın sorunu çözmek için destek ekibimiz burada.</div>'
+    + '</div>'
+    + '<button class="dac-btn-support" onclick="_dacOpenSupport()">'
+    + 'Destek Al <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:14px"></iconify-icon></button>'
+    + '</div>';
+
+  h += '</div>';
+  return h;
+}
+
+function _dacOpenSupport() {
+  _dacClose();
+  if (typeof openSupportPage === 'function') openSupportPage();
+  else if (typeof _admToast === 'function') _admToast('Destek ekibi yakında seninle iletişime geçecek', 'ok');
 }
 
 function _dacRenderSuspended() {
