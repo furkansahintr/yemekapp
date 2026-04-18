@@ -94,7 +94,115 @@ function _bbdRenderBody() {
     return;
   }
 
-  body.innerHTML = '<div class="bbd-wrap"><div class="bbd-empty">Akış (P3) yakında...</div></div>';
+  body.innerHTML = _bbdRenderFlow();
+}
+
+/* ═══ P3 — 3-Step Flow ═══ */
+function _bbdRenderFlow() {
+  var br = _bbdBranch(_bbd.branchId);
+  var titles = ['Kapatma Sebebi', 'Şifre Doğrulama', 'SMS Doğrulama', 'Tamamlandı'];
+
+  var h = '<div class="bbd-wrap">';
+
+  // Şube özet kartı
+  if (br) {
+    h += '<div class="bbd-br-summary">'
+      + '<iconify-icon icon="solar:shop-bold" style="font-size:18px;color:#F97316"></iconify-icon>'
+      + '<div style="flex:1"><div class="bbd-br-name">' + _bbdEsc(br.name) + '</div>'
+      + '<div class="bbd-br-addr">' + _bbdEsc(br.address || '') + '</div></div>'
+      + '</div>';
+  }
+
+  // Step dots
+  h += '<div class="bbd-steps">';
+  for (var i = 1; i <= 3; i++) {
+    h += '<div class="bbd-step' + (i < _bbd.step ? ' done' : i === _bbd.step ? ' active' : '') + '">'
+      + '<div class="bbd-step-num">' + (i < _bbd.step ? '<iconify-icon icon="solar:check-bold" style="font-size:12px"></iconify-icon>' : i) + '</div>'
+      + '<div class="bbd-step-lbl">' + titles[i-1] + '</div>'
+      + '</div>';
+  }
+  h += '</div>';
+
+  if (_bbd.step === 1) h += _bbdStep1();
+  else if (_bbd.step === 2) h += _bbdStep2();
+  else if (_bbd.step === 3) h += _bbdStep3();
+
+  h += '</div>';
+  return h;
+}
+
+function _bbdStep1() {
+  var h = '<div class="bbd-step-body">';
+  h += '<div class="bbd-step-intro"><b>Neden kapatıyorsun?</b> Cevabın gelişim için bize ışık tutar.</div>';
+  h += '<div class="bbd-reason-grid">';
+  for (var i = 0; i < BIZ_DELETE_REASONS.length; i++) {
+    var r = BIZ_DELETE_REASONS[i];
+    var sel = !!_bbd.selectedReasons[r.id];
+    h += '<div class="bbd-chip' + (sel ? ' selected' : '') + '" onclick="_bbdToggleReason(\'' + r.id + '\')">'
+      + '<iconify-icon icon="' + r.icon + '" style="font-size:14px"></iconify-icon>'
+      + '<span>' + _bbdEsc(r.label) + '</span>'
+      + (sel ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:14px;color:#10B981"></iconify-icon>' : '')
+      + '</div>';
+  }
+  h += '</div>';
+
+  h += '<textarea class="bbd-note" maxlength="200" placeholder="(Opsiyonel) Daha fazla detay..." '
+    + 'oninput="_bbd.note=this.value">' + _bbdEsc(_bbd.note) + '</textarea>';
+
+  // Onay modal metni
+  h += '<div class="bbd-info-box">'
+    + '<iconify-icon icon="solar:info-circle-bold" style="font-size:14px;color:#3B82F6"></iconify-icon>'
+    + '<span>Bu şube kapatıldığında <b>şubeye bağlı menüler, garsonlar ve çalışma saatleri</b> yayından kaldırılacaktır. <b>30 gün</b> içinde geri alabilirsiniz.</span>'
+    + '</div>';
+
+  var valid = Object.keys(_bbd.selectedReasons).filter(function(k){ return _bbd.selectedReasons[k]; }).length > 0;
+  h += '<div class="bbd-footer">'
+    + '<button class="bbd-btn-ghost" onclick="_bbdClose()">Vazgeç</button>'
+    + '<button class="bbd-btn-danger' + (valid ? '' : ' disabled') + '"' + (valid ? ' onclick="_bbd.step=2;_bbdRenderBody()"' : '') + '>'
+    + 'Devam Et <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:13px"></iconify-icon></button>'
+    + '</div>';
+  h += '</div>';
+  return h;
+}
+
+function _bbdToggleReason(id) {
+  _bbd.selectedReasons[id] = !_bbd.selectedReasons[id];
+  _bbdRenderBody();
+}
+
+function _bbdStep2() {
+  var h = '<div class="bbd-step-body bbd-step-body--center">'
+    + '<div class="bbd-verify-ico"><iconify-icon icon="solar:lock-keyhole-bold" style="font-size:38px;color:#8B5CF6"></iconify-icon></div>'
+    + '<div class="bbd-verify-title">Şifre Doğrulama</div>'
+    + '<div class="bbd-verify-sub">Hesap sahibi olduğunu doğrulamak için işletme şifreni gir.</div>'
+    + '<input type="password" class="bbd-input" placeholder="İşletme şifresi" value="' + _bbdEsc(_bbd.password) + '" '
+    + 'oninput="_bbd.password=this.value" id="bbdPwd">'
+    + '<div class="bbd-footer">'
+    + '<button class="bbd-btn-ghost" onclick="_bbd.step=1;_bbdRenderBody()">Geri</button>'
+    + '<button class="bbd-btn-danger" onclick="if(_bbd.password.length>=4){_bbd.step=3;_bbdRenderBody()}else if(typeof _admToast===\'function\')_admToast(\'Şifre en az 4 karakter\',\'err\')">'
+    + 'Devam Et <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:13px"></iconify-icon></button>'
+    + '</div></div>';
+  return h;
+}
+
+function _bbdStep3() {
+  var h = '<div class="bbd-step-body bbd-step-body--center">'
+    + '<div class="bbd-verify-ico"><iconify-icon icon="solar:shield-keyhole-bold" style="font-size:38px;color:#EF4444"></iconify-icon></div>'
+    + '<div class="bbd-verify-title">SMS Doğrulama</div>'
+    + '<div class="bbd-verify-sub">+90 *** *** ** 42 numaralı telefona gönderilen 6 haneli kodu gir.</div>'
+    + '<input type="text" class="bbd-input bbd-otp-input" maxlength="6" placeholder="• • • • • •" value="' + _bbdEsc(_bbd.otp) + '" '
+    + 'oninput="_bbd.otp=this.value.replace(/\\D/g,\'\');this.value=_bbd.otp" id="bbdOtp">'
+    + '<button class="bbd-btn-link" onclick="if(typeof _admToast===\'function\')_admToast(\'Kod yeniden gönderildi\',\'ok\')">Kodu Yeniden Gönder</button>'
+    + '<div class="bbd-footer">'
+    + '<button class="bbd-btn-ghost" onclick="_bbd.step=2;_bbdRenderBody()">Geri</button>'
+    + '<button class="bbd-btn-danger" onclick="if(_bbd.otp.length===6){_bbdCompleteBranchDeletion()}else if(typeof _admToast===\'function\')_admToast(\'6 haneli kodu tam gir\',\'err\')">'
+    + '<iconify-icon icon="solar:trash-bin-trash-bold" style="font-size:13px"></iconify-icon>Şubeyi Kapat</button>'
+    + '</div></div>';
+  return h;
+}
+
+function _bbdCompleteBranchDeletion() {
+  if (typeof _admToast === 'function') _admToast('Başarı akışı (P4) yakında...', 'ok');
 }
 
 function _bbdRenderBlocker(br, g) {
