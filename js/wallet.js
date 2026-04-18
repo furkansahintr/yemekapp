@@ -456,3 +456,287 @@ function _wltLoadStep4() {
     + '</div>';
   return h;
 }
+
+/* ═══ P3 — Token Share Akışı ═══ */
+function _wltOpenShare() {
+  _wltCloseAll();
+  _wlt.shareOpen = true;
+  _wlt.shareStep = 1;
+  _wlt.shareSearch = '';
+  _wlt.shareTarget = null;
+  _wlt.shareAmount = 0;
+  _wlt.shareNote = '';
+
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'wltShareModal';
+  m.className = 'wlt-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _wltCloseShare(); };
+  m.innerHTML = '<div class="wlt-modal"><div id="wltShareBody"></div></div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+  _wltRenderShare();
+}
+
+function _wltCloseShare() {
+  var m = document.getElementById('wltShareModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
+  _wlt.shareOpen = false;
+}
+
+function _wltRenderShare() {
+  var body = document.getElementById('wltShareBody');
+  if (!body) return;
+
+  var titles = ['Arkadaş Seç', 'Miktar & Not', 'Onay', 'Gönderildi'];
+  var h = '<div class="wlt-step-head">'
+    + '<div class="wlt-step-close" onclick="_wltCloseShare()"><iconify-icon icon="solar:close-circle-bold" style="font-size:22px;color:var(--text-muted)"></iconify-icon></div>'
+    + '<div style="flex:1"><div class="wlt-step-title">' + titles[_wlt.shareStep - 1] + '</div>'
+    + '<div class="wlt-step-sub">Adım ' + _wlt.shareStep + '/4</div></div>'
+    + '</div>'
+    + '<div class="wlt-step-dots">'
+    + [1,2,3,4].map(function(i){
+        return '<div class="wlt-step-dot' + (i < _wlt.shareStep ? ' done' : i === _wlt.shareStep ? ' active' : '') + '"></div>';
+      }).join('')
+    + '</div>';
+
+  if (_wlt.shareStep === 1) h += _wltShareStep1();
+  else if (_wlt.shareStep === 2) h += _wltShareStep2();
+  else if (_wlt.shareStep === 3) h += _wltShareStep3();
+  else h += _wltShareStep4();
+
+  body.innerHTML = h;
+}
+
+function _wltShareStep1() {
+  var q = (_wlt.shareSearch || '').toLowerCase().trim();
+  // Sadece karşılıklı takipleşenler (mutual)
+  var friends = USER_MUTUAL_FRIENDS.filter(function(f) {
+    if (!f.mutual) return false;
+    if (!q) return true;
+    return f.name.toLowerCase().indexOf(q) > -1 || f.handle.toLowerCase().indexOf(q) > -1;
+  });
+
+  var h = '<div class="wlt-step-body">';
+
+  // Güvenlik uyarısı
+  h += '<div class="wlt-secure-note">'
+    + '<iconify-icon icon="solar:shield-check-bold" style="font-size:14px;color:#8B5CF6"></iconify-icon>'
+    + '<span>Sadece <b>karşılıklı takipleştiğin</b> arkadaşlara token gönderebilirsin</span>'
+    + '</div>';
+
+  // Search
+  h += '<div class="wlt-search">'
+    + '<iconify-icon icon="solar:magnifer-linear" style="font-size:15px;color:var(--text-muted)"></iconify-icon>'
+    + '<input type="text" placeholder="İsim veya kullanıcı adı ara..." value="' + _wltEsc(_wlt.shareSearch) + '" '
+    + 'oninput="_wlt.shareSearch=this.value;_wltRenderShareList()">'
+    + '</div>';
+
+  h += '<div id="wltFriendList" class="wlt-friend-list">' + _wltFriendListHtml(friends) + '</div>';
+
+  h += '</div>';
+  return h;
+}
+
+function _wltRenderShareList() {
+  var q = (_wlt.shareSearch || '').toLowerCase().trim();
+  var friends = USER_MUTUAL_FRIENDS.filter(function(f) {
+    if (!f.mutual) return false;
+    if (!q) return true;
+    return f.name.toLowerCase().indexOf(q) > -1 || f.handle.toLowerCase().indexOf(q) > -1;
+  });
+  var el = document.getElementById('wltFriendList');
+  if (el) el.innerHTML = _wltFriendListHtml(friends);
+}
+
+function _wltFriendListHtml(friends) {
+  if (friends.length === 0) {
+    return '<div class="wlt-empty-small">'
+      + '<iconify-icon icon="solar:users-group-rounded-linear" style="font-size:32px;opacity:.3"></iconify-icon>'
+      + '<div>Arkadaş bulunamadı</div>'
+      + '</div>';
+  }
+  var h = '';
+  for (var i = 0; i < friends.length; i++) {
+    var f = friends[i];
+    h += '<div class="wlt-friend-row" onclick="_wltPickFriend(\'' + f.id + '\')">'
+      + '<img class="wlt-friend-avatar" src="' + f.avatar + '" alt="">'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="wlt-friend-name">' + _wltEsc(f.name) + (f.badge ? ' <span class="wlt-friend-badge">' + f.badge + '</span>' : '') + '</div>'
+      + '<div class="wlt-friend-handle">' + _wltEsc(f.handle) + ' · <span class="wlt-mutual-pill">Karşılıklı takip</span></div>'
+      + '</div>'
+      + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:15px;color:var(--text-muted)"></iconify-icon>'
+      + '</div>';
+  }
+  return h;
+}
+
+function _wltPickFriend(id) {
+  for (var i = 0; i < USER_MUTUAL_FRIENDS.length; i++) {
+    if (USER_MUTUAL_FRIENDS[i].id === id) { _wlt.shareTarget = USER_MUTUAL_FRIENDS[i]; break; }
+  }
+  _wlt.shareStep = 2;
+  _wltRenderShare();
+}
+
+function _wltShareStep2() {
+  var f = _wlt.shareTarget;
+  var bal = USER_WALLET.tokens;
+  var dailyRemain = WALLET_CONFIG.dailyShareLimit - WALLET_DAILY_SHARED;
+  var amt = _wlt.shareAmount || 0;
+
+  var h = '<div class="wlt-step-body">';
+
+  // Alıcı
+  h += '<div class="wlt-recipient">'
+    + '<img class="wlt-friend-avatar" src="' + f.avatar + '" alt="">'
+    + '<div style="flex:1"><div class="wlt-friend-name">' + _wltEsc(f.name) + '</div>'
+    + '<div class="wlt-friend-handle">' + _wltEsc(f.handle) + '</div></div>'
+    + '<button class="wlt-btn-link" onclick="_wlt.shareStep=1;_wltRenderShare()">Değiştir</button>'
+    + '</div>';
+
+  // Amount input
+  h += '<div class="wlt-amount-card">'
+    + '<div class="wlt-amount-lbl">Gönderilecek miktar</div>'
+    + '<div class="wlt-amount-input">'
+    + '<input type="number" min="0" placeholder="0" value="' + (amt || '') + '" '
+    + 'oninput="_wlt.shareAmount=parseInt(this.value)||0;_wltUpdateShareStep2()" id="wltShareAmt">'
+    + '<span class="wlt-amount-coin">🪙</span>'
+    + '</div>'
+    + '<div class="wlt-amount-tl" id="wltShareTl">≈ ' + _wltFmtTL(amt * WALLET_CONFIG.exchangeRate) + '</div>'
+    + '</div>';
+
+  // Quick amounts
+  var quicks = [25, 50, 100, 250].filter(function(v){ return v <= Math.min(bal, dailyRemain, WALLET_CONFIG.maxSingleShare); });
+  h += '<div class="wlt-preset-grid">';
+  for (var i = 0; i < quicks.length; i++) {
+    h += '<button class="wlt-preset-chip' + (amt === quicks[i] ? ' active' : '') + '" onclick="_wlt.shareAmount=' + quicks[i] + ';_wltRenderShare()">'
+      + _wltFmt(quicks[i]) + '<span>🪙</span></button>';
+  }
+  h += '</div>';
+
+  // Limit info
+  h += '<div class="wlt-limit-info">'
+    + '<div><span>Bakiyen</span><b>' + _wltFmt(bal) + ' 🪙</b></div>'
+    + '<div><span>Günlük kalan</span><b>' + _wltFmt(dailyRemain) + ' 🪙</b></div>'
+    + '<div><span>Tek seferlik max</span><b>' + _wltFmt(WALLET_CONFIG.maxSingleShare) + ' 🪙</b></div>'
+    + '</div>';
+
+  // Note
+  h += '<div class="wlt-note-wrap">'
+    + '<div class="wlt-note-lbl">Not (opsiyonel)</div>'
+    + '<input class="wlt-inp" maxlength="80" placeholder="Kısa bir not bırak..." value="' + _wltEsc(_wlt.shareNote) + '" '
+    + 'oninput="_wlt.shareNote=this.value" id="wltShareNote">'
+    + '<div class="wlt-note-counter"><span id="wltNoteCount">' + (_wlt.shareNote || '').length + '</span>/80</div>'
+    + '</div>';
+
+  // Validation
+  var err = '';
+  if (amt < WALLET_CONFIG.minShare) err = 'Min. ' + WALLET_CONFIG.minShare + ' token gönderebilirsin';
+  else if (amt > bal) err = 'Yetersiz bakiye';
+  else if (amt > dailyRemain) err = 'Günlük limit aşıldı (kalan: ' + dailyRemain + ')';
+  else if (amt > WALLET_CONFIG.maxSingleShare) err = 'Tek seferlik max: ' + WALLET_CONFIG.maxSingleShare;
+
+  if (err) {
+    h += '<div class="wlt-err-note">'
+      + '<iconify-icon icon="solar:danger-triangle-bold" style="font-size:13px;color:#EF4444"></iconify-icon>'
+      + '<span>' + err + '</span></div>';
+  }
+
+  var valid = amt >= WALLET_CONFIG.minShare && amt <= bal && amt <= dailyRemain && amt <= WALLET_CONFIG.maxSingleShare;
+  h += '<div class="wlt-step-footer">'
+    + '<button class="wlt-btn-ghost" onclick="_wlt.shareStep=1;_wltRenderShare()">Geri</button>'
+    + '<button class="wlt-btn-primary' + (valid ? '' : ' disabled') + '"' + (valid ? ' onclick="_wlt.shareStep=3;_wltRenderShare()"' : '') + '>'
+    + 'Devam Et <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:14px"></iconify-icon></button>'
+    + '</div>';
+
+  h += '</div>';
+  return h;
+}
+
+function _wltUpdateShareStep2() {
+  var el = document.getElementById('wltShareTl');
+  if (el) el.textContent = '≈ ' + _wltFmtTL((_wlt.shareAmount || 0) * WALLET_CONFIG.exchangeRate);
+  // Re-render footer + err
+  _wltRenderShare();
+}
+
+function _wltShareStep3() {
+  var f = _wlt.shareTarget;
+  var amt = _wlt.shareAmount;
+
+  var h = '<div class="wlt-step-body">';
+  h += '<div class="wlt-confirm-hero">'
+    + '<iconify-icon icon="solar:send-square-bold" style="font-size:42px;color:#8B5CF6"></iconify-icon>'
+    + '<div class="wlt-confirm-amt">' + _wltFmt(amt) + ' <span>🪙</span></div>'
+    + '<div class="wlt-confirm-sub">' + _wltFmtTL(amt * WALLET_CONFIG.exchangeRate) + ' değerinde token</div>'
+    + '</div>';
+
+  h += '<div class="wlt-sum-card">'
+    + '<div class="wlt-sum-row"><span>Alıcı</span><b>' + _wltEsc(f.name) + '</b></div>'
+    + '<div class="wlt-sum-row"><span>Kullanıcı adı</span><b>' + _wltEsc(f.handle) + '</b></div>'
+    + '<div class="wlt-sum-row"><span>Miktar</span><b style="color:#8B5CF6">-' + _wltFmt(amt) + ' 🪙</b></div>'
+    + (_wlt.shareNote ? '<div class="wlt-sum-row"><span>Not</span><b>"' + _wltEsc(_wlt.shareNote) + '"</b></div>' : '')
+    + '<div class="wlt-sum-row wlt-sum-row--hl"><span>Yeni bakiyen</span><b>' + _wltFmt(USER_WALLET.tokens - amt) + ' 🪙</b></div>'
+    + '</div>';
+
+  h += '<div class="wlt-warn-note">'
+    + '<iconify-icon icon="solar:shield-warning-bold" style="font-size:14px;color:#F59E0B"></iconify-icon>'
+    + '<span>Gönderilen token <b>geri alınamaz</b>. Tokenlar gerçek paraya çevrilemez; sadece uygulama içi işlemlerde kullanılır.</span>'
+    + '</div>';
+
+  h += '<div class="wlt-step-footer">'
+    + '<button class="wlt-btn-ghost" onclick="_wlt.shareStep=2;_wltRenderShare()">Geri</button>'
+    + '<button class="wlt-btn-primary wlt-btn--violet" onclick="_wltSubmitShare()">'
+    + '<iconify-icon icon="solar:check-circle-bold" style="font-size:15px"></iconify-icon>Onayla & Gönder</button>'
+    + '</div>';
+
+  h += '</div>';
+  return h;
+}
+
+function _wltSubmitShare() {
+  var f = _wlt.shareTarget;
+  var amt = _wlt.shareAmount;
+  var bb = USER_WALLET.tokens;
+
+  USER_WALLET.tokens -= amt;
+  WALLET_DAILY_SHARED += amt;
+
+  WALLET_TRANSACTIONS.unshift({
+    id: 'tx_' + Date.now().toString(36),
+    direction: 'out',
+    source: 'share',
+    amount: amt,
+    counterparty: f.name,
+    counterpartyAvatar: f.avatar,
+    note: _wlt.shareNote || 'Token Share',
+    balanceBefore: bb,
+    balanceAfter: USER_WALLET.tokens,
+    date: new Date().toISOString(),
+    channel: 'Token Share'
+  });
+
+  _wlt.shareStep = 4;
+  _wltRenderShare();
+}
+
+function _wltShareStep4() {
+  var f = _wlt.shareTarget;
+  var amt = _wlt.shareAmount;
+
+  var h = '<div class="wlt-step-body wlt-success-body">'
+    + '<div class="wlt-success-ico"><iconify-icon icon="solar:check-circle-bold" style="font-size:54px;color:#22C55E"></iconify-icon></div>'
+    + '<div class="wlt-success-title">Token Gönderildi</div>'
+    + '<div class="wlt-success-sub"><b>' + _wltEsc(f.name) + '</b> hesabına başarıyla iletildi</div>'
+    + '<div class="wlt-success-box">'
+    + '<div class="wlt-sum-row"><span>Alıcı</span><b>' + _wltEsc(f.name) + '</b></div>'
+    + '<div class="wlt-sum-row"><span>Gönderilen</span><b style="color:#8B5CF6">-' + _wltFmt(amt) + ' 🪙</b></div>'
+    + '<div class="wlt-sum-row wlt-sum-row--hl"><span>Yeni Bakiyen</span><b>' + _wltFmt(USER_WALLET.tokens) + ' 🪙</b></div>'
+    + '</div>'
+    + '<button class="wlt-btn-primary wlt-btn-wide" onclick="_wltCloseShare();_wltRenderBody()">Tamam</button>'
+    + '</div>';
+  return h;
+}
