@@ -145,14 +145,169 @@ function _badRenderMain() {
   return h;
 }
 
+/* ═══ P7 — 3-step flow (flow modali) ═══ */
 function _badOpenFlow() {
-  if (typeof _admToast === 'function') _admToast('3-step akışı (P7) yakında...', 'ok');
+  _badCloseFlow();
+  var host = document.getElementById('bizPhone') || document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'badFlowModal';
+  m.className = 'bad-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _badCloseFlow(); };
+  m.innerHTML = '<div class="bad-modal"><div id="badFlowBody"></div></div>';
+  host.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+  _badRenderFlow();
+}
+
+function _badCloseFlow() {
+  var m = document.getElementById('badFlowModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
+}
+
+function _badRenderFlow() {
+  var body = document.getElementById('badFlowBody');
+  if (!body) return;
+
+  var titles = ['Silme Sebebi', 'Şifre Doğrulama', 'SMS Doğrulama'];
+  var h = '<div class="bad-flow-head">'
+    + '<div class="bad-flow-close" onclick="_badCloseFlow()"><iconify-icon icon="solar:close-circle-bold" style="font-size:22px;color:var(--text-muted)"></iconify-icon></div>'
+    + '<div style="flex:1"><div class="bad-flow-title">' + titles[_bad.step - 1] + '</div>'
+    + '<div class="bad-flow-sub">Adım ' + _bad.step + '/3 · 3 aşamalı güvenlik</div></div>'
+    + '</div>'
+    + '<div class="bad-step-dots">'
+    + [1,2,3].map(function(i){
+        return '<div class="bad-dot' + (i < _bad.step ? ' done' : i === _bad.step ? ' active' : '') + '"></div>';
+      }).join('')
+    + '</div>';
+
+  if (_bad.step === 1) h += _badFlowStep1();
+  else if (_bad.step === 2) h += _badFlowStep2();
+  else if (_bad.step === 3) h += _badFlowStep3();
+
+  body.innerHTML = h;
+}
+
+function _badFlowStep1() {
+  var h = '<div class="bad-flow-body">';
+  h += '<div class="bad-flow-intro">İşletmeni silme sebebini paylaş. Bir veya birden fazla seçebilirsin.</div>';
+  h += '<div class="bad-reason-grid">';
+  for (var i = 0; i < BIZ_DELETE_REASONS.length; i++) {
+    var r = BIZ_DELETE_REASONS[i];
+    var sel = !!_bad.selectedReasons[r.id];
+    h += '<div class="bad-chip' + (sel ? ' selected' : '') + '" onclick="_badToggleReason(\'' + r.id + '\')">'
+      + '<iconify-icon icon="' + r.icon + '" style="font-size:14px"></iconify-icon>'
+      + '<span>' + _badEsc(r.label) + '</span>'
+      + (sel ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:14px;color:#10B981"></iconify-icon>' : '')
+      + '</div>';
+  }
+  h += '</div>';
+  h += '<textarea class="bad-note" maxlength="300" placeholder="(Opsiyonel) Geri bildirimin..." oninput="_bad.note=this.value">' + _badEsc(_bad.note) + '</textarea>';
+
+  var valid = Object.keys(_bad.selectedReasons).filter(function(k){ return _bad.selectedReasons[k]; }).length > 0;
+  h += '<div class="bad-flow-footer">'
+    + '<button class="bad-btn-ghost" onclick="_badCloseFlow()">Vazgeç</button>'
+    + '<button class="bad-btn-danger-small' + (valid ? '' : ' disabled') + '"' + (valid ? ' onclick="_bad.step=2;_badRenderFlow()"' : '') + '>'
+    + 'Devam Et <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:13px"></iconify-icon></button>'
+    + '</div>';
+  h += '</div>';
+  return h;
+}
+
+function _badToggleReason(id) {
+  _bad.selectedReasons[id] = !_bad.selectedReasons[id];
+  _badRenderFlow();
+}
+
+function _badFlowStep2() {
+  return '<div class="bad-flow-body bad-flow-body--center">'
+    + '<div class="bad-verify-ico"><iconify-icon icon="solar:lock-keyhole-bold" style="font-size:40px;color:#8B5CF6"></iconify-icon></div>'
+    + '<div class="bad-verify-title">Şifre Doğrulama</div>'
+    + '<div class="bad-verify-sub">İşletme sahibi olduğunu doğrulamak için hesap şifreni gir.</div>'
+    + '<input type="password" class="bad-input" placeholder="İşletme şifresi" value="' + _badEsc(_bad.password) + '" oninput="_bad.password=this.value">'
+    + '<div class="bad-flow-footer">'
+    + '<button class="bad-btn-ghost" onclick="_bad.step=1;_badRenderFlow()">Geri</button>'
+    + '<button class="bad-btn-danger-small" onclick="if(_bad.password.length>=4){_bad.step=3;_badRenderFlow()}else if(typeof _admToast===\'function\')_admToast(\'Şifre en az 4 karakter\',\'err\')">'
+    + 'Devam Et <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:13px"></iconify-icon></button>'
+    + '</div></div>';
+}
+
+function _badFlowStep3() {
+  return '<div class="bad-flow-body bad-flow-body--center">'
+    + '<div class="bad-verify-ico"><iconify-icon icon="solar:shield-keyhole-bold" style="font-size:40px;color:#EF4444"></iconify-icon></div>'
+    + '<div class="bad-verify-title">SMS Doğrulama</div>'
+    + '<div class="bad-verify-sub">Kayıtlı telefona gönderilen <b>6 haneli kodu</b> gir.</div>'
+    + '<input type="text" class="bad-input bad-otp-input" maxlength="6" placeholder="• • • • • •" value="' + _badEsc(_bad.otp) + '" oninput="_bad.otp=this.value.replace(/\\D/g,\'\');this.value=_bad.otp">'
+    + '<button class="bad-btn-link" onclick="if(typeof _admToast===\'function\')_admToast(\'Kod yeniden gönderildi\',\'ok\')">Kodu Yeniden Gönder</button>'
+    + '<div class="bad-flow-footer">'
+    + '<button class="bad-btn-ghost" onclick="_bad.step=2;_badRenderFlow()">Geri</button>'
+    + '<button class="bad-btn-danger-small" onclick="if(_bad.otp.length===6){_badCompleteAccountDeletion()}else if(typeof _admToast===\'function\')_admToast(\'6 haneli kodu tam gir\',\'err\')">'
+    + '<iconify-icon icon="solar:trash-bin-trash-bold" style="font-size:13px"></iconify-icon>Hesabı Sil</button>'
+    + '</div></div>';
+}
+
+function _badCompleteAccountDeletion() {
+  var stats = (typeof BIZ_ACCOUNT_STATS !== 'undefined') ? BIZ_ACCOUNT_STATS : { walletTokens:0, branchCount:0 };
+  var now = new Date();
+  var deleteAt = new Date(now.getTime() + 30 * 86400000);
+
+  BIZ_ACCOUNT_DELETION_STATE = {
+    scheduledAt: now.toISOString(),
+    deleteAt: deleteAt.toISOString(),
+    reasons: Object.keys(_bad.selectedReasons).filter(function(k){ return _bad.selectedReasons[k]; }),
+    note: _bad.note || '',
+    tokenAtStart: stats.walletTokens,
+    branchCount: stats.branchCount
+  };
+
+  _badCloseFlow();
+  _bad.view = 'suspended';
+  _bad.step = 4;
+  _badRenderBody();
+
+  if (typeof _admToast === 'function') _admToast('Hesap askıya alındı · 30 gün içinde geri alabilirsin', 'ok');
 }
 
 function _badRenderSuspended() {
-  return '<div class="bad-wrap"><div class="bad-empty">Askıya alma ekranı (P7)</div></div>';
+  var s = BIZ_ACCOUNT_DELETION_STATE;
+  if (!s) return '<div class="bad-wrap"><div class="bad-empty">Askı bilgisi bulunamadı.</div></div>';
+
+  var daysLeft = Math.max(0, Math.ceil((new Date(s.deleteAt) - new Date()) / 86400000));
+  var deleteAt = new Date(s.deleteAt);
+  var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var dateStr = deleteAt.getDate() + ' ' + months[deleteAt.getMonth()] + ' ' + deleteAt.getFullYear();
+
+  var h = '<div class="bad-wrap">';
+  h += '<div class="bad-susp-bar">'
+    + '<iconify-icon icon="solar:siren-bold" style="font-size:17px;color:#EF4444"></iconify-icon>'
+    + '<div style="flex:1"><div class="bad-susp-bar-title"><b>' + daysLeft + ' gün</b> kaldı · Hesap silinecek</div>'
+    + '<div class="bad-susp-bar-sub">Silinme tarihi: ' + dateStr + '</div></div>'
+    + '<button class="bad-btn-primary bad-btn-small" onclick="_badCancelAccountDeletion()">Geri Al</button>'
+    + '</div>';
+
+  h += '<div class="bad-susp-card">'
+    + '<iconify-icon icon="solar:moon-sleep-bold" style="font-size:54px;color:#64748B"></iconify-icon>'
+    + '<div class="bad-susp-title">İşletme hesabı askıda</div>'
+    + '<div class="bad-susp-sub"><b>' + s.branchCount + ' şube</b>, tüm menüler ve <b>' + s.tokenAtStart + ' token</b> ' + dateStr + ' tarihinde silinecektir.</div>'
+    + '<div class="bad-countdown-num">' + daysLeft + '</div>'
+    + '<div class="bad-countdown-lbl">GÜN KALDI</div>'
+    + '<button class="bad-btn-primary bad-btn-wide" onclick="_badCancelAccountDeletion()">'
+    + '<iconify-icon icon="solar:restart-bold" style="font-size:15px"></iconify-icon>İşlemi İptal Et & Geri Dön</button>'
+    + '<div class="bad-susp-hint">31. günden itibaren giriş yapılamaz. Arşiv için <b>destek@yemekapp.com</b>.</div>'
+    + '</div>';
+  h += '</div>';
+  return h;
+}
+
+function _badCancelAccountDeletion() {
+  BIZ_ACCOUNT_DELETION_STATE = null;
+  if (typeof _admToast === 'function') _admToast('Hoş geldin! Hesabın ve tüm şubelerin tam aktif.', 'ok');
+  _bad.view = 'main';
+  _bad.step = 1;
+  _badRenderBody();
 }
 
 function _badRenderSuccess() {
-  // P7'de doldurulacak
+  // Başarı ekranı suspended view'a yönlendirildi; burası ileride modal eklenirse kullanılır
 }
