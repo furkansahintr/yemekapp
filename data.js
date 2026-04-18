@@ -1390,3 +1390,108 @@ var PAST_GROUP_ORDERS = [
     memberCount:8, total:1280, frequent:false
   }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   WALLET — Cüzdan (token, işlem geçmişi, share)
+   ═══════════════════════════════════════════════════════════ */
+
+// Admin-paramı (günlük share limiti — admin panelinden yönetilebilir)
+var WALLET_CONFIG = {
+  dailyShareLimit: 1000,    // Günde max 1000 token gönderilebilir
+  minShare: 10,
+  maxSingleShare: 500,
+  loadMin: 50,
+  loadPresets: [100, 250, 500, 1000, 2500],
+  exchangeRate: 1.0         // 1 Token = 1 TL
+};
+
+// Karşılıklı takipleşen arkadaşlar (Token Share için uygun)
+var USER_MUTUAL_FRIENDS = [
+  { id:'mf_01', name:'M. Salih',       handle:'@msalih',     avatar:'https://i.pravatar.cc/80?img=53', mutual:true,  badge:null     },
+  { id:'mf_02', name:'Zeynep K.',      handle:'@zeynepk',    avatar:'https://i.pravatar.cc/80?img=47', mutual:true,  badge:'⭐'     },
+  { id:'mf_03', name:'Burak Y.',       handle:'@burakyz',    avatar:'https://i.pravatar.cc/80?img=33', mutual:true,  badge:null     },
+  { id:'mf_04', name:'Elif D.',        handle:'@elifd',      avatar:'https://i.pravatar.cc/80?img=48', mutual:true,  badge:null     },
+  { id:'mf_05', name:'Can Ö.',         handle:'@cano',       avatar:'https://i.pravatar.cc/80?img=15', mutual:true,  badge:'⭐'     },
+  { id:'mf_06', name:'Selin A.',       handle:'@selina',     avatar:'https://i.pravatar.cc/80?img=36', mutual:true,  badge:null     },
+  { id:'mf_07', name:'Mehmet Ö.',      handle:'@mehmetoz',   avatar:'https://i.pravatar.cc/80?img=68', mutual:false, badge:null     },
+  { id:'mf_08', name:'Deniz K.',       handle:'@denizk',     avatar:'https://i.pravatar.cc/80?img=29', mutual:true,  badge:null     }
+];
+
+// İşlem geçmişi — kronolojik (yeni üstte)
+// direction: 'in' (gelen) | 'out' (giden)
+// source: 'load' | 'share' | 'order' | 'reservation' | 'premium' | 'refund' | 'system' | 'achievement'
+var WALLET_TRANSACTIONS = [
+  {
+    id:'tx_041', direction:'out', source:'share', amount:50,
+    counterparty:'Zeynep K.', counterpartyAvatar:'https://i.pravatar.cc/80?img=47',
+    note:'Dünkü yemek için 🍕',
+    balanceBefore:290, balanceAfter:240,
+    date:'2026-04-18T11:32:00', channel:'Token Share'
+  },
+  {
+    id:'tx_040', direction:'in', source:'achievement', amount:25,
+    counterparty:'Başarılar', counterpartyAvatar:null,
+    note:'Gece Kuşu rozeti hediyesi',
+    balanceBefore:265, balanceAfter:290,
+    date:'2026-04-17T23:10:00', channel:'Sistem'
+  },
+  {
+    id:'tx_039', direction:'out', source:'reservation', amount:50,
+    counterparty:'Burger Lab', counterpartyAvatar:'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=80&h=80&fit=crop',
+    note:'Rezervasyon bloke · Masa 5',
+    balanceBefore:315, balanceAfter:265,
+    date:'2026-04-17T14:25:00', channel:'Rezervasyon'
+  },
+  {
+    id:'tx_038', direction:'in', source:'load', amount:250,
+    counterparty:'Yükleme', counterpartyAvatar:null,
+    note:'Kredi kartı · Visa •••• 4821',
+    balanceBefore:65, balanceAfter:315,
+    date:'2026-04-16T18:50:00', channel:'Kart Yükleme'
+  },
+  {
+    id:'tx_037', direction:'out', source:'order', amount:85,
+    counterparty:'Kebapçı Hacı', counterpartyAvatar:'https://i.pravatar.cc/80?img=58',
+    note:'İskender Porsiyon · Sipariş #4201',
+    balanceBefore:150, balanceAfter:65,
+    date:'2026-04-15T20:18:00', channel:'Sipariş'
+  },
+  {
+    id:'tx_036', direction:'in', source:'share', amount:50,
+    counterparty:'M. Salih', counterpartyAvatar:'https://i.pravatar.cc/80?img=53',
+    note:'Maç akşamı ödeme 🏆',
+    balanceBefore:100, balanceAfter:150,
+    date:'2026-04-13T22:05:00', channel:'Token Share'
+  },
+  {
+    id:'tx_035', direction:'out', source:'premium', amount:99,
+    counterparty:'Premium', counterpartyAvatar:null,
+    note:'Premium üyelik · 1 ay',
+    balanceBefore:199, balanceAfter:100,
+    date:'2026-04-12T09:30:00', channel:'Abonelik'
+  },
+  {
+    id:'tx_034', direction:'in', source:'refund', amount:45,
+    counterparty:'Pizza House', counterpartyAvatar:null,
+    note:'İade · Sipariş #4189 iptal',
+    balanceBefore:154, balanceAfter:199,
+    date:'2026-04-10T13:22:00', channel:'İade'
+  },
+  {
+    id:'tx_033', direction:'out', source:'order', amount:120,
+    counterparty:'La Pasta', counterpartyAvatar:null,
+    note:'Carbonara · Sipariş #4175',
+    balanceBefore:274, balanceAfter:154,
+    date:'2026-04-08T20:15:00', channel:'Sipariş'
+  },
+  {
+    id:'tx_032', direction:'in', source:'load', amount:200,
+    counterparty:'Yükleme', counterpartyAvatar:null,
+    note:'Kredi kartı · Mastercard •••• 9134',
+    balanceBefore:74, balanceAfter:274,
+    date:'2026-04-05T11:40:00', channel:'Kart Yükleme'
+  }
+];
+
+// Günlük share kullanımı (bugün gönderilen toplam)
+var WALLET_DAILY_SHARED = 50;   // WALLET_CONFIG.dailyShareLimit üstü engellenir
