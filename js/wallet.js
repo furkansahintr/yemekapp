@@ -1079,6 +1079,45 @@ function _wltInjectStyles() {
     '.wlt-success-box{width:100%;background:var(--bg-phone-secondary);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left;margin-bottom:12px}'
   );
 
+  // ── P5.6 Share akışı ──
+  parts.push(
+    '/* Search */',
+    '.wlt-search{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-phone-secondary);border-radius:12px}',
+    '.wlt-search input{flex:1;border:none;background:transparent;color:var(--text-primary);font-size:13px;outline:none}',
+    '/* Friend list */',
+    '.wlt-friend-list{display:flex;flex-direction:column;gap:7px;max-height:440px;overflow-y:auto}',
+    '.wlt-friend-row{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--bg-phone);border:1px solid var(--border-soft);border-radius:12px;cursor:pointer;transition:transform .15s}',
+    '.wlt-friend-row:active{transform:scale(.98)}',
+    '.wlt-friend-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--bg-phone-secondary);flex-shrink:0}',
+    '.wlt-friend-name{font-size:13px;font-weight:700;color:var(--text-primary);display:inline-flex;align-items:center;gap:5px}',
+    '.wlt-friend-badge{font-size:11px}',
+    '.wlt-friend-handle{font-size:10.5px;color:var(--text-muted);margin-top:2px;display:inline-flex;align-items:center;gap:4px}',
+    '.wlt-mutual-pill{display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;color:#8B5CF6;background:#8B5CF615;padding:1px 6px;border-radius:5px;letter-spacing:.3px}',
+    '.wlt-empty-small{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 14px;color:var(--text-muted);font-size:12px;text-align:center}',
+    '/* Recipient summary (step 2) */',
+    '.wlt-recipient{display:flex;align-items:center;gap:10px;padding:11px 12px;background:#8B5CF608;border:1px solid #8B5CF630;border-radius:12px}',
+    '/* Limit info 3-col */',
+    '.wlt-limit-info{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--bg-phone-secondary);border-radius:12px;padding:11px 10px}',
+    '.wlt-limit-info > div{text-align:center}',
+    '.wlt-limit-info span{display:block;font-size:9.5px;color:var(--text-muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-bottom:3px}',
+    '.wlt-limit-info b{display:block;font-size:13px;font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums}',
+    '/* Note */',
+    '.wlt-note-wrap{display:flex;flex-direction:column;gap:4px}',
+    '.wlt-note-lbl{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;padding-left:2px}',
+    '.wlt-note-wrap .wlt-inp{background:var(--bg-phone)}',
+    '.wlt-note-counter{font-size:10px;color:var(--text-muted);text-align:right;font-variant-numeric:tabular-nums}',
+    '/* Error note */',
+    '.wlt-err-note{display:flex;align-items:center;gap:6px;padding:9px 11px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;color:#991B1B;font-size:11.5px;font-weight:600}',
+    '/* Confirm hero (step 3) */',
+    '.wlt-confirm-hero{padding:18px 14px 14px;border-radius:16px;background:linear-gradient(135deg,#8B5CF610,#A855F710);border:1px solid #8B5CF625;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}',
+    '.wlt-confirm-amt{font-size:34px;font-weight:800;color:#7C3AED;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 1px 2px rgba(124,58,237,.15)}',
+    '.wlt-confirm-amt span{font-size:24px;margin-left:2px}',
+    '.wlt-confirm-sub{font-size:12px;color:var(--text-muted);font-weight:600;margin-top:2px}',
+    '/* Warn note */',
+    '.wlt-warn-note{display:flex;align-items:center;gap:7px;padding:10px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.22);border-radius:10px;font-size:11.5px;color:#92400E;line-height:1.5}',
+    '.wlt-warn-note b{font-weight:700}'
+  );
+
   s.textContent = parts.join('\n');
   document.head.appendChild(s);
 }
