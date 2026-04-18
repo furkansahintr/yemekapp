@@ -1071,3 +1071,80 @@ const USER_EMPLOYEE_ANNOUNCEMENTS = [
   { id: 'ann_2', empId: 'emp_007', title: 'Yeni kahve çeşitleri', message: 'Cold brew ve nitro seçenekleri eklendi.', date: '2026-04-09', businessName: 'Kahve Dünyası', isRead: true },
   { id: 'ann_10', empId: 'emp_008', title: 'Sezon balıkları', message: 'Levrek ve çipura sezonu başladı. Müşterilere önerin.', date: '2026-04-10', businessName: 'Balıkçı Hasan', isRead: false }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   BAŞARILAR KOLEKSİYONU — Rozet Kataloğu + User Progress
+   ═══════════════════════════════════════════════════════════ */
+
+var USER_ACHIEVEMENTS_CATALOG = [
+  /* Sosyal Etkileşim */
+  { id:'social_bronze', category:'social', tier:'bronze', label:'Bronz Sosyal',
+    desc:'Haftada 5 içerik paylaşarak topluluğa ilk adımını at!',
+    icon:'solar:medal-ribbon-star-bold', target:5, metric:'weekly_posts', reward:null, rarity:'common' },
+  { id:'social_silver', category:'social', tier:'silver', label:'Gümüş Sosyal',
+    desc:'Haftada 8 içerik paylaşarak etkileşimi artır, dikkatleri üzerine çek.',
+    icon:'solar:medal-ribbon-bold', target:8, metric:'weekly_posts', reward:null, rarity:'uncommon' },
+  { id:'social_gold', category:'social', tier:'gold', label:'Altın Sosyal',
+    desc:'Haftada 10 içerik paylaşarak topluluğun parlayan yıldızı ol!',
+    icon:'solar:medal-star-bold', target:10, metric:'weekly_posts', reward:{ type:'token', amount:10 }, rarity:'rare' },
+
+  /* Eleştirmen */
+  { id:'critic_bronze', category:'critic', tier:'bronze', label:'Bronz Eleştirmen',
+    desc:'Haftada 5 yorum yap, fikirlerinle topluluğa rehberlik et.',
+    icon:'solar:pen-new-square-bold', target:5, metric:'weekly_reviews', reward:null, rarity:'common' },
+  { id:'critic_silver', category:'critic', tier:'silver', label:'Gümüş Eleştirmen',
+    desc:'Haftada 8 yorum yap, detaylı analizlerinle fark yarat.',
+    icon:'solar:pen-bold', target:8, metric:'weekly_reviews', reward:null, rarity:'uncommon' },
+  { id:'critic_gold', category:'critic', tier:'gold', label:'Altın Eleştirmen',
+    desc:'Haftada 10 yorum yap, mekanların ve şeflerin çekindiği bir kalem ol!',
+    icon:'solar:feather-bold', target:10, metric:'weekly_reviews', reward:null, rarity:'rare' },
+  { id:'critic_gurme',  category:'critic', tier:'prestige', label:'Gurme',
+    desc:'Haftada 15 ve üzeri yorum yaparak platformun en saygın eleştirmenleri arasına gir.',
+    icon:'solar:cup-star-bold', target:15, metric:'weekly_reviews', reward:{ type:'frame', value:'gurme' }, rarity:'legendary' },
+
+  /* Lezzet Kaşifi */
+  { id:'taste_explorer', category:'order', tier:'bronze', label:'Lezzet Kaşifi',
+    desc:'Haftada 3 sipariş ver, yeni lezzet duraklarını keşfet!',
+    icon:'solar:compass-bold', target:3, metric:'weekly_orders', reward:{ type:'token', amount:50 }, rarity:'common' },
+  { id:'taste_gourmet', category:'order', tier:'silver', label:'Ağzının Tadını Biliyor',
+    desc:'Haftada 5 sipariş ver, damak tadını konuştur.',
+    icon:'solar:confetti-minimalistic-bold', target:5, metric:'weekly_orders', reward:null, rarity:'uncommon' },
+  { id:'taste_real',    category:'order', tier:'gold', label:'Gerçek Gurme',
+    desc:'Haftada 8 sipariş ver, gerçek bir yemek tutkunu olduğunu kanıtla!',
+    icon:'solar:crown-bold', target:8, metric:'weekly_orders', reward:null, rarity:'rare' },
+
+  /* Stratejik */
+  { id:'super_chef', category:'special', tier:'prestige', label:'Süper Şef',
+    desc:'Paylaştığın bir tarif 100 kişi tarafından kaydedilirse bu rozeti kazanırsın.',
+    icon:'solar:chef-hat-heart-bold', target:100, metric:'recipe_saves', reward:null, rarity:'legendary' },
+  { id:'loyal_customer', category:'special', tier:'gold', label:'Sadık Müşteri',
+    desc:'Aynı işletmeden ayda 4 kez sipariş vererek işletmenin favori müşterisi ol.',
+    icon:'solar:heart-pulse-bold', target:4, metric:'monthly_same_biz_orders', reward:null, rarity:'rare' },
+  { id:'night_owl', category:'special', tier:'silver', label:'Gece Kuşu',
+    desc:'Gece 00:00 - 05:00 saatleri arasında 3 sipariş vererek açlığa meydan oku.',
+    icon:'solar:moon-stars-bold', target:3, metric:'weekly_night_orders', reward:null, rarity:'uncommon' },
+  { id:'explorer_soul', category:'special', tier:'gold', label:'Kaşif Ruhu',
+    desc:'Daha önce hiç sipariş almamış yeni bir işletmeden sipariş vererek ilk keşfi sen yap.',
+    icon:'solar:planet-bold', target:1, metric:'first_discovery', reward:null, rarity:'rare' }
+];
+
+var USER_ACHIEVEMENT_CATEGORIES = [
+  { id:'social',  label:'Sosyal Etkileşim', sub:'İçerik Şampiyonları',   icon:'solar:users-group-two-rounded-bold', color:'#3B82F6' },
+  { id:'critic',  label:'Eleştirmen',        sub:'Gurme Yorumcular',       icon:'solar:pen-bold',                       color:'#EC4899' },
+  { id:'order',   label:'Lezzet Kaşifi',     sub:'Sipariş Ustaları',       icon:'solar:compass-bold',                   color:'#F59E0B' },
+  { id:'special', label:'Özel Başarılar',    sub:'Nadir rozetler',          icon:'solar:stars-bold',                     color:'#8B5CF6' }
+];
+
+/* Mevcut kullanıcının haftalık progress + koleksiyonu */
+var USER_ACHIEVEMENT_PROGRESS = {
+  weekly_posts:            6,   // Bronz tamamlandı, Gümüşte
+  weekly_reviews:          7,   // Bronz tamamlandı, Gümüşte
+  weekly_orders:           3,   // Lezzet Kaşifi yeni tamamlandı
+  weekly_night_orders:     1,
+  recipe_saves:            72,  // Süper Şef için 28 kaldı
+  monthly_same_biz_orders: 2,
+  first_discovery:         0,
+  /* Haftalık sayaç resetlenir; earnedIds kalıcıdır */
+  weekStart: '2026-04-14T00:00:00',  // Pazartesi 14 Nisan 2026
+  earnedIds: ['social_bronze','critic_bronze','taste_explorer','night_owl']
+};
