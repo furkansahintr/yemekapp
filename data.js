@@ -1495,3 +1495,54 @@ var WALLET_TRANSACTIONS = [
 
 // Günlük share kullanımı (bugün gönderilen toplam)
 var WALLET_DAILY_SHARED = 50;   // WALLET_CONFIG.dailyShareLimit üstü engellenir
+
+/* ═══════════════════════════════════════════════════════════
+   ACCOUNT DELETION — Hesap Silme / Veda Akışı
+   Kayıp önleme sayfası · anket · 30 gün askıya alma
+   ═══════════════════════════════════════════════════════════ */
+
+// Kullanıcıyı ikna eden duygusal notlar (sayfa boyunca dağılır)
+var DELETE_RETENTION_MESSAGES = [
+  {
+    icon:'solar:chef-hat-heart-bold', tone:'#F97316',
+    title:'500 tarif seni bekliyor',
+    body:'Henüz tatmadığın onlarca şefin özel tarifi koleksiyonumuzda.'
+  },
+  {
+    icon:'solar:cup-star-bold', tone:'#F59E0B',
+    title:'Rozetlerini kaybedeceksin',
+    body:'Kazandığın 4 rozet ve ilerlediğin haftalık görevler silinecek.'
+  },
+  {
+    icon:'solar:users-group-rounded-bold', tone:'#EC4899',
+    title:'Arkadaşların seni özleyecek',
+    body:'Ortak grup siparişlerin ve takipleştiğin 7 arkadaşın var.'
+  },
+  {
+    icon:'solar:calendar-mark-bold', tone:'#8B5CF6',
+    title:'Aktif 3 rezervasyonun var',
+    body:'İptal etmediğin rezervasyonlarda token blokesi yanabilir.'
+  },
+  {
+    icon:'solar:medal-ribbons-star-bold', tone:'#10B981',
+    title:'6 ay emek verdin',
+    body:'Uygulamadaki 248 sipariş ve 72 tarif kaydın geçmişinde.'
+  }
+];
+
+// "Neden gidiyorsun?" anketi — admin-incident'a feed
+var DELETE_SURVEY_OPTIONS = [
+  { id:'slow',         icon:'solar:clock-circle-linear',    label:'Uygulama yavaş çalışıyor' },
+  { id:'not_found',    icon:'solar:magnifer-linear',        label:'Aradığımı bulamıyorum' },
+  { id:'notif',        icon:'solar:bell-off-linear',        label:'Çok bildirim geliyor' },
+  { id:'expensive',    icon:'solar:tag-price-linear',       label:'Fiyatlar yüksek' },
+  { id:'few_options',  icon:'solar:shop-linear',            label:'Yeterli işletme yok' },
+  { id:'delivery',     icon:'solar:delivery-linear',        label:'Teslimat sorunları yaşadım' },
+  { id:'duplicate',    icon:'solar:copy-linear',            label:'Başka hesabım var' },
+  { id:'other',        icon:'solar:chat-round-line-linear', label:'Diğer / belirtmek istemiyorum' }
+];
+
+// Kullanıcının silme durumu (null = aktif; obje = askıya alındı)
+var ACCOUNT_DELETION_STATE = null;
+// Örnek aktif askı: { scheduledAt: '2026-04-18T12:00:00', deleteAt: '2026-05-18T12:00:00', reasons:['slow','notif'], note:'' }
+
