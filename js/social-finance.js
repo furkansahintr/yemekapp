@@ -88,6 +88,7 @@ function _sfnRender() {
     + '<div class="sfn-title"><iconify-icon icon="solar:users-group-two-rounded-bold" style="font-size:17px;color:#8B5CF6"></iconify-icon>Grup İşlemleri & Hesap Bölme</div>'
     + '<div class="sfn-sub">Arkadaşlarınla ortak sepet & hesap bölüşümü</div>'
     + '</div>'
+    + (_sfn.tab === 'group' ? '<div class="sfn-back sfn-menu-btn" onclick="_sfnToggleMenu(event)"><iconify-icon icon="solar:menu-dots-bold" style="font-size:20px"></iconify-icon></div>' : '')
     + '</div>';
 
   // Tabs
@@ -165,6 +166,9 @@ function _sfnRenderGroup() {
     + '<iconify-icon icon="solar:link-bold" style="font-size:15px"></iconify-icon>Linki Kopyala</button>'
     + '</div>';
 
+  // Üyeler bölümü (hazır durumu, lider yetkileri, çıkarma)
+  h += _sfnRenderMembers(g);
+
   // Ödeme ayrımı toggle
   h += '<div class="sfn-section-lbl"><iconify-icon icon="solar:card-bold" style="font-size:13px"></iconify-icon>Ödeme Ayrımı</div>'
     + '<div class="sfn-pay-toggle">'
@@ -199,10 +203,25 @@ function _sfnRenderGroup() {
   h += '</div>';
 
   // Toplam ve aksiyon
+  var activeMems = _sfnActiveMembers(g);
+  var notReadyCount = activeMems.filter(function(id){ return !_sfnMemberState(g, id).ready; }).length;
+  var allReady = notReadyCount === 0 && activeMems.length > 0;
+  var finalizeBtn;
+  if (_sfnIsLeader()) {
+    finalizeBtn = '<button class="sfn-btn-primary' + (allReady ? '' : ' disabled') + '"' + (allReady ? ' onclick="_sfnOpenPayment(\'group\')"' : '') + ' title="' + (allReady ? 'Siparişi tamamla' : notReadyCount + ' üye hazır değil') + '">'
+      + '<iconify-icon icon="solar:check-circle-bold" style="font-size:15px"></iconify-icon>'
+      + (allReady ? 'Siparişi Tamamla' : notReadyCount + ' Bekleniyor')
+      + '</button>';
+  } else {
+    var meSt = _sfnMemberState(g, 'u_me');
+    finalizeBtn = '<button class="sfn-btn-primary' + (meSt.ready ? '' : '') + '" onclick="_sfnToggleMyReady()">'
+      + '<iconify-icon icon="' + (meSt.ready ? 'solar:close-circle-bold' : 'solar:check-circle-bold') + '" style="font-size:15px"></iconify-icon>'
+      + (meSt.ready ? 'Hazırım İptal' : 'Ben Hazırım')
+      + '</button>';
+  }
   h += '<div class="sfn-total-box">'
     + '<div><span class="sfn-total-lbl">TOPLAM</span><span class="sfn-total-val">' + _sfnFmtTL(total) + '</span></div>'
-    + '<button class="sfn-btn-primary" onclick="_sfnOpenPayment(\'group\')">'
-    + '<iconify-icon icon="solar:card-bold" style="font-size:15px"></iconify-icon>Ödeme Yap</button>'
+    + finalizeBtn
     + '</div>';
 
   h += '<div class="sfn-tip">'
@@ -446,8 +465,10 @@ function _sfnReactivate(id) {
 function _sfnOpenPayment(mode, amount) {
   _sfnCloseModal();
   var total = 0;
-  if (mode === 'group') total = _sfnGroupTotal(ACTIVE_GROUP_ORDER);
-  else if (mode === 'split') total = amount || 0;
+  if (mode === 'group') {
+    total = _sfnGroupTotal(ACTIVE_GROUP_ORDER);
+    ACTIVE_GROUP_ORDER.phase = 'payment';
+  } else if (mode === 'split') total = amount || 0;
 
   var tokenMax = Math.min(USER_WALLET.tokens, total);
   _sfn.tokenAmount = _sfn.useToken ? tokenMax : 0;
@@ -588,6 +609,306 @@ function _sfnSubmitPayment(total, mode) {
     + '</div>';
   phone.appendChild(m);
   requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MEMBER STATE, READY, LEAVE, KICK, TRANSFER, DISSOLVE
+   ═══════════════════════════════════════════════════════════ */
+function _sfnMemberState(g, id) {
+  g.memberStates = g.memberStates || {};
+  if (!g.memberStates[id]) g.memberStates[id] = { ready:false, status:'active', joinedAt:new Date().toISOString() };
+  return g.memberStates[id];
+}
+function _sfnIsLeader() {
+  return ACTIVE_GROUP_ORDER.leaderId === 'u_me';
+}
+function _sfnActiveMembers(g) {
+  return g.members.filter(function(id){ return _sfnMemberState(g, id).status === 'active'; });
+}
+function _sfnLeftMembers(g) {
+  return g.members.filter(function(id){ return _sfnMemberState(g, id).status === 'left'; });
+}
+function _sfnRemoveItemsByUser(g, userId) {
+  var before = g.items.length;
+  g.items = g.items.filter(function(it){ return it.addedBy !== userId; });
+  return before - g.items.length;
+}
+
+/* ─ My ready toggle ─ */
+function _sfnToggleMyReady() {
+  var g = ACTIVE_GROUP_ORDER;
+  var st = _sfnMemberState(g, 'u_me');
+  st.ready = !st.ready;
+  _sfnRenderBody();
+  if (typeof _admToast === 'function') _admToast(st.ready ? 'Hazır durumun aktif' : 'Hazır durumun iptal edildi', 'ok');
+}
+
+/* ─ Leader: Nudge ─ */
+function _sfnNudge(userId) {
+  var f = _sfnFriend(userId);
+  if (typeof _admToast === 'function') _admToast(f.name + '\'e dürtü gönderildi', 'ok');
+}
+
+/* ─ Leader: Kick member ─ */
+function _sfnKick(userId) {
+  var f = _sfnFriend(userId);
+  _sfnConfirmModal({
+    icon: 'solar:user-cross-bold', iconColor:'#EF4444',
+    title: f.name + ' gruptan çıkarılsın mı?',
+    message: 'Bu kullanıcının sepete eklediği ürünler de temizlenecek.',
+    danger: 'Evet, çıkar',
+    onConfirm: function(){
+      var g = ACTIVE_GROUP_ORDER;
+      var removed = _sfnRemoveItemsByUser(g, userId);
+      _sfnMemberState(g, userId).status = 'left';
+      _sfnCloseConfirm();
+      _sfnRenderBody();
+      if (typeof _admToast === 'function') _admToast(f.name + ' çıkarıldı' + (removed ? ' · ' + removed + ' ürün temizlendi' : ''), 'ok');
+    }
+  });
+}
+
+/* ─ Self: Leave group (smart path by phase + role + ready state) ─ */
+function _sfnLeaveRequest() {
+  var g = ACTIVE_GROUP_ORDER;
+  var me = _sfnMemberState(g, 'u_me');
+
+  // 1) Payment phase — critical warning
+  if (g.phase === 'payment') {
+    _sfnConfirmModal({
+      icon:'solar:danger-triangle-bold', iconColor:'#EF4444',
+      title:'Ödeme aşamasındasınız',
+      message:'Ayrılırsanız siparişiniz iptal edilecektir. Devam etmek istiyor musunuz?',
+      danger:'Ayrıl ve iptal et',
+      onConfirm: function(){ _sfnCloseConfirm(); _sfnLeaveExecute(true); }
+    });
+    return;
+  }
+
+  // 2) Leader → ask transfer or dissolve
+  if (_sfnIsLeader()) {
+    _sfnLeaderLeaveModal();
+    return;
+  }
+
+  // 3) Ready-locked → must cancel ready first
+  if (me.ready) {
+    _sfnConfirmModal({
+      icon:'solar:lock-keyhole-bold', iconColor:'#F59E0B',
+      title:'Önce "Hazırım" durumunu iptal et',
+      message:'Siparişini onayladıktan sonra ayrılmak için önce hazır durumunu kaldırman gerekiyor. Bu, liderin yanlışlıkla onay vermesini önler.',
+      cancelLabel:'Vazgeç',
+      primary:'Hazırım\'ı İptal Et',
+      onConfirm: function(){
+        me.ready = false;
+        _sfnCloseConfirm();
+        _sfnRenderBody();
+        // Sonra yeniden leave'e girsin — kullanıcı bilinçli ikinci tık
+        if (typeof _admToast === 'function') _admToast('Hazır durumu kaldırıldı · tekrar çık\'a bas', 'ok');
+      }
+    });
+    return;
+  }
+
+  // 4) Normal lobby leave — simple confirm
+  _sfnConfirmModal({
+    icon:'solar:exit-bold', iconColor:'#EF4444',
+    title:'Gruptan ayrılmak istiyor musun?',
+    message:'Sepete eklediğin ürünler gruptan kaldırılacak.',
+    danger:'Gruptan Ayrıl',
+    onConfirm: function(){ _sfnCloseConfirm(); _sfnLeaveExecute(false); }
+  });
+}
+
+function _sfnLeaveExecute(wasPayment) {
+  var g = ACTIVE_GROUP_ORDER;
+  _sfnRemoveItemsByUser(g, 'u_me');
+  _sfnMemberState(g, 'u_me').status = 'left';
+  if (typeof _admToast === 'function') _admToast(wasPayment ? 'Sipariş iptal edildi · gruptan ayrıldın' : 'Gruptan ayrıldın · sepetin temizlendi', 'ok');
+  _sfnClose();
+}
+
+/* ─ Leader leaves: transfer or dissolve ─ */
+function _sfnLeaderLeaveModal() {
+  var g = ACTIVE_GROUP_ORDER;
+  var others = _sfnActiveMembers(g).filter(function(id){ return id !== 'u_me'; });
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'sfnConfirmModal';
+  m.className = 'sfn-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _sfnCloseConfirm(); };
+
+  var memberList = '';
+  for (var i = 0; i < others.length; i++) {
+    var f = _sfnFriend(others[i]);
+    memberList += '<div class="sfn-xfer-row" onclick="_sfnTransferLeader(\'' + others[i] + '\')">'
+      + '<img class="sfn-xfer-avatar" src="' + f.avatar + '" alt="">'
+      + '<div style="flex:1"><div class="sfn-xfer-name">' + _sfnEsc(f.name) + '</div>'
+      + '<div class="sfn-xfer-sub">Lider olarak ata</div></div>'
+      + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-muted)"></iconify-icon>'
+      + '</div>';
+  }
+
+  m.innerHTML = '<div class="sfn-modal sfn-confirm-modal">'
+    + '<div class="sfn-confirm-head">'
+    + '<div class="sfn-confirm-ico" style="background:rgba(139,92,246,.12);color:#8B5CF6"><iconify-icon icon="solar:crown-bold" style="font-size:24px"></iconify-icon></div>'
+    + '<div><div class="sfn-confirm-title">Grubu nasıl bırakmak istersin?</div>'
+    + '<div class="sfn-confirm-msg">Liderliği bir üyeye devredebilir veya grubu tamamen dağıtabilirsin.</div></div>'
+    + '</div>'
+    + (others.length > 0 ? '<div class="sfn-confirm-section-lbl">Liderliği Devret</div><div class="sfn-xfer-list">' + memberList + '</div>' : '<div class="sfn-confirm-msg" style="padding:8px 0">Grupta başka üye yok — sadece dağıtabilirsin.</div>')
+    + '<div class="sfn-confirm-actions">'
+    + '<button class="sfn-confirm-btn sfn-confirm-btn--ghost" onclick="_sfnCloseConfirm()">Vazgeç</button>'
+    + '<button class="sfn-confirm-btn sfn-confirm-btn--danger" onclick="_sfnDissolveGroup()">Grubu Dağıt</button>'
+    + '</div>'
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+
+function _sfnTransferLeader(newId) {
+  var g = ACTIVE_GROUP_ORDER;
+  g.leaderId = newId;
+  var newLeader = _sfnFriend(newId);
+  _sfnRemoveItemsByUser(g, 'u_me');
+  _sfnMemberState(g, 'u_me').status = 'left';
+  _sfnCloseConfirm();
+  if (typeof _admToast === 'function') _admToast('Liderlik ' + newLeader.name + '\'e devredildi · gruptan ayrıldın', 'ok');
+  _sfnClose();
+}
+
+function _sfnDissolveGroup() {
+  _sfnConfirmModal({
+    icon:'solar:bomb-minimalistic-bold', iconColor:'#EF4444',
+    title:'Grubu dağıt',
+    message:'Tüm üyelere bildirim gidecek ve sepet silinecek. Geri alınamaz.',
+    danger:'Dağıt',
+    onConfirm: function(){
+      var g = ACTIVE_GROUP_ORDER;
+      g.items = [];
+      for (var i = 0; i < g.members.length; i++) _sfnMemberState(g, g.members[i]).status = 'left';
+      _sfnCloseConfirm();
+      if (typeof _admToast === 'function') _admToast('Grup dağıtıldı · üyelere bildirim gitti', 'ok');
+      _sfnClose();
+    }
+  });
+}
+
+/* ═══ Generic confirm modal ═══ */
+function _sfnConfirmModal(opts) {
+  _sfnCloseConfirm();
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'sfnConfirmModal';
+  m.className = 'sfn-modal-backdrop';
+  m.onclick = function(e){ if (e.target === m) _sfnCloseConfirm(); };
+  var actions = '';
+  if (opts.danger) {
+    actions = '<button class="sfn-confirm-btn sfn-confirm-btn--ghost" onclick="_sfnCloseConfirm()">' + (opts.cancelLabel || 'Vazgeç') + '</button>'
+      + '<button class="sfn-confirm-btn sfn-confirm-btn--danger" id="sfnConfirmOK">' + opts.danger + '</button>';
+  } else {
+    actions = '<button class="sfn-confirm-btn sfn-confirm-btn--ghost" onclick="_sfnCloseConfirm()">' + (opts.cancelLabel || 'Vazgeç') + '</button>'
+      + '<button class="sfn-confirm-btn sfn-confirm-btn--primary" id="sfnConfirmOK">' + (opts.primary || 'Tamam') + '</button>';
+  }
+  m.innerHTML = '<div class="sfn-modal sfn-confirm-modal">'
+    + '<div class="sfn-confirm-head">'
+    + '<div class="sfn-confirm-ico" style="background:' + opts.iconColor + '18;color:' + opts.iconColor + '"><iconify-icon icon="' + opts.icon + '" style="font-size:24px"></iconify-icon></div>'
+    + '<div><div class="sfn-confirm-title">' + opts.title + '</div>'
+    + '<div class="sfn-confirm-msg">' + opts.message + '</div></div>'
+    + '</div>'
+    + '<div class="sfn-confirm-actions">' + actions + '</div>'
+    + '</div>';
+  phone.appendChild(m);
+  var btn = m.querySelector('#sfnConfirmOK');
+  if (btn) btn.onclick = opts.onConfirm;
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+function _sfnCloseConfirm() {
+  var m = document.getElementById('sfnConfirmModal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 240);
+}
+
+/* ═══ Header 3-dot menu ═══ */
+function _sfnToggleMenu(ev) {
+  if (ev) ev.stopPropagation();
+  var ex = document.getElementById('sfnMenuPop');
+  if (ex) { ex.remove(); return; }
+  var g = ACTIVE_GROUP_ORDER;
+  var me = _sfnMemberState(g, 'u_me');
+  var items = '';
+  items += '<div class="sfn-menu-item" onclick="_sfnToggleMyReady();_sfnToggleMenu()">'
+    + '<iconify-icon icon="' + (me.ready ? 'solar:close-circle-bold' : 'solar:check-circle-bold') + '" style="font-size:16px;color:' + (me.ready ? '#F59E0B' : '#22C55E') + '"></iconify-icon>'
+    + '<span>' + (me.ready ? 'Hazır Durumumu İptal Et' : 'Ben Hazırım') + '</span></div>';
+  if (_sfnIsLeader()) {
+    items += '<div class="sfn-menu-item" onclick="_sfnToggleMenu();_sfnDissolveGroup()">'
+      + '<iconify-icon icon="solar:bomb-minimalistic-bold" style="font-size:16px;color:#EF4444"></iconify-icon>'
+      + '<span>Grubu Dağıt</span></div>';
+  }
+  items += '<div class="sfn-menu-item" onclick="_sfnToggleMenu();_sfnLeaveRequest()">'
+    + '<iconify-icon icon="solar:exit-bold" style="font-size:16px;color:#EF4444"></iconify-icon>'
+    + '<span>Gruptan Ayrıl</span></div>';
+  var pop = document.createElement('div');
+  pop.id = 'sfnMenuPop';
+  pop.className = 'sfn-menu-pop';
+  pop.innerHTML = items;
+  var overlay = document.getElementById('sfnOverlay');
+  if (overlay) overlay.appendChild(pop);
+  // Close on outside click
+  setTimeout(function(){
+    document.addEventListener('click', _sfnMenuOutsideClose, { once:true });
+  }, 0);
+}
+function _sfnMenuOutsideClose(e) {
+  var pop = document.getElementById('sfnMenuPop');
+  if (pop && !pop.contains(e.target)) pop.remove();
+}
+
+/* ═══ Members section (Users view inside group tab) ═══ */
+function _sfnRenderMembers(g) {
+  var h = '<div class="sfn-section-lbl"><iconify-icon icon="solar:users-group-rounded-bold" style="font-size:13px"></iconify-icon>Üyeler <span class="sfn-lbl-badge">' + _sfnActiveMembers(g).length + '/' + g.members.length + '</span></div>';
+  h += '<div class="sfn-members-list">';
+  for (var i = 0; i < g.members.length; i++) {
+    var id = g.members[i];
+    var f = _sfnFriend(id);
+    var st = _sfnMemberState(g, id);
+    var isMe = id === 'u_me';
+    var isLeader = g.leaderId === id;
+    var left = st.status === 'left';
+
+    var badges = '';
+    if (isLeader) badges += '<span class="sfn-mem-badge sfn-mem-badge--leader"><iconify-icon icon="solar:crown-bold" style="font-size:10px"></iconify-icon>Lider</span>';
+    if (left) badges += '<span class="sfn-mem-badge sfn-mem-badge--left">Ayrıldı</span>';
+    else if (st.ready) badges += '<span class="sfn-mem-badge sfn-mem-badge--ready"><iconify-icon icon="solar:check-circle-bold" style="font-size:10px"></iconify-icon>Hazır</span>';
+    else badges += '<span class="sfn-mem-badge sfn-mem-badge--waiting"><iconify-icon icon="solar:clock-circle-bold" style="font-size:10px"></iconify-icon>Bekliyor</span>';
+
+    var actions = '';
+    // Lider yetkileri (sadece kendisinde, başkalarına uygulanır)
+    if (_sfnIsLeader() && !isMe && !left) {
+      if (!st.ready) {
+        actions += '<button class="sfn-mem-act" onclick="_sfnNudge(\'' + id + '\')" title="Dürt"><iconify-icon icon="solar:bell-bing-bold" style="font-size:15px;color:#F59E0B"></iconify-icon></button>';
+      }
+      actions += '<button class="sfn-mem-act" onclick="_sfnKick(\'' + id + '\')" title="Çıkar"><iconify-icon icon="solar:user-minus-rounded-bold" style="font-size:15px;color:#EF4444"></iconify-icon></button>';
+    }
+    // Kendi satırında Hazırım toggle
+    if (isMe && !left) {
+      actions += '<button class="sfn-mem-act sfn-mem-act--my' + (st.ready ? ' on' : '') + '" onclick="_sfnToggleMyReady()">'
+        + '<iconify-icon icon="solar:check-circle-bold" style="font-size:14px"></iconify-icon>'
+        + (st.ready ? 'Hazır' : 'Hazırım')
+        + '</button>';
+    }
+
+    h += '<div class="sfn-mem-row' + (left ? ' is-left' : '') + '">'
+      + '<img class="sfn-mem-avatar" src="' + f.avatar + '" alt="">'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div class="sfn-mem-name">' + _sfnEsc(f.name) + (isMe ? ' <span class="sfn-mem-you">(sen)</span>' : '') + '</div>'
+      +   '<div class="sfn-mem-badges">' + badges + '</div>'
+      + '</div>'
+      + '<div class="sfn-mem-actions">' + actions + '</div>'
+      + '</div>';
+  }
+  h += '</div>';
+  return h;
 }
 
 /* ═══ Styles ═══ */
@@ -781,7 +1102,52 @@ function _sfnInjectStyles() {
     '.sfn-success-box{background:var(--bg-phone-secondary);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;text-align:left}',
     '.sfn-remain-bar{margin-bottom:14px}',
     '.sfn-remain-txt{font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center}',
-    '.sfn-remain-txt b{font-weight:800}'
+    '.sfn-remain-txt b{font-weight:800}',
+    '/* ── Members list ── */',
+    '.sfn-members-list{display:flex;flex-direction:column;gap:6px;background:var(--bg-phone);border:1px solid var(--border-soft);border-radius:14px;padding:6px;overflow:hidden}',
+    '.sfn-mem-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;transition:background .15s}',
+    '.sfn-mem-row:hover{background:var(--bg-phone-secondary)}',
+    '.sfn-mem-row.is-left{opacity:.55}',
+    '.sfn-mem-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--bg-phone-secondary)}',
+    '.sfn-mem-name{font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:4px}',
+    '.sfn-mem-you{font-size:11px;font-weight:500;color:var(--text-muted)}',
+    '.sfn-mem-badges{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap}',
+    '.sfn-mem-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;letter-spacing:.2px}',
+    '.sfn-mem-badge--leader{background:rgba(139,92,246,.14);color:#8B5CF6}',
+    '.sfn-mem-badge--ready{background:rgba(34,197,94,.14);color:#16A34A}',
+    '.sfn-mem-badge--waiting{background:rgba(245,158,11,.14);color:#D97706}',
+    '.sfn-mem-badge--left{background:rgba(239,68,68,.14);color:#DC2626}',
+    '.sfn-mem-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}',
+    '.sfn-mem-act{width:32px;height:32px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-phone);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .15s, background .15s}',
+    '.sfn-mem-act:active{transform:scale(.92)}',
+    '.sfn-mem-act:hover{background:var(--bg-phone-secondary)}',
+    '.sfn-mem-act--my{width:auto;padding:0 10px;gap:4px;font-size:11.5px;font-weight:700;color:var(--text-primary);border-color:var(--border-soft)}',
+    '.sfn-mem-act--my.on{background:#22C55E;color:#fff;border-color:#22C55E}',
+    '/* ── Header menu ── */',
+    '.sfn-menu-btn{border-radius:10px}',
+    '.sfn-menu-pop{position:absolute;top:56px;right:12px;min-width:200px;background:var(--bg-phone);border:1px solid var(--border-soft);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:6px;z-index:10;animation:sfnMenuIn .18s ease}',
+    '@keyframes sfnMenuIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}',
+    '.sfn-menu-item{display:flex;align-items:center;gap:10px;padding:10px 10px;font-size:13px;font-weight:600;color:var(--text-primary);cursor:pointer;border-radius:8px;transition:background .15s}',
+    '.sfn-menu-item:hover{background:var(--bg-phone-secondary)}',
+    '/* ── Confirm modal ── */',
+    '.sfn-confirm-modal{max-width:400px;padding:18px;display:flex;flex-direction:column;gap:14px}',
+    '.sfn-confirm-head{display:flex;align-items:flex-start;gap:12px}',
+    '.sfn-confirm-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}',
+    '.sfn-confirm-title{font-size:15px;font-weight:800;color:var(--text-primary);line-height:1.3;margin-bottom:4px}',
+    '.sfn-confirm-msg{font-size:12.5px;color:var(--text-muted);line-height:1.5}',
+    '.sfn-confirm-section-lbl{font-size:11px;font-weight:800;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;padding:0 2px}',
+    '.sfn-xfer-list{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto}',
+    '.sfn-xfer-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;border:1px solid var(--border-soft);transition:background .15s}',
+    '.sfn-xfer-row:hover{background:var(--bg-phone-secondary)}',
+    '.sfn-xfer-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover}',
+    '.sfn-xfer-name{font-size:13px;font-weight:700;color:var(--text-primary)}',
+    '.sfn-xfer-sub{font-size:11px;color:var(--text-muted);margin-top:2px}',
+    '.sfn-confirm-actions{display:flex;gap:8px;margin-top:2px}',
+    '.sfn-confirm-btn{flex:1;padding:12px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:transform .15s}',
+    '.sfn-confirm-btn:active{transform:scale(.97)}',
+    '.sfn-confirm-btn--ghost{background:var(--bg-phone-secondary);color:var(--text-primary)}',
+    '.sfn-confirm-btn--primary{background:linear-gradient(135deg,#F97316,#EA580C);color:#fff}',
+    '.sfn-confirm-btn--danger{background:#EF4444;color:#fff}'
   ].join('\n');
   document.head.appendChild(s);
 }

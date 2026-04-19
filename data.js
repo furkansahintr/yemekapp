@@ -1331,7 +1331,15 @@ var ACTIVE_GROUP_ORDER = {
   createdAt:'2026-04-18T19:42:00',
   leaderId:'u_me',
   paymentMode:'split',       // 'split' (herkes kendi) | 'leader' (lider hepsini öder)
+  phase:'lobby',             // 'lobby' | 'payment' | 'completed'
   members:['u_me','u_muh','u_zeynep','u_burak'],
+  // Üye başına durum (ready + active/left + joinedAt)
+  memberStates:{
+    u_me:     { ready:false, status:'active', joinedAt:'2026-04-18T19:42:00' },
+    u_muh:    { ready:true,  status:'active', joinedAt:'2026-04-18T19:43:00' },
+    u_zeynep: { ready:false, status:'active', joinedAt:'2026-04-18T19:44:00' },
+    u_burak:  { ready:true,  status:'active', joinedAt:'2026-04-18T19:45:00' }
+  },
   items:[
     { id:'it_01', name:'Big Burger Menu',    price:145, qty:1, addedBy:'u_me',     addedAt:'19:43' },
     { id:'it_02', name:'Chicken Burger',     price:125, qty:1, addedBy:'u_muh',    addedAt:'19:44' },
