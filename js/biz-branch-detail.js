@@ -191,13 +191,14 @@ function openBizBranchDetail(branchId) {
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="alert('Fatura detayları — yakında!')">
-            <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle);position:relative" onclick="openBizInvoiceList('${branch.id}')">
+            <div style="width:36px;height:36px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative">
               <iconify-icon icon="solar:document-text-linear" style="font-size:18px;color:#F59E0B"></iconify-icon>
+              ${(typeof bizUnpaidInvoiceCount === 'function' && bizUnpaidInvoiceCount(branch.id) > 0) ? `<span style="position:absolute;top:-3px;right:-3px;min-width:14px;height:14px;padding:0 4px;border-radius:var(--r-full);background:#EF4444;color:#fff;font:var(--fw-bold) 9px/14px var(--font);text-align:center">${bizUnpaidInvoiceCount(branch.id)}</span>` : ''}
             </div>
             <div style="flex:1">
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Faturalar</div>
-              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Vergi faturası & e-arşiv</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(typeof bizUnpaidInvoiceCount === 'function' && bizUnpaidInvoiceCount(branch.id) > 0) ? bizUnpaidInvoiceCount(branch.id) + ' ödenmemiş · hizmet & komisyon' : 'Hizmet & komisyon faturaları'}</div>
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>

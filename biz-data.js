@@ -1713,6 +1713,36 @@ var BIZ_BRANCH_DELETION_STATE = null;
 // null | { scheduledAt, deleteAt, reasons, note, tokenAtStart, branchCount }
 var BIZ_ACCOUNT_DELETION_STATE = null;
 
+// ═══ FATURALAR ═══
+// Şubelere kesilen faturalar — iki kategori:
+//   type:'service'    → Premium/Reklam gibi anlık hizmet faturaları
+//   type:'commission' → Ay sonu sipariş aracılık komisyon faturaları
+const BIZ_INVOICES = [
+  // ── Kadıköy (b1) ──
+  { id:'inv_b1_01', branchId:'b1', type:'service', title:'Premium Üyelik — Gold Paket', subtitle:'1 Ay · Otomatik yenileme', number:'FA2026-04-0188', amount:499.00, vatIncluded:true, status:'paid',    issuedAt:'2026-04-01', paidAt:'2026-04-01', pdfUrl:'#' },
+  { id:'inv_b1_02', branchId:'b1', type:'service', title:'Öne Çıkarma Reklamı (7 Günlük)', subtitle:'Kadıköy bölgesi · Burger kategorisi', number:'FA2026-04-0221', amount:349.00, vatIncluded:true, status:'paid',    issuedAt:'2026-04-08', paidAt:'2026-04-08', pdfUrl:'#' },
+  { id:'inv_b1_03', branchId:'b1', type:'commission', title:'Mart 2026 — Sipariş Aracılık Hizmet Bedeli', subtitle:'842 sipariş · %4 komisyon', number:'KM2026-03-0042', amount:3284.50, vatIncluded:true, status:'paid',    issuedAt:'2026-04-01', paidAt:'2026-04-05', pdfUrl:'#', orderCount:842, commissionRate:0.04, grossRevenue:82112.50 },
+  { id:'inv_b1_04', branchId:'b1', type:'commission', title:'Şubat 2026 — Sipariş Aracılık Hizmet Bedeli', subtitle:'761 sipariş · %4 komisyon', number:'KM2026-02-0042', amount:2892.10, vatIncluded:true, status:'paid',    issuedAt:'2026-03-01', paidAt:'2026-03-04', pdfUrl:'#', orderCount:761, commissionRate:0.04, grossRevenue:72302.50 },
+  { id:'inv_b1_05', branchId:'b1', type:'service', title:'Öne Çıkarma Reklamı (3 Günlük)', subtitle:'Hafta sonu kampanyası', number:'FA2026-04-0295', amount:149.00, vatIncluded:true, status:'pending', issuedAt:'2026-04-15', dueAt:'2026-04-29', pdfUrl:'#' },
+
+  // ── Beşiktaş (b2) ──
+  { id:'inv_b2_01', branchId:'b2', type:'service', title:'Premium Üyelik — Silver Paket', subtitle:'1 Ay', number:'FA2026-04-0189', amount:299.00, vatIncluded:true, status:'paid',    issuedAt:'2026-04-01', paidAt:'2026-04-01', pdfUrl:'#' },
+  { id:'inv_b2_02', branchId:'b2', type:'commission', title:'Mart 2026 — Sipariş Aracılık Hizmet Bedeli', subtitle:'524 sipariş · %4 komisyon', number:'KM2026-03-0043', amount:2012.80, vatIncluded:true, status:'paid',    issuedAt:'2026-04-01', paidAt:'2026-04-07', pdfUrl:'#', orderCount:524, commissionRate:0.04, grossRevenue:50320.00 },
+  { id:'inv_b2_03', branchId:'b2', type:'commission', title:'Şubat 2026 — Sipariş Aracılık Hizmet Bedeli', subtitle:'498 sipariş · %4 komisyon', number:'KM2026-02-0043', amount:1884.40, vatIncluded:true, status:'overdue', issuedAt:'2026-03-01', dueAt:'2026-03-15', pdfUrl:'#', orderCount:498, commissionRate:0.04, grossRevenue:47110.00 },
+
+  // ── b3 ──
+  { id:'inv_b3_01', branchId:'b3', type:'commission', title:'Mart 2026 — Sipariş Aracılık Hizmet Bedeli', subtitle:'312 sipariş · %4 komisyon', number:'KM2026-03-0044', amount:1148.60, vatIncluded:true, status:'paid',    issuedAt:'2026-04-01', paidAt:'2026-04-10', pdfUrl:'#', orderCount:312, commissionRate:0.04, grossRevenue:28715.00 },
+  { id:'inv_b3_02', branchId:'b3', type:'service', title:'Öne Çıkarma Reklamı (14 Günlük)', subtitle:'Tüm gün · Şehir geneli', number:'FA2026-04-0310', amount:699.00, vatIncluded:true, status:'pending', issuedAt:'2026-04-18', dueAt:'2026-05-02', pdfUrl:'#' }
+];
+
+function bizInvoicesForBranch(branchId) {
+  return BIZ_INVOICES.filter(function(i){ return i.branchId === branchId; });
+}
+
+function bizUnpaidInvoiceCount(branchId) {
+  return BIZ_INVOICES.filter(function(i){ return i.branchId === branchId && (i.status === 'pending' || i.status === 'overdue'); }).length;
+}
+
 // İşletme başarı metrikleri (ikna katmanı için)
 var BIZ_ACCOUNT_STATS = {
   totalOrders: 18420,
