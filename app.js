@@ -79,23 +79,22 @@ let activeHomeTab = 'tarifler';
 
 try { if (typeof injectTokens === 'function') injectTokens(); } catch (e) { console.error('[app.js] injectTokens failed:', e); }
 
-// Home Tabs
-(function attachHomeTabs() {
-  const el = document.getElementById('homeTabs');
-  if (!el) { console.warn('[app.js] #homeTabs not in DOM yet'); return; }
-  el.addEventListener('click', e => {
-    const tab = e.target.closest('.home-tab');
-    if (!tab) return;
-    document.querySelectorAll('.home-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    const tabName = tab.dataset.tab;
-    activeHomeTab = tabName;
-    document.getElementById('tabTarifler').style.display = tabName === 'tarifler' ? '' : 'none';
-    document.getElementById('tabRestoranlar').style.display = tabName === 'restoranlar' ? '' : 'none';
-    if (tabName === 'tarifler') renderMenu();
-    else renderRestoranlar();
+// Home Tabs (delegation — works for both app-header and sticky-header instances)
+document.addEventListener('click', e => {
+  const tab = e.target.closest('.home-tab');
+  if (!tab || !tab.dataset.tab) return;
+  const tabName = tab.dataset.tab;
+  activeHomeTab = tabName;
+  document.querySelectorAll('.home-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tabName);
   });
-})();
+  const tT = document.getElementById('tabTarifler');
+  const tR = document.getElementById('tabRestoranlar');
+  if (tT) tT.style.display = tabName === 'tarifler' ? '' : 'none';
+  if (tR) tR.style.display = tabName === 'restoranlar' ? '' : 'none';
+  if (tabName === 'tarifler') renderMenu();
+  else renderRestoranlar();
+});
 
 /* ═══ THEME ═══ */
 function toggleTheme() {
@@ -160,7 +159,10 @@ function switchTab(tab) {
   const isMenu = tab === 'menu';
   const isCommunity = tab === 'community';
   const appHeader = document.getElementById('appHeader');
-  if (appHeader) appHeader.style.display = isCommunity ? 'none' : '';
+  if (appHeader) {
+    appHeader.style.display = isCommunity ? 'none' : '';
+    appHeader.classList.toggle('home', isMenu);
+  }
   document.getElementById('headerLocation').style.display = isMenu ? 'flex' : 'none';
   document.getElementById('headerTitle').style.display = isMenu ? 'block' : 'none';
   document.getElementById('headerIcons').style.display = isMenu ? 'flex' : 'none';
@@ -190,9 +192,12 @@ let lastScrollY = 0, lastScrollTime = 0, stickyActive = false;
 function syncStickyHeader() {
   const sticky = document.getElementById('stickyHeader');
   const isMenu = currentView === 'menu';
-  sticky.querySelector('#stickyLocation').style.display = isMenu ? 'flex' : 'none';
-  sticky.querySelector('#stickyTitle').style.display = isMenu ? 'block' : 'none';
-  sticky.querySelector('#stickyIcons').style.display = isMenu ? 'flex' : 'none';
+  sticky.classList.toggle('home-mode', isMenu);
+  const topRow = sticky.firstElementChild;
+  if (topRow) topRow.style.display = isMenu ? 'none' : 'flex';
+  sticky.querySelector('#stickyLocation').style.display = 'none';
+  sticky.querySelector('#stickyTitle').style.display = 'none';
+  sticky.querySelector('#stickyIcons').style.display = 'none';
   const sc = sticky.querySelector('#stickyTitleCenter');
   sc.style.display = isMenu ? 'none' : 'block';
   sc.textContent = titleMap[currentView] || '';
