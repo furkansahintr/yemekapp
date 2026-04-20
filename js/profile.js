@@ -1032,9 +1032,19 @@ function _mrViewRecipe(id) {
   var content = document.getElementById('mrContent');
   if (!content) return;
 
+  _mrInjectRecipeStyles();
   var html = '';
   html += '<div onclick="_mrRenderList()" style="display:inline-flex;align-items:center;gap:4px;padding:8px 0;cursor:pointer;color:var(--primary);font:var(--fw-medium) var(--fs-sm)/1 var(--font);margin-bottom:8px"><iconify-icon icon="solar:arrow-left-outline" style="font-size:16px"></iconify-icon>Geri</div>';
-  html += '<img src="' + r.img + '" style="width:100%;height:180px;object-fit:cover;border-radius:var(--r-xl);margin-bottom:12px">';
+
+  // Çoklu kapak → carousel; yoksa tek görsel
+  var imgs = r.images && r.images.length > 0 ? r.images : (r.img ? [r.img] : []);
+  if (imgs.length > 1) {
+    html += '<div class="mr-preview-cover" style="margin-bottom:12px">';
+    imgs.forEach(function(src){ html += '<img src="' + src + '" alt="">'; });
+    html += '</div>';
+  } else if (imgs.length === 1) {
+    html += '<img src="' + imgs[0] + '" style="width:100%;height:180px;object-fit:cover;border-radius:var(--r-xl);margin-bottom:12px">';
+  }
   html += '<div style="font:var(--fw-bold) var(--fs-xl)/1.2 var(--font);color:var(--text-primary)">' + r.name + '</div>';
   html += '<div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-secondary);margin-top:6px">' + (r.desc || '') + '</div>';
 
@@ -1057,14 +1067,27 @@ function _mrViewRecipe(id) {
     });
   }
 
-  /* Adımlar */
+  /* Adımlar — string veya {text,img} kabul eder */
   if (r.steps && r.steps.length > 0) {
-    html += '<div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-top:20px;margin-bottom:8px">Hazırlanışı</div>';
+    html += '<div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-top:20px;margin-bottom:10px">Hazırlanışı</div>';
     r.steps.forEach(function(step, i) {
-      html += '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle)">';
-      html += '<div style="width:24px;height:24px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;font:var(--fw-bold) 11px/1 var(--font);color:#fff">' + (i + 1) + '</div>';
-      html += '<span style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-secondary);flex:1">' + step + '</span>';
-      html += '</div>';
+      var stepText = typeof step === 'string' ? step : (step.text || '');
+      var stepImg = typeof step === 'string' ? '' : (step.img || '');
+      if (i > 0 && i % 4 === 0) {
+        html += '<div class="mr-disclaimer"><iconify-icon icon="solar:shield-warning-linear" style="font-size:14px;color:#F59E0B"></iconify-icon><span>Marka/reklam içerikleri sistemden kaldırılır.</span></div>';
+      }
+      if (stepImg) {
+        html += '<div class="mr-preview-step">';
+        html += '<div class="mr-preview-step-head"><div class="mr-step-num">' + (i + 1) + '</div><div class="mr-preview-step-lbl">Adım ' + (i + 1) + '</div></div>';
+        html += '<img class="mr-preview-step-img" src="' + stepImg + '" alt="">';
+        html += '<div class="mr-preview-step-text">' + _escHtmlAttr(stepText) + '</div>';
+        html += '</div>';
+      } else {
+        html += '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle)">';
+        html += '<div style="width:24px;height:24px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;font:var(--fw-bold) 11px/1 var(--font);color:#fff">' + (i + 1) + '</div>';
+        html += '<span style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-secondary);flex:1">' + _escHtmlAttr(stepText) + '</span>';
+        html += '</div>';
+      }
     });
   }
 
@@ -1081,22 +1104,173 @@ function _mrDeleteRecipe(id) {
 /* ── Tarif Oluştur Formu ── */
 function _mrOpenForm() {
   _mrForm = {
-    name: '', category: 'Ana Yemek', img: '', prepTime: '', cookTime: '',
+    name: '', category: 'Ana Yemek', prepTime: '', cookTime: '',
     difficulty: 'Orta', servings: 2, desc: '',
-    ingredients: [''], steps: ['']
+    images: [],                         // En fazla 3 kapak görseli (data URL)
+    ingredients: [''],
+    steps: [{ text: '', img: '' }],     // Her adım: {text, img}
+    preview: false                      // Önizleme modu
   };
   _mrRenderForm();
+}
+
+/* ── Kapak görselleri ── */
+var _MR_MAX_COVERS = 3;
+function _mrHandleCoverUpload(input) {
+  var files = input.files;
+  if (!files || !files.length) return;
+  var remaining = _MR_MAX_COVERS - _mrForm.images.length;
+  var slots = Math.min(files.length, remaining);
+  var loaded = 0;
+  for (var i = 0; i < slots; i++) {
+    (function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        _mrForm.images.push(e.target.result);
+        loaded++;
+        if (loaded === slots) _mrRenderForm();
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+  input.value = '';
+}
+function _mrRemoveCover(idx) {
+  _mrForm.images.splice(idx, 1);
+  _mrRenderForm();
+}
+
+/* ── Adım fotoğrafı ── */
+function _mrHandleStepPhoto(idx, input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _mrForm.steps[idx].img = e.target.result;
+    _mrRenderForm();
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function _mrRemoveStepPhoto(idx) {
+  _mrForm.steps[idx].img = '';
+  _mrRenderForm();
+}
+
+/* ── Drag & Drop (adım sıralama) ── */
+var _mrDragIdx = null;
+function _mrStepDragStart(e, idx) {
+  _mrDragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', String(idx)); } catch(err) {}
+  var row = e.currentTarget;
+  if (row && row.classList) row.classList.add('mr-step-dragging');
+}
+function _mrStepDragEnd(e) {
+  var row = e.currentTarget;
+  if (row && row.classList) row.classList.remove('mr-step-dragging');
+  _mrDragIdx = null;
+}
+function _mrStepDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+function _mrStepDrop(e, toIdx) {
+  e.preventDefault();
+  if (_mrDragIdx === null || _mrDragIdx === toIdx) return;
+  var moved = _mrForm.steps.splice(_mrDragIdx, 1)[0];
+  _mrForm.steps.splice(toIdx, 0, moved);
+  _mrDragIdx = null;
+  _mrRenderForm();
+}
+
+/* ── Önizleme ── */
+function _mrTogglePreview() {
+  _mrForm.preview = !_mrForm.preview;
+  _mrRenderForm();
+}
+
+/* ── Politika tooltip ── */
+function _mrTogglePolicyTip(e, id) {
+  if (e) e.stopPropagation();
+  var tip = document.getElementById(id);
+  if (!tip) return;
+  var open = tip.getAttribute('data-open') === '1';
+  // Close all other tooltips
+  document.querySelectorAll('[data-mr-tip]').forEach(function(t){
+    t.style.display = 'none';
+    t.setAttribute('data-open', '0');
+  });
+  if (!open) {
+    tip.style.display = 'block';
+    tip.setAttribute('data-open', '1');
+    setTimeout(function(){
+      document.addEventListener('click', function closeTip(){
+        tip.style.display = 'none';
+        tip.setAttribute('data-open', '0');
+        document.removeEventListener('click', closeTip);
+      }, { once: true });
+    }, 0);
+  }
 }
 
 function _mrRenderForm() {
   var content = document.getElementById('mrContent');
   if (!content) return;
+  _mrInjectRecipeStyles();
 
   var f = _mrForm;
+
+  // Önizleme modundaysa farklı view render et
+  if (f.preview) { content.innerHTML = _mrRenderPreview(); return; }
+
   var html = '';
 
-  html += '<div onclick="_mrRenderList()" style="display:inline-flex;align-items:center;gap:4px;padding:8px 0;cursor:pointer;color:var(--primary);font:var(--fw-medium) var(--fs-sm)/1 var(--font);margin-bottom:8px"><iconify-icon icon="solar:arrow-left-outline" style="font-size:16px"></iconify-icon>Geri</div>';
+  // Header: Geri + Önizleme toggle
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  html += '<div onclick="_mrRenderList()" style="display:inline-flex;align-items:center;gap:4px;padding:8px 0;cursor:pointer;color:var(--primary);font:var(--fw-medium) var(--fs-sm)/1 var(--font)"><iconify-icon icon="solar:arrow-left-outline" style="font-size:16px"></iconify-icon>Geri</div>';
+  html += '<div onclick="_mrTogglePreview()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border-subtle);border-radius:var(--r-full);cursor:pointer;color:var(--text-primary);font:var(--fw-medium) var(--fs-xs)/1 var(--font)"><iconify-icon icon="solar:eye-linear" style="font-size:14px"></iconify-icon>Önizle</div>';
+  html += '</div>';
+
   html += '<div style="font:var(--fw-bold) var(--fs-lg)/1.2 var(--font);color:var(--text-primary);margin-bottom:16px">Yeni Tarif Oluştur</div>';
+
+  /* ═══ Kapak Görselleri (en fazla 3) ═══ */
+  html += '<div style="margin-bottom:14px">';
+  html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
+  html += '<label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Kapak Görselleri <span style="color:var(--text-tertiary)">(en fazla ' + _MR_MAX_COVERS + ')</span></label>';
+  html += '<div style="position:relative;margin-left:auto">';
+  html += '<iconify-icon icon="solar:info-circle-linear" onclick="_mrTogglePolicyTip(event,\'mrPolicyTip\')" style="font-size:16px;color:var(--text-muted);cursor:pointer"></iconify-icon>';
+  html += '<div id="mrPolicyTip" data-mr-tip style="display:none;position:absolute;top:22px;right:0;z-index:20;width:260px;padding:10px 12px;background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);font:var(--fw-regular) var(--fs-xs)/1.5 var(--font);color:var(--text-secondary)"><b style="color:var(--text-primary)">Politika</b>: Lütfen tariflerinizde marka veya reklamlara yer vermeyiniz. Vermiş olduğunuz reklamlar sistemden kaldırılacaktır.</div>';
+  html += '</div>';
+  html += '</div>';
+
+  // 3 slot horizontal
+  html += '<div class="mr-cover-row">';
+  for (var ci = 0; ci < _MR_MAX_COVERS; ci++) {
+    if (f.images[ci]) {
+      html += '<div class="mr-cover-slot mr-cover-filled">'
+        + '<img src="' + f.images[ci] + '" alt="">'
+        + '<div class="mr-cover-actions">'
+        +   '<label class="mr-cover-act" title="Değiştir"><iconify-icon icon="solar:pen-2-linear" style="font-size:14px"></iconify-icon>'
+        +     '<input type="file" accept="image/*" style="display:none" onchange="_mrReplaceCover(' + ci + ',this)">'
+        +   '</label>'
+        +   '<div class="mr-cover-act" onclick="_mrRemoveCover(' + ci + ')" title="Sil"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:14px"></iconify-icon></div>'
+        + '</div>'
+        + '<div class="mr-cover-idx">' + (ci + 1) + '</div>'
+        + '</div>';
+    } else if (ci === f.images.length) {
+      // Next empty slot — active uploader
+      html += '<label class="mr-cover-slot mr-cover-add">'
+        + '<iconify-icon icon="solar:camera-add-bold" style="font-size:28px;color:var(--primary)"></iconify-icon>'
+        + '<span>Görsel Ekle</span>'
+        + '<input type="file" accept="image/*" multiple style="display:none" onchange="_mrHandleCoverUpload(this)">'
+        + '</label>';
+    } else {
+      html += '<div class="mr-cover-slot mr-cover-empty"><iconify-icon icon="solar:gallery-linear" style="font-size:20px;color:var(--text-tertiary)"></iconify-icon></div>';
+    }
+  }
+  html += '</div>';
+  html += '</div>';
 
   /* Tarif adı */
   html += '<div style="margin-bottom:12px">';
@@ -1150,25 +1324,169 @@ function _mrRenderForm() {
   html += '<div onclick="_mrAddIngredient()" style="display:flex;align-items:center;gap:6px;padding:6px 0;color:var(--primary);cursor:pointer;font:var(--fw-medium) var(--fs-sm)/1 var(--font)"><iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>Malzeme Ekle</div>';
   html += '</div>';
 
-  /* Adımlar */
+  /* ═══ Adımlar (drag-drop + fotoğraf) ═══ */
   html += '<div style="margin-bottom:16px">';
-  html += '<label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);display:block;margin-bottom:6px">Hazırlanışı</label>';
+  html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
+  html += '<label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Hazırlık Aşamaları</label>';
+  html += '<span style="font:var(--fw-regular) 10px/1 var(--font);color:var(--text-tertiary);margin-left:auto"><iconify-icon icon="solar:sort-vertical-linear" style="font-size:12px"></iconify-icon> Sürükleyerek sırala</span>';
+  html += '</div>';
+
   f.steps.forEach(function(step, i) {
-    html += '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:flex-start">';
-    html += '<div style="width:24px;height:24px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:8px;font:var(--fw-bold) 10px/1 var(--font);color:#fff">' + (i + 1) + '</div>';
-    html += '<textarea placeholder="Adım ' + (i + 1) + '..." oninput="_mrForm.steps[' + i + ']=this.value" style="flex:1;padding:10px 12px;border:1.5px solid var(--border-subtle);border-radius:var(--r-lg);background:var(--glass-card);font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-primary);outline:none;resize:none;min-height:44px">' + _escHtmlAttr(step) + '</textarea>';
+    // Her 3 adımda bir reklam yasağı hatırlatıcısı
+    if (i > 0 && i % 3 === 0) {
+      html += '<div class="mr-disclaimer"><iconify-icon icon="solar:shield-warning-linear" style="font-size:14px;color:#F59E0B"></iconify-icon><span>Marka/reklam içerikleri sistemden kaldırılır.</span></div>';
+    }
+    html += '<div class="mr-step-card" draggable="true" ondragstart="_mrStepDragStart(event,' + i + ')" ondragend="_mrStepDragEnd(event)" ondragover="_mrStepDragOver(event,' + i + ')" ondrop="_mrStepDrop(event,' + i + ')">';
+    // Header: drag handle + step no + remove
+    html += '<div class="mr-step-head">';
+    html += '<div class="mr-step-drag"><iconify-icon icon="solar:hamburger-menu-linear" style="font-size:16px"></iconify-icon></div>';
+    html += '<div class="mr-step-num">' + (i + 1) + '</div>';
+    html += '<div class="mr-step-lbl">Adım ' + (i + 1) + '</div>';
     if (f.steps.length > 1) {
-      html += '<div onclick="_mrRemoveStep(' + i + ')" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);margin-top:4px"><iconify-icon icon="solar:minus-circle-linear" style="font-size:18px"></iconify-icon></div>';
+      html += '<div onclick="_mrRemoveStep(' + i + ')" class="mr-step-del"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:16px"></iconify-icon></div>';
+    }
+    html += '</div>';
+    // Body: textarea
+    html += '<textarea placeholder="Örn: Unu sarı bir renk alana kadar kavurun..." oninput="_mrForm.steps[' + i + '].text=this.value" class="mr-step-text">' + _escHtmlAttr(step.text) + '</textarea>';
+    // Photo area
+    if (step.img) {
+      html += '<div class="mr-step-photo">';
+      html += '<img src="' + step.img + '" alt="">';
+      html += '<div class="mr-step-photo-actions">';
+      html += '<label class="mr-photo-act"><iconify-icon icon="solar:pen-2-linear" style="font-size:13px"></iconify-icon>Değiştir<input type="file" accept="image/*" style="display:none" onchange="_mrHandleStepPhoto(' + i + ',this)"></label>';
+      html += '<div class="mr-photo-act mr-photo-act--danger" onclick="_mrRemoveStepPhoto(' + i + ')"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:13px"></iconify-icon>Sil</div>';
+      html += '</div>';
+      html += '</div>';
+    } else {
+      html += '<label class="mr-step-add-photo"><iconify-icon icon="solar:gallery-add-linear" style="font-size:15px"></iconify-icon>Fotoğraf Ekle <span style="color:var(--text-tertiary);font-weight:400">(opsiyonel)</span>';
+      html += '<input type="file" accept="image/*" style="display:none" onchange="_mrHandleStepPhoto(' + i + ',this)"></label>';
     }
     html += '</div>';
   });
-  html += '<div onclick="_mrAddStep()" style="display:flex;align-items:center;gap:6px;padding:6px 0;color:var(--primary);cursor:pointer;font:var(--fw-medium) var(--fs-sm)/1 var(--font)"><iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>Adım Ekle</div>';
+  html += '<div onclick="_mrAddStep()" style="display:flex;align-items:center;gap:6px;padding:10px 0 4px;color:var(--primary);cursor:pointer;font:var(--fw-medium) var(--fs-sm)/1 var(--font)"><iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>Yeni Adım Ekle</div>';
   html += '</div>';
 
   /* Kaydet butonu */
   html += '<button onclick="_mrSaveRecipe()" style="width:100%;padding:14px;border:none;border-radius:var(--r-xl);background:var(--primary);color:#fff;font:var(--fw-semibold) var(--fs-md)/1 var(--font);cursor:pointer;transition:opacity .15s">Tarifi Kaydet</button>';
 
   content.innerHTML = html;
+}
+
+/* ── Önizleme (story/feed akışı) ── */
+function _mrRenderPreview() {
+  var f = _mrForm;
+  var html = '';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+  html += '<div onclick="_mrTogglePreview()" style="display:inline-flex;align-items:center;gap:4px;padding:8px 0;cursor:pointer;color:var(--primary);font:var(--fw-medium) var(--fs-sm)/1 var(--font)"><iconify-icon icon="solar:arrow-left-outline" style="font-size:16px"></iconify-icon>Düzenlemeye Dön</div>';
+  html += '<div style="padding:4px 10px;border-radius:var(--r-full);background:rgba(139,92,246,.12);color:#8B5CF6;font:var(--fw-semibold) 10px/1 var(--font);letter-spacing:.4px">ÖNİZLEME</div>';
+  html += '</div>';
+
+  // Kapak carousel
+  if (f.images.length > 0) {
+    html += '<div class="mr-preview-cover">';
+    f.images.forEach(function(img, idx){
+      html += '<img src="' + img + '" alt="">';
+    });
+    html += '</div>';
+  }
+
+  html += '<div style="font:var(--fw-bold) var(--fs-xl)/1.2 var(--font);color:var(--text-primary);margin-top:14px">' + _escHtmlAttr(f.name || 'Tarif Adı') + '</div>';
+  if (f.desc) html += '<div style="font:var(--fw-regular) var(--fs-sm)/1.5 var(--font);color:var(--text-secondary);margin-top:6px">' + _escHtmlAttr(f.desc) + '</div>';
+
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+  html += '<span class="mr-chip"><iconify-icon icon="solar:clock-circle-linear" style="font-size:12px"></iconify-icon>' + _escHtmlAttr(f.prepTime || '-') + ' hazırlık</span>';
+  html += '<span class="mr-chip"><iconify-icon icon="solar:fire-minimalistic-linear" style="font-size:12px"></iconify-icon>' + _escHtmlAttr(f.cookTime || '-') + ' pişirme</span>';
+  html += '<span class="mr-chip"><iconify-icon icon="solar:chef-hat-linear" style="font-size:12px"></iconify-icon>' + _escHtmlAttr(f.difficulty) + '</span>';
+  html += '<span class="mr-chip"><iconify-icon icon="solar:users-group-rounded-linear" style="font-size:12px"></iconify-icon>' + (f.servings || 1) + ' kişi</span>';
+  html += '</div>';
+
+  var activeIng = f.ingredients.filter(function(x){ return x && x.trim(); });
+  if (activeIng.length) {
+    html += '<div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-top:20px;margin-bottom:8px">Malzemeler</div>';
+    activeIng.forEach(function(ing){
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-subtle)"><iconify-icon icon="solar:check-circle-bold" style="font-size:16px;color:var(--primary)"></iconify-icon><span style="font:var(--fw-regular) var(--fs-sm)/1.3 var(--font);color:var(--text-secondary)">' + _escHtmlAttr(ing) + '</span></div>';
+    });
+  }
+
+  var activeSteps = f.steps.filter(function(s){ return s && s.text && s.text.trim(); });
+  if (activeSteps.length) {
+    html += '<div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-top:20px;margin-bottom:10px">Hazırlanışı</div>';
+    activeSteps.forEach(function(s, i){
+      if (i > 0 && i % 4 === 0) {
+        html += '<div class="mr-disclaimer"><iconify-icon icon="solar:shield-warning-linear" style="font-size:14px;color:#F59E0B"></iconify-icon><span>Marka/reklam içerikleri sistemden kaldırılır.</span></div>';
+      }
+      html += '<div class="mr-preview-step">';
+      html += '<div class="mr-preview-step-head"><div class="mr-step-num">' + (i + 1) + '</div><div class="mr-preview-step-lbl">Adım ' + (i + 1) + '</div></div>';
+      if (s.img) html += '<img class="mr-preview-step-img" src="' + s.img + '" alt="">';
+      html += '<div class="mr-preview-step-text">' + _escHtmlAttr(s.text) + '</div>';
+      html += '</div>';
+    });
+  }
+
+  return html;
+}
+
+function _mrReplaceCover(idx, input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _mrForm.images[idx] = e.target.result;
+    _mrRenderForm();
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function _mrInjectRecipeStyles() {
+  if (document.getElementById('mrRecipeStyles')) return;
+  var s = document.createElement('style');
+  s.id = 'mrRecipeStyles';
+  s.textContent = [
+    '.mr-cover-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}',
+    '.mr-cover-slot{aspect-ratio:1;border-radius:var(--r-lg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer}',
+    '.mr-cover-empty{background:var(--glass-card);border:1.5px dashed var(--border-subtle);cursor:default}',
+    '.mr-cover-add{background:var(--glass-card);border:1.5px dashed var(--primary);flex-direction:column;gap:4px;color:var(--primary);font:var(--fw-semibold) 11px/1 var(--font)}',
+    '.mr-cover-add:hover{background:rgba(246,80,19,0.06)}',
+    '.mr-cover-filled{background:var(--glass-card);border:1px solid var(--border-subtle)}',
+    '.mr-cover-filled img{width:100%;height:100%;object-fit:cover;display:block}',
+    '.mr-cover-actions{position:absolute;top:4px;right:4px;display:flex;gap:4px;opacity:0;transition:opacity .15s}',
+    '.mr-cover-filled:hover .mr-cover-actions{opacity:1}',
+    '.mr-cover-act{width:24px;height:24px;border-radius:6px;background:rgba(0,0,0,0.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(4px)}',
+    '.mr-cover-idx{position:absolute;bottom:4px;left:4px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,0.55);color:#fff;font:var(--fw-bold) 10px/1.4 var(--font)}',
+    '/* Step card */',
+    '.mr-step-card{background:var(--glass-card);border:1.5px solid var(--border-subtle);border-radius:var(--r-lg);padding:10px 12px;margin-bottom:10px;transition:box-shadow .15s, transform .15s, opacity .15s}',
+    '.mr-step-card.mr-step-dragging{opacity:.55;box-shadow:var(--shadow-lg)}',
+    '.mr-step-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}',
+    '.mr-step-drag{color:var(--text-tertiary);cursor:grab;display:flex;align-items:center}',
+    '.mr-step-drag:active{cursor:grabbing}',
+    '.mr-step-num{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font:var(--fw-bold) 11px/1 var(--font);flex-shrink:0}',
+    '.mr-step-lbl{font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);flex:1}',
+    '.mr-step-del{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#EF4444;border-radius:6px}',
+    '.mr-step-del:hover{background:rgba(239,68,68,0.1)}',
+    '.mr-step-text{width:100%;padding:8px 10px;border:1px solid var(--border-subtle);border-radius:var(--r-md);background:var(--bg-phone);font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-primary);outline:none;resize:none;min-height:52px;box-sizing:border-box}',
+    '.mr-step-add-photo{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 12px;border:1px dashed var(--border-subtle);border-radius:var(--r-md);color:var(--primary);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;transition:background .15s}',
+    '.mr-step-add-photo:hover{background:rgba(246,80,19,0.06)}',
+    '.mr-step-photo{margin-top:8px;position:relative;border-radius:var(--r-md);overflow:hidden}',
+    '.mr-step-photo img{width:100%;max-height:180px;object-fit:cover;display:block}',
+    '.mr-step-photo-actions{display:flex;gap:6px;margin-top:6px}',
+    '.mr-photo-act{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:var(--r-md);background:var(--glass-card);border:1px solid var(--border-subtle);color:var(--text-primary);font:var(--fw-medium) 11px/1 var(--font);cursor:pointer}',
+    '.mr-photo-act:hover{background:var(--bg-btn)}',
+    '.mr-photo-act--danger{color:#EF4444;border-color:rgba(239,68,68,0.3)}',
+    '/* Disclaimer */',
+    '.mr-disclaimer{display:flex;align-items:center;gap:6px;padding:7px 10px;margin:6px 0 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.22);border-radius:var(--r-md);font:var(--fw-medium) 11px/1.4 var(--font);color:var(--text-secondary)}',
+    '/* Preview */',
+    '.mr-preview-cover{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:var(--r-xl);scrollbar-width:none}',
+    '.mr-preview-cover::-webkit-scrollbar{display:none}',
+    '.mr-preview-cover img{flex-shrink:0;width:100%;height:220px;object-fit:cover;scroll-snap-align:start;border-radius:var(--r-xl)}',
+    '.mr-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:var(--r-full);background:var(--glass-card);font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)}',
+    '.mr-preview-step{margin-bottom:14px;padding:12px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);background:var(--bg-phone)}',
+    '.mr-preview-step-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}',
+    '.mr-preview-step-lbl{font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)}',
+    '.mr-preview-step-img{width:100%;max-height:220px;object-fit:cover;border-radius:var(--r-md);margin-bottom:8px;display:block}',
+    '.mr-preview-step-text{font:var(--fw-regular) var(--fs-sm)/1.5 var(--font);color:var(--text-secondary)}'
+  ].join('\n');
+  document.head.appendChild(s);
 }
 
 function _escHtmlAttr(s) {
@@ -1178,7 +1496,7 @@ function _escHtmlAttr(s) {
 
 function _mrAddIngredient() { _mrForm.ingredients.push(''); _mrRenderForm(); }
 function _mrRemoveIngredient(i) { _mrForm.ingredients.splice(i, 1); _mrRenderForm(); }
-function _mrAddStep() { _mrForm.steps.push(''); _mrRenderForm(); }
+function _mrAddStep() { _mrForm.steps.push({ text: '', img: '' }); _mrRenderForm(); }
 function _mrRemoveStep(i) { _mrForm.steps.splice(i, 1); _mrRenderForm(); }
 
 function _mrSaveRecipe() {
@@ -1197,18 +1515,24 @@ function _mrSaveRecipe() {
     'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400&h=400&fit=crop'
   ];
 
+  var imgs = (_mrForm.images || []).slice();
+  var coverImg = imgs[0] || dummyImgs[USER_PROFILE.myRecipes.length % dummyImgs.length];
+
   var newRecipe = {
     id: Date.now(),
     name: _mrForm.name.trim(),
     category: _mrForm.category || 'Ana Yemek',
-    img: dummyImgs[USER_PROFILE.myRecipes.length % dummyImgs.length],
+    img: coverImg,                 // Liste/kart görünümü için tek kapak
+    images: imgs,                  // Carousel için tüm kapaklar (yeni)
     prepTime: _mrForm.prepTime || '',
     cookTime: _mrForm.cookTime || '',
     difficulty: _mrForm.difficulty || 'Orta',
     servings: _mrForm.servings || 2,
     desc: _mrForm.desc || '',
     ingredients: _mrForm.ingredients.filter(function(x) { return x.trim() !== ''; }),
-    steps: _mrForm.steps.filter(function(x) { return x.trim() !== ''; }),
+    steps: _mrForm.steps
+      .filter(function(s) { return s && s.text && s.text.trim(); })
+      .map(function(s) { return { text: s.text.trim(), img: s.img || '' }; }),
     date: new Date().toISOString().slice(0, 10)
   };
 
