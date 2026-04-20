@@ -1180,6 +1180,43 @@ const BIZ_REVIEWS = [
       text: 'Mekana gelmek için teşekkür ederiz. Yakında daha geniş alana taşınacağız.',
       date: '2026-04-02T20:30:00Z'
     }
+  },
+  // ═══ MENÜ DEĞERLENDİRMELERİ — spesifik ürünlere ═══
+  {
+    id: 'mreview_001', branchId: 'b1', type: 'menu',
+    customerName: 'Muhammed Solak', customerAvatar: 'https://api.pravatar.cc/img?img=20',
+    rating: 5, text: 'Adana kebap tam da olması gerektiği gibi — baharatı dengeli, servis sıcacık geldi.',
+    date: '2026-04-18T20:45:00Z', menuItemName: 'Adana Kebap', menuItemId: 'mi_01', reply: null
+  },
+  {
+    id: 'mreview_002', branchId: 'b1', type: 'menu',
+    customerName: 'Zeynep Arslan', customerAvatar: 'https://api.pravatar.cc/img?img=21',
+    rating: 3, text: 'İskender kebap biraz tuzluydu bence, sosu güzel ama et biraz kurumuştu.',
+    date: '2026-04-17T19:12:00Z', menuItemName: 'İskender Kebap', menuItemId: 'mi_02', reply: null
+  },
+  {
+    id: 'mreview_003', branchId: 'b1', type: 'menu',
+    customerName: 'Ece Kaya', customerAvatar: 'https://api.pravatar.cc/img?img=22',
+    rating: 5, text: 'Tiramisu enfes! Kahve tadı muhteşem, porsiyon da doyurucuydu.',
+    date: '2026-04-16T21:30:00Z', menuItemName: 'Tiramisu', menuItemId: 'mi_10',
+    reply: { author: 'Furkan', text: 'Sağ olun Ece Hanım! Tiramisumuzu el yapımı hazırlıyoruz.', date: '2026-04-16T22:00:00Z' }
+  },
+  {
+    id: 'mreview_004', branchId: 'b1', type: 'menu',
+    customerName: 'Kemal Yılmaz', customerAvatar: 'https://api.pravatar.cc/img?img=23',
+    rating: 4, text: 'Tavuk dönerim lezzetliydi ama beklediğim kadar tok tutmadı, porsiyon biraz küçük.',
+    date: '2026-04-15T13:20:00Z', menuItemName: 'Tavuk Döner', menuItemId: 'mi_03', reply: null
+  },
+  {
+    id: 'mreview_005', branchId: 'b1', type: 'menu',
+    customerName: 'Selin Demir', customerAvatar: 'https://api.pravatar.cc/img?img=24',
+    rating: 2, text: 'Hummus tabağında bir sorun vardı, biraz ekşimsi geldi bana.',
+    date: '2026-04-14T18:00:00Z', menuItemName: 'Hummus Tabağı', menuItemId: 'mi_04', reply: null
+  },
+  {
+    id: 'mreview_006', branchId: 'b1', type: 'menu',
+    customerName: 'Barış Öztürk', customerAvatar: 'https://api.pravatar.cc/img?img=25',
+    rating: 5, text: '', date: '2026-04-13T20:10:00Z', menuItemName: 'Adana Kebap', menuItemId: 'mi_01', reply: null
   }
 ];
 
@@ -1931,6 +1968,61 @@ function bizInvoicesForBranch(branchId) {
 
 function bizUnpaidInvoiceCount(branchId) {
   return BIZ_INVOICES.filter(function(i){ return i.branchId === branchId && (i.status === 'pending' || i.status === 'overdue'); }).length;
+}
+
+// ═══ YASAL EVRAKLAR (Şube Bazlı) ═══
+// Kritik alanlar (title, address, coords, taxNo, taxCertFile, iban) değişirse
+// şube "İnceleme Altında" moduna geçer ve 24 saat kadar satışa kapanır.
+// Kritik olmayanlar (photos, phone) anında güncellenir.
+var BIZ_BRANCH_LEGAL = {
+  b1: {
+    current: {
+      title: 'Burger Lab — Kadıköy Şubesi',
+      address: 'Caferağa Mah. Moda Cad. No: 142, Kadıköy/İstanbul',
+      coords: { lat: 40.9876, lng: 29.0256 },
+      taxNo: '1234567890',
+      taxCertFile: 'vergi-levhasi-b1.pdf',
+      iban: 'TR33 0006 1005 1978 6457 8413 26',
+      phone: '+905551234500',
+      photos: {
+        cover: 'https://placeholder.com/branches/kadikoy-cover.jpg',
+        ambient: ['https://placeholder.com/branches/kadikoy-1.jpg','https://placeholder.com/branches/kadikoy-2.jpg'],
+        menu: ['https://placeholder.com/branches/kadikoy-menu.jpg']
+      }
+    },
+    pending: null  // { changes:{title?, address?, coords?, taxNo?, taxCertFile?, iban?}, submittedAt, reviewDeadline }
+  },
+  b2: {
+    current: {
+      title: 'Burger Lab — Beşiktaş Şubesi',
+      address: 'Çırağan Cad. No: 89, Beşiktaş/İstanbul',
+      coords: { lat: 41.0421, lng: 29.0028 },
+      taxNo: '1234567890',
+      taxCertFile: 'vergi-levhasi-b2.pdf',
+      iban: 'TR33 0006 1005 1978 6457 8413 26',
+      phone: '+905551234501',
+      photos: { cover: '', ambient: [], menu: [] }
+    },
+    pending: null
+  },
+  b3: {
+    current: {
+      title: 'Burger Lab — Ataşehir Şubesi',
+      address: 'Atatürk Mah. Meriç Cad. No:4, Ataşehir/İstanbul',
+      coords: { lat: 40.9845, lng: 29.1181 },
+      taxNo: '1234567890',
+      taxCertFile: 'vergi-levhasi-b3.pdf',
+      iban: 'TR33 0006 1005 1978 6457 8413 26',
+      phone: '+905551234502',
+      photos: { cover: '', ambient: [], menu: [] }
+    },
+    pending: null
+  }
+};
+
+function bizBranchLegal(branchId) {
+  if (!BIZ_BRANCH_LEGAL[branchId]) BIZ_BRANCH_LEGAL[branchId] = { current:{}, pending:null };
+  return BIZ_BRANCH_LEGAL[branchId];
 }
 
 // ═══ İŞLETME BAŞARILARI VE KOLEKSİYONLARI ═══

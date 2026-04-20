@@ -300,11 +300,11 @@ function openBizBranchDetail(branchId) {
             ${(branch.temporarilyClosedUntil && new Date(branch.temporarilyClosedUntil) > new Date()) ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(239,68,68,0.14);color:#DC2626;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">KAPALI</span>' : ''}
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="alert('Masa düzeni — yakında!')">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="bizActiveBranch='${branch.id}';openBizTables()">
             <iconify-icon icon="solar:sofa-2-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
             <div style="flex:1">
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Masa Düzeni</div>
-              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${branchTables.length} masa tanımlı</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${branchTables.length} masa · ${(function(){ const zc = (typeof BIZ_TABLE_ZONES !== 'undefined') ? BIZ_TABLE_ZONES.filter(z => z.branchId === branch.id).length : 0; return zc + ' bölge'; })()}</div>
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
@@ -315,6 +315,14 @@ function openBizBranchDetail(branchId) {
               <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${branch.tableQRMode ? 'Masaya özel QR açık · tam interaktif' : 'Sadece genel menü · sipariş kapalı'}</div>
             </div>
             ${branch.tableQRMode ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(249,115,22,.14);color:#EA580C;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">AKTİF</span>' : ''}
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="bizActiveBranch='${branch.id}';openBizMenuMgmt()">
+            <iconify-icon icon="solar:notebook-bold" style="font-size:20px;color:#F59E0B"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Menü Yönetimi</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(function(){ const mc = (typeof BIZ_MENU_ITEMS !== 'undefined') ? BIZ_MENU_ITEMS.filter(m => m.branchId === branch.id && m.status === 'active').length : 0; const cats = (typeof BIZ_MENU_CATEGORIES !== 'undefined') ? BIZ_MENU_CATEGORIES.length : 0; return mc + ' ürün · ' + cats + ' kategori'; })()}</div>
+            </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
           <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizCommissionSettings('${branch.id}')">
@@ -343,6 +351,15 @@ function openBizBranchDetail(branchId) {
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Cüzdanım</div>
               <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Kazançlar, finansal hareketler & ödemeler</div>
             </div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizLegalDocs('${branch.id}')">
+            <iconify-icon icon="solar:shield-keyhole-bold" style="font-size:20px;color:#F59E0B"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Yasal Evraklar</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(function(){ if (typeof bizBranchLegal !== 'function') return 'Ünvan · adres · vergi · IBAN'; const ld = bizBranchLegal(branch.id); const isPending = ld.pending && new Date(ld.pending.reviewDeadline) > new Date(); return isPending ? 'İnceleme altında · doğrulama bekliyor' : 'Ünvan · adres · vergi · IBAN'; })()}</div>
+            </div>
+            ${(typeof bizBranchLegal === 'function' && bizBranchLegal(branch.id).pending && new Date(bizBranchLegal(branch.id).pending.reviewDeadline) > new Date()) ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(245,158,11,.14);color:#D97706;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">İNCELEMEDE</span>' : ''}
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
           <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;background:linear-gradient(90deg,rgba(239,68,68,.06),transparent)" onclick="openBizBranchDeletePage('${branch.id}')">
