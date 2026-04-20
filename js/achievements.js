@@ -5,7 +5,7 @@
 
 /* ── State ── */
 var _ach = {
-  tab: 'active',                // 'active' | 'collection'
+  tab: 'weekly',                // 'weekly' | 'monthly' | 'permanent' | 'collection'
   detailId: null
 };
 
@@ -22,7 +22,7 @@ function openAchievementsPage() {
   overlay.id = 'achOverlay';
   phone.appendChild(overlay);
 
-  _ach.tab = 'active';
+  _ach.tab = 'weekly';
   _achRender();
 }
 
@@ -88,29 +88,50 @@ function _achProgress(badge) {
 }
 
 function _achTierColor(tier) {
-  return tier === 'bronze' ? '#CD7F32'
-    : tier === 'silver' ? '#C0C0C0'
-    : tier === 'gold' ? '#F59E0B'
-    : tier === 'prestige' ? '#8B5CF6'
+  return tier === 'bronze'  ? '#CD7F32'
+    : tier === 'silver'  ? '#C0C0C0'
+    : tier === 'gold'    ? '#F59E0B'
+    : tier === 'diamond' ? '#3FCFF6'
+    : tier === 'prestige'? '#8B5CF6'
     : '#6B7280';
 }
 
 function _achTierGradient(tier) {
-  return tier === 'bronze' ? 'linear-gradient(135deg,#CD7F32,#A0522D)'
-    : tier === 'silver' ? 'linear-gradient(135deg,#E5E7EB,#9CA3AF)'
-    : tier === 'gold' ? 'linear-gradient(135deg,#FCD34D,#F59E0B)'
-    : tier === 'prestige' ? 'linear-gradient(135deg,#8B5CF6,#EC4899)'
+  return tier === 'bronze'  ? 'linear-gradient(135deg,#CD7F32,#A0522D)'
+    : tier === 'silver'  ? 'linear-gradient(135deg,#E5E7EB,#9CA3AF)'
+    : tier === 'gold'    ? 'linear-gradient(135deg,#FCD34D,#F59E0B)'
+    : tier === 'diamond' ? 'linear-gradient(135deg,#A7F3FF,#3FCFF6 60%,#0EA5E9)'
+    : tier === 'prestige'? 'linear-gradient(135deg,#8B5CF6,#EC4899)'
     : 'linear-gradient(135deg,#9CA3AF,#6B7280)';
 }
 
-function _achDaysUntilReset() {
-  // Sonraki Pazartesi 00:00'a kalan saat/gün
+function _achTierLabel(tier) {
+  return tier === 'bronze'  ? 'BRONZ'
+    : tier === 'silver'  ? 'GÜMÜŞ'
+    : tier === 'gold'    ? 'ALTIN'
+    : tier === 'diamond' ? 'ELMAS'
+    : tier === 'prestige'? 'PRESTİJ'
+    : '—';
+}
+
+function _achDaysUntilReset(kind) {
   var now = new Date();
-  var day = now.getDay(); // 0=Paz, 1=Pzt
-  var daysUntil = (day === 0) ? 1 : (8 - day);
   var next = new Date(now);
-  next.setDate(now.getDate() + daysUntil);
-  next.setHours(0, 0, 0, 0);
+  if (kind === 'monthly') {
+    // Ayın 1'i 00:00
+    next.setMonth(now.getMonth() + 1, 1);
+    next.setHours(0, 0, 0, 0);
+  } else if (kind === 'yearly' || kind === 'permanent') {
+    // Kalıcı için: yıl başı 00:00
+    next.setFullYear(now.getFullYear() + 1, 0, 1);
+    next.setHours(0, 0, 0, 0);
+  } else {
+    // weekly: sonraki Pazartesi 00:00
+    var day = now.getDay();
+    var daysUntil = (day === 0) ? 1 : (8 - day);
+    next.setDate(now.getDate() + daysUntil);
+    next.setHours(0, 0, 0, 0);
+  }
   var diff = next - now;
   var d = Math.floor(diff / 86400000);
   var h = Math.floor((diff % 86400000) / 3600000);
@@ -121,10 +142,16 @@ function _achDaysUntilReset() {
 function _achRenderMain() {
   var earned = USER_ACHIEVEMENT_PROGRESS.earnedIds.length;
   var total = USER_ACHIEVEMENTS_CATALOG.length;
-  var reset = _achDaysUntilReset();
 
   // Kullanıcı top badge
   var topBadge = _achTopBadge();
+
+  // Aktif tab'a göre reset
+  var resetKind = (_ach.tab === 'monthly') ? 'monthly'
+    : (_ach.tab === 'permanent') ? 'yearly'
+    : 'weekly';
+  var reset = _achDaysUntilReset(resetKind);
+  var resetLbl = (_ach.tab === 'monthly') ? 'Ay sonu' : (_ach.tab === 'permanent') ? 'Yıl sonu' : 'Hafta sonu';
 
   var h = '<div class="adm-fadeIn ach-wrap">';
 
@@ -142,23 +169,36 @@ function _achRenderMain() {
     + '<div class="ach-hero-stats">'
     + '<span><b>' + earned + '</b>/' + total + ' rozet</span>'
     + '<span>·</span>'
-    + '<span>Sıfırlama: <b>' + reset.days + 'g ' + reset.hours + 's</b></span>'
+    + '<span>' + resetLbl + ': <b>' + reset.days + 'g ' + reset.hours + 's</b></span>'
     + '</div>'
     + '</div>'
     + '</div></div>';
 
-  // Tabs
+  // Tabs (4: Haftalık / Aylık / Kalıcı / Koleksiyon)
   h += '<div class="ach-tabs">'
-    + '<button class="ach-tab-btn' + (_ach.tab === 'active' ? ' active' : '') + '" onclick="_ach.tab=\'active\';_achRenderBody()">'
-    + '<iconify-icon icon="solar:target-bold" style="font-size:14px"></iconify-icon>Aktif Görevler</button>'
-    + '<button class="ach-tab-btn' + (_ach.tab === 'collection' ? ' active' : '') + '" onclick="_ach.tab=\'collection\';_achRenderBody()">'
-    + '<iconify-icon icon="solar:cup-bold" style="font-size:14px"></iconify-icon>Koleksiyon (' + earned + ')</button>'
+    + '<button class="ach-tab-btn' + (_ach.tab === 'weekly' ? ' active' : '') + '" onclick="_ach.tab=\'weekly\';_achRender()">'
+    +   '<iconify-icon icon="solar:calendar-minimalistic-bold" style="font-size:14px"></iconify-icon>Haftalık</button>'
+    + '<button class="ach-tab-btn' + (_ach.tab === 'monthly' ? ' active' : '') + '" onclick="_ach.tab=\'monthly\';_achRender()">'
+    +   '<iconify-icon icon="solar:calendar-date-bold" style="font-size:14px"></iconify-icon>Aylık</button>'
+    + '<button class="ach-tab-btn' + (_ach.tab === 'permanent' ? ' active' : '') + '" onclick="_ach.tab=\'permanent\';_achRender()">'
+    +   '<iconify-icon icon="solar:infinity-bold" style="font-size:14px"></iconify-icon>Kalıcı</button>'
+    + '<button class="ach-tab-btn' + (_ach.tab === 'collection' ? ' active' : '') + '" onclick="_ach.tab=\'collection\';_achRender()">'
+    +   '<iconify-icon icon="solar:cup-bold" style="font-size:14px"></iconify-icon>Koleksiyon (' + earned + ')</button>'
     + '</div>';
 
-  if (_ach.tab === 'active') {
-    h += _achRenderActive();
-  } else {
+  // Açıklama kuralı (tab'a göre)
+  var rulesByTab = {
+    weekly:    'Her Pazartesi 00:00\'da sayaç sıfırlanır. Hedefe ulaşan rozet Pazar 23:59\'a kadar aktif kalır.',
+    monthly:   'Her ayın 1\'inde sayaç sıfırlanır. Ay boyu hedefe ulaşınca rozet kazanılır.',
+    permanent: 'Kazanıldığı an ömür boyu kalır (yıllık rozetler her yıl yenilenir).',
+    collection: 'Kazandığın tüm rozetler burada listelenir.'
+  };
+  h += '<div class="ach-rule"><iconify-icon icon="solar:info-circle-bold" style="font-size:13px;color:#3B82F6;flex-shrink:0"></iconify-icon><span>' + rulesByTab[_ach.tab] + '</span></div>';
+
+  if (_ach.tab === 'collection') {
     h += _achRenderCollection();
+  } else {
+    h += _achRenderByDuration(_ach.tab);
   }
 
   h += '</div>';
@@ -179,12 +219,20 @@ function _achTopBadge() {
   return best;
 }
 
-/* ═══ Aktif Görevler ═══ */
-function _achRenderActive() {
+/* ═══ Duration bazlı kategori render (weekly/monthly/permanent) ═══ */
+function _achRenderByDuration(duration) {
+  // 'permanent' sekmesi hem permanent hem yearly'i kapsasın
+  var cats = USER_ACHIEVEMENT_CATEGORIES.filter(function(c){
+    if (duration === 'permanent') return c.duration === 'permanent' || c.duration === 'yearly';
+    return c.duration === duration;
+  });
+  if (!cats.length) return '<div class="ach-empty"><iconify-icon icon="solar:box-linear" style="font-size:48px;opacity:.3"></iconify-icon><div>Bu bölümde henüz rozet yok</div></div>';
+
   var h = '';
-  for (var i = 0; i < USER_ACHIEVEMENT_CATEGORIES.length; i++) {
-    var cat = USER_ACHIEVEMENT_CATEGORIES[i];
+  for (var i = 0; i < cats.length; i++) {
+    var cat = cats[i];
     var badges = USER_ACHIEVEMENTS_CATALOG.filter(function(b) { return b.category === cat.id; });
+    if (!badges.length) continue;
 
     h += '<div class="ach-cat-sect">'
       + '<div class="ach-cat-head">'
@@ -193,12 +241,12 @@ function _achRenderActive() {
       + '</div>'
       + '<div style="flex:1"><div class="ach-cat-lbl">' + _achEsc(cat.label) + '</div>'
       + '<div class="ach-cat-sub">' + _achEsc(cat.sub) + '</div></div>'
+      + (cat.duration === 'yearly' ? '<span class="ach-cat-chip">Yıllık</span>' : '')
+      + (cat.duration === 'permanent' ? '<span class="ach-cat-chip ach-cat-chip--perm">Kalıcı</span>' : '')
       + '</div>'
       + '<div class="ach-badge-grid">';
 
-    for (var j = 0; j < badges.length; j++) {
-      h += _achBadgeCard(badges[j]);
-    }
+    for (var j = 0; j < badges.length; j++) h += _achBadgeCard(badges[j]);
     h += '</div></div>';
   }
   return h;
@@ -257,7 +305,7 @@ function _achRenderCollection() {
       + '<iconify-icon icon="' + b.icon + '" style="font-size:32px;color:#fff"></iconify-icon>'
       + '</div>'
       + '<div class="ach-coll-lbl" style="color:' + tierColor + '">' + _achEsc(b.label) + '</div>'
-      + '<div class="ach-coll-tier">' + (b.tier === 'prestige' ? '✨ Prestij' : b.tier === 'gold' ? '🥇 Altın' : b.tier === 'silver' ? '🥈 Gümüş' : '🥉 Bronz') + '</div>'
+      + '<div class="ach-coll-tier">' + (b.tier === 'diamond' ? '💎 Elmas' : b.tier === 'prestige' ? '✨ Prestij' : b.tier === 'gold' ? '🥇 Altın' : b.tier === 'silver' ? '🥈 Gümüş' : '🥉 Bronz') + '</div>'
       + '</div>';
   }
   h += '</div>';
@@ -299,7 +347,7 @@ function _achRenderDetail() {
   var p = _achProgress(b);
   var grad = _achTierGradient(b.tier);
 
-  var tierLabel = b.tier === 'prestige' ? 'PRESTİJ' : b.tier === 'gold' ? 'ALTIN' : b.tier === 'silver' ? 'GÜMÜŞ' : 'BRONZ';
+  var tierLabel = _achTierLabel(b.tier);
 
   var h = '<div class="ach-detail-head" style="background:' + (earned ? grad : 'linear-gradient(135deg,#64748B,#475569)') + '">'
     + '<div class="ach-close" onclick="_achCloseDetail()"><iconify-icon icon="solar:close-circle-bold" style="font-size:18px;color:#fff"></iconify-icon></div>'
@@ -397,15 +445,20 @@ function _achInjectStyles() {
     '.ach-hero-stats{display:flex;align-items:center;gap:6px;font-size:11px;opacity:.95}',
     '.ach-hero-stats b{font-weight:700}',
     '/* Tabs */',
-    '.ach-tabs{display:flex;gap:8px;background:var(--bg-phone-secondary);padding:4px;border-radius:12px;margin-bottom:14px}',
-    '.ach-tab-btn{flex:1;padding:9px 10px;border:none;background:transparent;color:var(--text-muted);border-radius:9px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all .18s}',
+    '.ach-tabs{display:flex;gap:4px;background:var(--bg-phone-secondary);padding:4px;border-radius:12px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}',
+    '.ach-tabs::-webkit-scrollbar{display:none}',
+    '.ach-tab-btn{flex:1;padding:9px 8px;border:none;background:transparent;color:var(--text-muted);border-radius:9px;font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:all .18s;white-space:nowrap;min-width:fit-content}',
     '.ach-tab-btn.active{background:var(--bg-phone);color:var(--text-primary);box-shadow:0 1px 4px rgba(0,0,0,.08)}',
+    '/* Kural açıklama şeridi */',
+    '.ach-rule{display:flex;align-items:flex-start;gap:6px;padding:10px 12px;margin-bottom:14px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.18);border-radius:10px;font-size:11.5px;line-height:1.4;color:var(--text-secondary)}',
     '/* Category section */',
     '.ach-cat-sect{margin-bottom:18px}',
     '.ach-cat-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:0 2px}',
     '.ach-cat-ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}',
     '.ach-cat-lbl{font-size:13px;font-weight:700;color:var(--text-primary)}',
     '.ach-cat-sub{font-size:10.5px;color:var(--text-muted);margin-top:1px}',
+    '.ach-cat-chip{padding:3px 8px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:.3px;background:rgba(14,165,233,.12);color:#0EA5E9}',
+    '.ach-cat-chip--perm{background:rgba(139,92,246,.14);color:#8B5CF6}',
     '/* Badge grid */',
     '.ach-badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}',
     '.ach-badge-card{background:var(--bg-phone);border:1px solid var(--border-soft);border-radius:14px;padding:11px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .15s,box-shadow .18s;position:relative;overflow:hidden}',
