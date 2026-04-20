@@ -1933,6 +1933,129 @@ function bizUnpaidInvoiceCount(branchId) {
   return BIZ_INVOICES.filter(function(i){ return i.branchId === branchId && (i.status === 'pending' || i.status === 'overdue'); }).length;
 }
 
+// ═══ İŞLETME BAŞARILARI VE KOLEKSİYONLARI ═══
+// Şube bazında verilen dinamik rozetler + kriter karşılama durumları
+const BIZ_BRANCH_BADGE_CATEGORIES = [
+  { id:'quality',     label:'Kalite ve Değerlendirme', sub:'Kullanıcı puanlarına dayalı prestij rozetleri', icon:'solar:star-bold',               color:'#F59E0B' },
+  { id:'nutrition',   label:'Beslenme ve Yaşam Tarzı', sub:'Menü içeriğine ve üretim tarzına göre',         icon:'solar:leaf-bold',               color:'#22C55E' },
+  { id:'service',     label:'İletişim ve Hizmet',      sub:'Yorumlara duyarlılık oranı',                    icon:'solar:chat-round-dots-bold',    color:'#3B82F6' },
+  { id:'performance', label:'Performans ve Operasyon', sub:'Satış hacmi ve disiplin verileri',              icon:'solar:chart-2-bold',            color:'#EF4444' }
+];
+
+const BIZ_BRANCH_BADGES_CATALOG = [
+  // ── Kalite ve Değerlendirme ──
+  { id:'customer_fav',     category:'quality',     tier:'gold',     label:'Müşteri Favorisi',
+    icon:'solar:star-bold',              color:'#F59E0B',
+    short:'Genel 4.5+ · Tüm ürünler 4.0+',
+    desc:'Genel puanınız 4.5 ve üzeri olmalı; menünüzdeki hiçbir ürünün puanı 4.0 altına düşmemeli.',
+    rule:'Genel puan ≥ 4.5 VE her menü ürünü ≥ 4.0' },
+  { id:'flawless_taste',   category:'quality',     tier:'diamond',  label:'Kusursuz Lezzet',
+    icon:'solar:medal-star-bold',        color:'#3FCFF6',
+    short:'Her ürün 4.5+',
+    desc:'Menünüzdeki her bir ürünün ortalama puanı 4.5 veya üzeri olmalı.',
+    rule:'Her menü ürünü ≥ 4.5' },
+  { id:'gourmet_pick',     category:'quality',     tier:'prestige', label:'Gurme Seçimi',
+    icon:'solar:cup-star-bold',          color:'#8B5CF6',
+    short:'Genel 4.9+ · Tüm ürünler 4.8+',
+    desc:'Şehrin en seçkin restoranları için: genel puan 4.9+ ve menüdeki tüm ürünler 4.8\'i aşmalı.',
+    rule:'Genel puan ≥ 4.9 VE her ürün ≥ 4.8' },
+  { id:'week_star',        category:'quality',     tier:'silver',   label:'Haftanın Yıldızı',
+    icon:'solar:sun-2-bold',             color:'#F59E0B',
+    short:'7 gün · 4★ altı yok',
+    desc:'Son 7 gün içerisinde hiçbir siparişten 4 yıldızın altında puan almamış olmalısınız.',
+    rule:'Son 7 günde minimum puan ≥ 4★' },
+
+  // ── Beslenme ve Yaşam Tarzı ──
+  { id:'vegan_friendly',   category:'nutrition',   tier:'gold',     label:'Vegan Dostu',
+    icon:'solar:leaf-bold',              color:'#22C55E',
+    short:'Menünün %50+\'si vegan',
+    desc:'Menü içeriğinizin %50 veya daha fazlası vegan seçeneklerden oluşmalı.',
+    rule:'Vegan ürün oranı ≥ %50' },
+  { id:'veggie_friendly',  category:'nutrition',   tier:'silver',   label:'Vejetaryen Dostu',
+    icon:'solar:salad-bold',             color:'#10B981',
+    short:'Menünün %50+\'si vejetaryen',
+    desc:'Menünüzün en az yarısı et içermeyen ürünlerden oluşmalı.',
+    rule:'Vejetaryen ürün oranı ≥ %50' },
+  { id:'mom_style',        category:'nutrition',   tier:'gold',     label:'Anne Eli',
+    icon:'solar:hand-heart-bold',        color:'#EF4444',
+    short:'Ev yapımı · dondurulmuş yok',
+    desc:'Endüstriyel üretimden uzak, günlük hazırlanan, dondurulmuş ürün içermeyen ve geleneksel yöntemleri kullanan işletmeler.',
+    rule:'Dondurulmuş ürün yok + günlük hazırlık' },
+
+  // ── İletişim ve Hizmet ──
+  { id:'caring_biz',       category:'service',     tier:'silver',   label:'İlgili İşletme',
+    icon:'solar:chat-round-dots-bold',   color:'#3B82F6',
+    short:'Yoruma dönüş oranı %90+',
+    desc:'Gelen yorumlara geri dönüş oranınız %90 ve üzeri olmalı.',
+    rule:'Yorum yanıt oranı ≥ %90' },
+  { id:'super_support',    category:'service',     tier:'gold',     label:'Süper Destek',
+    icon:'solar:bolt-circle-bold',       color:'#F97316',
+    short:'İlk 24 saatte %90+ yanıt',
+    desc:'Yorumlara ilk 24 saat içinde ve %90\'ın üzerinde oranla yanıt vermelisiniz.',
+    rule:'24 saat içi yanıt oranı ≥ %90' },
+
+  // ── Performans ve Operasyon ──
+  { id:'order_champion',   category:'performance', tier:'gold',     label:'Sipariş Rekortmeni',
+    icon:'solar:ranking-bold',           color:'#3B82F6',
+    short:'Haftalık ilk 100',
+    desc:'Haftalık sipariş hacminizle uygulama genelinde ilk 100 işletme arasına girmelisiniz.',
+    rule:'Haftalık sipariş sıralaması ≤ 100' },
+  { id:'low_cancel_user',  category:'performance', tier:'silver',   label:'Vazgeçilmez Lezzet',
+    icon:'solar:verified-check-bold',    color:'#22C55E',
+    short:'Kullanıcı iptali %1 altı',
+    desc:'Kullanıcı iptal oranınız %1\'in altında olmalı. Hız ve şeffaflıkla güven verin.',
+    rule:'Kullanıcı iptal oranı ≤ %1' },
+  { id:'reliable_biz',     category:'performance', tier:'diamond',  label:'Sözünün Eri',
+    icon:'solar:shield-star-bold',       color:'#3FCFF6',
+    short:'İşletme iptali %1 altı (dinamik)',
+    desc:'Kendi taraflarından gelen siparişi asla reddetmeyen (stok/yoğunluk bahanesi yok) en disiplinli işletmeler. 2 üst üste red → rozet düşer.',
+    rule:'İşletme iptal oranı ≤ %1 (dinamik)' }
+];
+
+// Şube başına rozet durumu + mevcut istatistikler + son tebrik bildirimi
+var BIZ_BRANCH_BADGE_STATE = {
+  b1: {
+    earnedIds: ['customer_fav','week_star','caring_biz','super_support','order_champion','low_cancel_user','reliable_biz'],
+    stats: {
+      generalRating: 4.7,      minItemRating: 4.2,      maxItemRating: 4.9,
+      weekMinOrderRating: 4,
+      veganPercent: 18,        vegetarianPercent: 42,   homemade: false,
+      replyRate: 0.94,         fastReplyRate24h: 0.92,
+      weeklyOrderRank: 42,     userCancelRate: 0.008,   bizCancelRate: 0.005
+    },
+    lastEarnedId: 'super_support',
+    lastEarnedAt: '2026-04-18T09:15:00Z'
+  },
+  b2: {
+    earnedIds: ['veggie_friendly','caring_biz','low_cancel_user'],
+    stats: {
+      generalRating: 4.3,      minItemRating: 3.9,      maxItemRating: 4.8,
+      weekMinOrderRating: 3,
+      veganPercent: 28,        vegetarianPercent: 58,   homemade: true,
+      replyRate: 0.91,         fastReplyRate24h: 0.72,
+      weeklyOrderRank: 180,    userCancelRate: 0.009,   bizCancelRate: 0.025
+    },
+    lastEarnedId: 'caring_biz',
+    lastEarnedAt: '2026-04-10T14:22:00Z'
+  },
+  b3: {
+    earnedIds: ['customer_fav','mom_style','caring_biz'],
+    stats: {
+      generalRating: 4.6,      minItemRating: 4.1,      maxItemRating: 4.9,
+      weekMinOrderRating: 4,
+      veganPercent: 12,        vegetarianPercent: 38,   homemade: true,
+      replyRate: 0.93,         fastReplyRate24h: 0.81,
+      weeklyOrderRank: 210,    userCancelRate: 0.014,   bizCancelRate: 0.008
+    },
+    lastEarnedId: null, lastEarnedAt: null
+  }
+};
+
+function bizBranchBadgeState(branchId) {
+  if (!BIZ_BRANCH_BADGE_STATE[branchId]) BIZ_BRANCH_BADGE_STATE[branchId] = { earnedIds:[], stats:{}, lastEarnedId:null, lastEarnedAt:null };
+  return BIZ_BRANCH_BADGE_STATE[branchId];
+}
+
 // ═══ REZERVASYON AYARLARI ═══
 // Her şubenin rezervasyon kabul kuralları + token bloke kuralı
 // earliestBooking: 'now' | '30m' | '1h' | '2h' | '6h' | '1day'

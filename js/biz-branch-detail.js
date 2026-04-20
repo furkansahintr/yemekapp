@@ -265,6 +265,15 @@ function openBizBranchDetail(branchId) {
           <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Şube Ayarları</span>
         </div>
         <div style="background:var(--bg-phone);border-radius:var(--r-xl);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);overflow:hidden">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizBranchAchievements('${branch.id}')">
+            <iconify-icon icon="solar:cup-star-bold" style="font-size:20px;color:#F59E0B"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">İşletme Başarılar ve Koleksiyonları</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(function(){ if (typeof bizBranchBadgeState !== 'function') return 'Rozetlerini keşfet'; const st = bizBranchBadgeState(branch.id); const total = (typeof BIZ_BRANCH_BADGES_CATALOG !== 'undefined') ? BIZ_BRANCH_BADGES_CATALOG.length : 12; return st.earnedIds.length + '/' + total + ' rozet aktif'; })()}</div>
+            </div>
+            ${(typeof bizBranchBadgeState === 'function' && bizBranchBadgeState(branch.id).earnedIds.length > 0) ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:linear-gradient(135deg,#F59E0B,#EC4899);color:#fff;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">${bizBranchBadgeState(branch.id).earnedIds.length}</span>` : ''}
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
           <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizDeliverySettings('${branch.id}')">
             <iconify-icon icon="solar:delivery-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
             <div style="flex:1">
@@ -299,12 +308,13 @@ function openBizBranchDetail(branchId) {
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="alert('QR menü — yakında!')">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizQRMenu('${branch.id}')">
             <iconify-icon icon="solar:qr-code-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
             <div style="flex:1">
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">QR Menü</div>
-              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Masalara özel QR kodları</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${branch.tableQRMode ? 'Masaya özel QR açık · tam interaktif' : 'Sadece genel menü · sipariş kapalı'}</div>
             </div>
+            ${branch.tableQRMode ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(249,115,22,.14);color:#EA580C;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">AKTİF</span>' : ''}
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
           <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openBizCommissionSettings('${branch.id}')">
