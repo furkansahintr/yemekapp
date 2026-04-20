@@ -1788,6 +1788,32 @@ function bizUnpaidInvoiceCount(branchId) {
   return BIZ_INVOICES.filter(function(i){ return i.branchId === branchId && (i.status === 'pending' || i.status === 'overdue'); }).length;
 }
 
+// ═══ REZERVASYON AYARLARI ═══
+// Her şubenin rezervasyon kabul kuralları + token bloke kuralı
+// earliestBooking: 'now' | '30m' | '1h' | '2h' | '6h' | '1day'
+// blockType: 'fixed' (rez başına sabit) | 'perPerson' (kişi başı)
+var BIZ_RESERVATION_SETTINGS = {
+  b1: { enabled: true,  earliestBooking: '2h',  maxDaysAhead: 30, blockType: 'perPerson', blockAmount: 50,  updatedAt: '2026-04-01T10:00:00Z' },
+  b2: { enabled: false, earliestBooking: '1h',  maxDaysAhead: 14, blockType: 'fixed',     blockAmount: 150, updatedAt: null },
+  b3: { enabled: true,  earliestBooking: 'now', maxDaysAhead: 7,  blockType: 'fixed',     blockAmount: 100, updatedAt: '2026-03-20T15:30:00Z' }
+};
+
+function bizReservationSettings(branchId) {
+  if (!BIZ_RESERVATION_SETTINGS[branchId]) {
+    BIZ_RESERVATION_SETTINGS[branchId] = { enabled: false, earliestBooking: 'now', maxDaysAhead: 30, blockType: 'fixed', blockAmount: 100, updatedAt: null };
+  }
+  return BIZ_RESERVATION_SETTINGS[branchId];
+}
+
+const BIZ_EARLIEST_BOOKING_LABELS = {
+  'now':   'Hemen',
+  '30m':   '30 Dakika Önceden',
+  '1h':    '1 Saat Önceden',
+  '2h':    '2 Saat Önceden',
+  '6h':    'Aynı Gün (En az 6 saat)',
+  '1day':  '1 Gün Önceden'
+};
+
 // İşletme başarı metrikleri (ikna katmanı için)
 var BIZ_ACCOUNT_STATS = {
   totalOrders: 18420,

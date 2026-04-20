@@ -79,6 +79,7 @@ function renderBizMyBusiness() {
               <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.address)}</div>
               <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
                 <span style="font:var(--fw-medium) 10px/1 var(--font);color:${b.status === 'open' ? '#22c55e' : '#ef4444'};background:${b.status === 'open' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'};padding:3px 8px;border-radius:var(--r-full)">${b.status === 'open' ? 'Açık' : 'Kapalı'}</span>
+                ${(typeof bizReservationSettings === 'function' && bizReservationSettings(b.id).enabled) ? '<span title="Rezervasyon aktif" style="display:inline-flex;align-items:center;gap:3px;font:var(--fw-medium) 10px/1 var(--font);color:#7C3AED;background:rgba(139,92,246,0.1);padding:3px 8px;border-radius:var(--r-full)"><iconify-icon icon="solar:calendar-mark-bold" style="font-size:11px"></iconify-icon>Rez.</span>' : ''}
                 <span style="font:var(--fw-regular) 10px/1 var(--font);color:var(--text-tertiary)">${branchTables.length} masa · ${branchStaff.length} personel</span>
               </div>
             </div>
