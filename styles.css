@@ -267,6 +267,24 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 .cart-overlay.open{display:flex}
 .cart-header{display:flex;align-items:center;gap:12px;padding:max(env(safe-area-inset-top),48px) var(--app-px) 14px;border-bottom:1px solid var(--border-subtle)}
 .cart-header span{flex:1}
+.cart-delivery-section{padding:12px var(--app-px);border-bottom:1px solid var(--border-subtle);background:var(--bg-phone);animation:cartFadeIn .25s ease}
+@keyframes cartFadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.cart-dl-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.cart-dl-opt{padding:11px 12px;border:1.5px solid var(--border-subtle);background:var(--bg-phone);border-radius:var(--r-lg);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s ease;color:var(--text-secondary)}
+.cart-dl-opt:active{transform:scale(.98)}
+.cart-dl-opt.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+.cart-dl-opt-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cart-dl-opt-lbl{font:var(--fw-bold) var(--fs-sm)/1 var(--font)}
+.cart-dl-opt-sub{font:var(--fw-regular) 10px/1 var(--font);opacity:.75}
+.cart-dl-info{padding:10px 12px;border-radius:var(--r-lg);display:flex;flex-direction:column;gap:6px;animation:cartFadeIn .2s ease}
+.cart-dl-info--pickup{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.22)}
+.cart-dl-info--online{background:rgba(246,80,19,0.06);border:1px solid rgba(246,80,19,0.2)}
+.cart-dl-info-text{font:var(--fw-regular) 11.5px/1.4 var(--font);color:var(--text-secondary);margin-bottom:2px}
+.cart-dl-info-row{display:flex;align-items:center;gap:6px;font:var(--fw-medium) var(--fs-xs)/1.3 var(--font);color:var(--text-primary)}
+.cart-dl-info-row b{font-weight:700;color:var(--text-primary)}
+.cart-dl-map-btn{margin-top:4px;padding:8px 12px;border:1px solid #16A34A;background:#fff;color:#16A34A;border-radius:var(--r-md);font:var(--fw-semibold) 11.5px/1 var(--font);cursor:pointer;display:inline-flex;align-items:center;gap:6px;align-self:flex-start}
+.cart-dl-map-btn:active{transform:scale(.97)}
+.cart-dl-warn{display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(239,68,68,0.08);border-radius:var(--r-md);font:var(--fw-medium) 11px/1.3 var(--font);color:#DC2626}
 .cart-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 var(--app-px)}
 .cart-items{flex:1;overflow-y:auto;padding:8px 0;scrollbar-width:none}
 .cart-items::-webkit-scrollbar{display:none}

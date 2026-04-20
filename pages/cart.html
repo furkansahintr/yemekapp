@@ -5,6 +5,10 @@
     <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)">Sepetim</span>
     <div class="btn-icon" onclick="clearCart()" id="cartClearBtn" style="display:none"><iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:20px;color:#EF4444"></iconify-icon></div>
   </div>
+
+  <!-- Teslimat modu (Online / Gel-Al) — dinamik render -->
+  <div id="cartDeliverySection" class="cart-delivery-section"></div>
+
   <!-- Empty state -->
   <div class="cart-empty" id="cartEmpty">
     <iconify-icon icon="solar:cart-large-2-linear" style="font-size:64px;color:var(--text-muted)"></iconify-icon>
@@ -21,8 +25,8 @@
         <span>Ara Toplam</span>
         <span id="cartSubtotal">₺0</span>
       </div>
-      <div class="cart-summary-row">
-        <span>Teslimat</span>
+      <div class="cart-summary-row" id="cartDeliveryRow">
+        <span>Kurye Ücreti</span>
         <span id="cartDelivery" style="color:var(--primary)">Ücretsiz</span>
       </div>
       <div class="cart-summary-row cart-total">
@@ -30,7 +34,7 @@
         <span id="cartTotal">₺0</span>
       </div>
     </div>
-    <button class="btn-primary" style="width:100%;padding:16px;font-size:var(--fs-md);display:flex;align-items:center;justify-content:center;gap:8px" onclick="goToAddressSelection()">
+    <button class="btn-primary" id="cartCheckoutBtn" style="width:100%;padding:16px;font-size:var(--fs-md);display:flex;align-items:center;justify-content:center;gap:8px" onclick="checkoutCart()">
       <iconify-icon icon="solar:bag-check-bold" style="font-size:18px"></iconify-icon>
       Siparişi Onayla
     </button>
