@@ -317,16 +317,41 @@ function openBizBranchDetail(branchId) {
             ${branch.tableQRMode ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(249,115,22,.14);color:#EA580C;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">AKTİF</span>' : ''}
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openBizCommissionSettings('${branch.id}')">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizCommissionSettings('${branch.id}')">
             <iconify-icon icon="solar:wallet-money-bold" style="font-size:20px;color:#A855F7"></iconify-icon>
             <div style="flex:1">
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary);display:flex;align-items:center;gap:6px">
-                Komisyon Ayarları
+                Komisyon Oranlarım
                 ${(function(){ const r = Number(branch.rating || 0); const tier = _commTier(r); return `<span style="font:var(--fw-semibold) 9px/1 var(--font);color:${tier.color};background:${tier.color}22;padding:3px 7px;border-radius:var(--r-full)">%${_commRate(r)}</span>`; })()}
               </div>
               <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px">${Number(branch.rating || 0).toFixed(1)} puan · Performansa dayalı oran</div>
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizPremiumPlan()">
+            <iconify-icon icon="solar:crown-bold" style="font-size:20px;color:#A855F7"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Abonelik Bilgisi</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${BIZ_BUSINESS.subscription === 'premium' ? 'Premium Plan · Sınırsız özellik' : 'Ücretsiz plan — yükseltmek için dokun'}</div>
+            </div>
+            ${BIZ_BUSINESS.subscription === 'premium' ? '<span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--r-full);background:#A855F7;color:#fff;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">AKTİF</span>' : ''}
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizWallet()">
+            <iconify-icon icon="solar:card-bold" style="font-size:20px;color:#10B981"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Cüzdanım</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">Kazançlar, finansal hareketler & ödemeler</div>
+            </div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;background:linear-gradient(90deg,rgba(239,68,68,.06),transparent)" onclick="openBizBranchDeletePage('${branch.id}')">
+            <iconify-icon icon="solar:shop-minus-bold" style="font-size:20px;color:#EF4444"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:#DC2626">Bu Şubeyi Kalıcı Olarak Sil</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">2 aşamalı güvenlik · 30 gün geri alma</div>
+            </div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:#EF4444"></iconify-icon>
           </div>
         </div>
       </div>

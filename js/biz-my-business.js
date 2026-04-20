@@ -34,32 +34,6 @@ function renderBizMyBusiness() {
         ${bizCurrentRole === 'owner' ? `<div class="g-pill" style="padding:8px 14px;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--primary);cursor:pointer" onclick="openBizProfileEdit()">Düzenle</div>` : ''}
       </div>
 
-      <!-- İşletme Bilgileri -->
-      <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:4px 0">İşletme Bilgileri</div>
-      <div style="background:var(--bg-phone);border-radius:var(--r-xl);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);overflow:hidden">
-        <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-subtle)">
-          <iconify-icon icon="solar:phone-linear" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>
-          <div style="flex:1">
-            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Telefon</div>
-            <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-top:2px">${biz.owner.phone}</div>
-          </div>
-        </div>
-        <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-subtle)">
-          <iconify-icon icon="solar:letter-linear" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>
-          <div style="flex:1">
-            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">E-posta</div>
-            <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-top:2px">${biz.owner.email}</div>
-          </div>
-        </div>
-        <div style="padding:14px 16px;display:flex;align-items:center;gap:12px">
-          <iconify-icon icon="solar:document-text-linear" style="font-size:18px;color:var(--text-secondary)"></iconify-icon>
-          <div style="flex:1">
-            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Vergi No</div>
-            <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary);margin-top:2px">${biz.taxId}</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Şubelerim -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
         <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">${branchesLabel}</div>
@@ -103,92 +77,12 @@ function renderBizMyBusiness() {
       </div>
       ` : ''}
 
-      <!-- Abonelik -->
-      <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:4px 0">Abonelik & Plan</div>
-      <div style="background:var(--bg-phone);border-radius:var(--r-xl);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);overflow:hidden">
-        <div onclick="openBizPremiumPlan()" style="padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer">
-          <div style="width:40px;height:40px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center">
-            <iconify-icon icon="solar:crown-bold" style="font-size:22px;color:#A855F7"></iconify-icon>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Premium Plan</div>
-            <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${BIZ_BUSINESS.subscription === 'premium' ? 'Sınırsız şube · Tüm özellikler' : 'Temel plan — yükseltmek için dokun'}</div>
-          </div>
-          ${BIZ_BUSINESS.subscription === 'premium'
-            ? `<div style="padding:6px 12px;border-radius:var(--r-full);background:#A855F7;font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:#fff">Aktif</div>`
-            : `<div style="padding:6px 12px;border-radius:var(--r-full);background:var(--bg-btn);border:1px solid var(--border-subtle);font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Ücretsiz</div>`}
-          <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
-        </div>
-      </div>
-
-      <!-- Komisyon Oranlarım -->
-      ${(function(){
-        var _visibleBranches = isManager
-          ? BIZ_BRANCHES.filter(function(b){ return b.id === bizActiveBranch; })
-          : BIZ_BRANCHES;
-        if (!_visibleBranches.length) return '';
-        var _cb = _visibleBranches[0];
-        var _cr = Number(_cb.rating || 0);
-        var _cRate = (typeof _commRate === 'function') ? _commRate(_cr) : '—';
-        var _cTier = (typeof _commTier === 'function') ? _commTier(_cr) : { label:'', color:'#666', icon:'solar:star-bold' };
-        var _multi = _visibleBranches.length > 1;
-        var _onclick = _multi ? '_commOpenBranchPicker()' : 'openBizCommissionSettings(\'' + _cb.id + '\')';
-        var _sub = _multi
-          ? _visibleBranches.length + ' şube · Şube seçerek komisyon detaylarını görüntüleyin'
-          : _cr.toFixed(1) + ' puan · %' + _cRate + ' komisyon · ' + _cb.name;
-        return '<div onclick="' + _onclick + '" style="background:linear-gradient(135deg, ' + _cTier.color + '15, var(--bg-phone));border-radius:var(--r-xl);border:1px solid ' + _cTier.color + '44;box-shadow:var(--shadow-md);padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-top:2px">'
-          + '<div style="width:44px;height:44px;border-radius:var(--r-lg);background:' + _cTier.color + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-          + '<iconify-icon icon="solar:wallet-money-bold" style="font-size:22px;color:#fff"></iconify-icon>'
-          + '</div>'
-          + '<div style="flex:1;min-width:0">'
-          + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
-          + '<span style="font:var(--fw-semibold) var(--fs-md)/1.1 var(--font);color:var(--text-primary)">Komisyon Oranlarım</span>'
-          + '<span style="font:var(--fw-semibold) 10px/1 var(--font);color:' + _cTier.color + ';background:' + _cTier.color + '18;padding:3px 7px;border-radius:var(--r-full)">' + (_multi ? _visibleBranches.length + ' Şube' : _cTier.label) + '</span>'
-          + '</div>'
-          + '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">' + _sub + '</div>'
-          + '</div>'
-          + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:' + _cTier.color + '"></iconify-icon>'
-          + '</div>';
-      })()}
-
-      <!-- Şubeyi Kapat (Komisyon Ayarları altı) -->
-      ${(function(){
-        var _visibleBranches = isManager
-          ? BIZ_BRANCHES.filter(function(b){ return b.id === bizActiveBranch; })
-          : BIZ_BRANCHES;
-        if (!_visibleBranches.length) return '';
-        var _tb = _visibleBranches[0];
-        return '<div onclick="openBizBranchDeletePage(\'' + _tb.id + '\')" style="background:linear-gradient(135deg,rgba(239,68,68,.05),var(--bg-phone));border:1px solid rgba(239,68,68,.22);border-radius:var(--r-xl);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-top:2px">'
-          + '<div style="width:40px;height:40px;border-radius:var(--r-lg);background:rgba(239,68,68,.12);color:#EF4444;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-          + '<iconify-icon icon="solar:shop-minus-bold" style="font-size:22px"></iconify-icon>'
-          + '</div>'
-          + '<div style="flex:1;min-width:0">'
-          + '<div style="font:var(--fw-semibold) var(--fs-md)/1.1 var(--font);color:#DC2626">Bu Şubeyi Kalıcı Olarak Sil</div>'
-          + '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">Menü, personel ve saatler yayından kalkar · 30 gün geri alma</div>'
-          + '</div>'
-          + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:#EF4444"></iconify-icon>'
-          + '</div>';
-      })()}
-
-      <!-- Cüzdanım -->
-      ${(typeof _wltPreviewTileHtml === 'function') ? _wltPreviewTileHtml() : ''}
-
       <!-- Ayarlar -->
       <div style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:4px 0">Ayarlar</div>
       <div style="background:var(--bg-phone);border-radius:var(--r-xl);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);overflow:hidden">
         ${bizSettingsItem('solar:bell-linear', 'Bildirim Ayarları', '', '')}
         ${bizSettingsItem('solar:link-circle-linear', 'Entegrasyonlar', 'POS, muhasebe, kargo', '')}
         ${bizCurrentRole === 'owner' ? bizSettingsItem('solar:lock-password-linear', 'Güvenlik', 'Şifre & iki adımlı doğrulama', '') : ''}
-        ${bizCurrentRole === 'owner' ? `
-        <div onclick="openBizBusinessDeletePage()" style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;background:linear-gradient(90deg,rgba(239,68,68,.04),transparent)">
-          <iconify-icon icon="solar:shield-cross-bold" style="font-size:20px;color:#EF4444"></iconify-icon>
-          <div style="flex:1">
-            <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:#DC2626">İşletme Hesabını ve Tüm Şubeleri Sil</div>
-            <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">Tam veda · 3 aşamalı güvenlik · 30 gün geri alma</div>
-          </div>
-          <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:#EF4444"></iconify-icon>
-        </div>
-        ` : ''}
         <div style="padding:14px 16px;display:flex;align-items:center;gap:12px">
           <iconify-icon icon="solar:moon-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
           <span style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Koyu Tema</span>
