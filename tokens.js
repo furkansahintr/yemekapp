@@ -35,9 +35,10 @@ const TOKENS = {
       textMuted: "rgba(24,24,27,0.45)",
       bgBtn: "rgb(243,244,246)",
       borderSubtle: "rgba(3,7,18,0.08)",
-      shadowSm: "0 3px 8px rgba(3,7,18,0.1)",
-      shadowMd: "0 6px 16px rgba(3,7,18,0.1)",
-      shadowLg: "0 9px 24px rgba(3,7,18,0.1)",
+      borderDanger: "rgba(225,29,72,0.08)",
+      shadowSm: "0 3px 8px rgba(3,7,18,0.13)",
+      shadowMd: "0 5px 13px rgba(3,7,18,0.08)",
+      shadowLg: "0 8px 21px rgba(3,7,18,0.05)",
     },
 
     dark: {
@@ -56,9 +57,10 @@ const TOKENS = {
       textMuted: "rgba(250,250,250,0.4)",
       bgBtn: "rgb(17,24,39)",
       borderSubtle: "rgba(229,231,235,0.08)",
-      shadowSm: "0 3px 8px rgba(156,163,175,0.1)",
-      shadowMd: "0 6px 16px rgba(156,163,175,0.1)",
-      shadowLg: "0 9px 24px rgba(156,163,175,0.1)",
+      borderDanger: "rgba(225,29,72,0.08)",
+      shadowSm: "0 3px 8px rgba(156,163,175,0.13)",
+      shadowMd: "0 5px 13px rgba(156,163,175,0.08)",
+      shadowLg: "0 8px 21px rgba(156,163,175,0.05)",
       primaryDeep: "#F88A60",
       primaryLight: "#1C0D06",
       secondary: "#9CA3AF",
@@ -145,6 +147,7 @@ function injectTokens() {
   // Borders & Shadows
   root.style.setProperty("--bg-btn", t.bgBtn);
   root.style.setProperty("--border-subtle", t.borderSubtle);
+  root.style.setProperty("--border-danger", t.borderDanger);
   root.style.setProperty("--shadow-sm", t.shadowSm);
   root.style.setProperty("--shadow-md", t.shadowMd);
   root.style.setProperty("--shadow-lg", t.shadowLg);

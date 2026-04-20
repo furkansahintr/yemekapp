@@ -12,10 +12,11 @@ function addToRecent(idx, source) {
 }
 
 function renderScrollCard(item, idx, source) {
+  const allergen = (typeof _cardAllergenBadge === 'function') ? _cardAllergenBadge(item) : '';
   if (item.type === 'restoran' || source === 'restoran') {
-    return `<div class="scroll-card" onclick="showDetail(${idx},'${source}')">
-      <div class="scroll-card-img"><img src="${item.img}" alt="${item.name}"></div>
-      <div class="scroll-card-body">
+    return `<div class="kesfet-item scroll-card" onclick="showDetail(${idx},'${source}')">
+      <div class="img-wrap" style="position:relative">${allergen}<img src="${item.img}" alt="${item.name}"></div>
+      <div class="ki-content">
         <div class="ki-title">${item.name}</div>
         <div class="ki-meta">
           <div class="ki-meta-group"><iconify-icon class="ki-meta-icon" icon="solar:star-linear"></iconify-icon><span class="ki-meta-text">${item.rating}</span></div>
@@ -27,9 +28,9 @@ function renderScrollCard(item, idx, source) {
       </div>
     </div>`;
   }
-  return `<div class="scroll-card" onclick="showDetail(${idx},'${source}')">
-    <div class="scroll-card-img"><img src="${item.img}" alt="${item.name}"></div>
-    <div class="scroll-card-body">
+  return `<div class="kesfet-item scroll-card" onclick="showDetail(${idx},'${source}')">
+    <div class="img-wrap" style="position:relative">${allergen}<img src="${item.img}" alt="${item.name}"></div>
+    <div class="ki-content">
       <div class="ki-title">${item.name}</div>
       <div class="ki-meta">
         <div class="ki-meta-group"><iconify-icon class="ki-meta-icon" icon="solar:star-linear"></iconify-icon><span class="ki-meta-text">${item.rating}</span></div>
@@ -43,10 +44,9 @@ function renderScrollCard(item, idx, source) {
 function renderSection(title, items, indices, source, opts) {
   if (!items.length) return '';
   const badge = opts && opts.badge ? `<span class="section-badge"><iconify-icon icon="solar:crown-bold" style="font-size:10px"></iconify-icon> ${opts.badge}</span>` : '';
-  const icon = opts && opts.icon ? `<iconify-icon icon="${opts.icon}" class="home-section-icon"></iconify-icon>` : '';
   return `<div class="home-section">
     <div class="home-section-header">
-      <span class="home-section-title">${icon}${title}${badge}</span>
+      <span class="home-section-title">${title}${badge}</span>
       <div class="home-section-link"><i class="ti ti-arrow-narrow-right" style="font-size:18px;color:var(--text-secondary)"></i></div>
     </div>
     <div class="home-scroll">${items.map((item, i) => renderScrollCard(item, indices[i], source)).join('')}</div>
@@ -56,22 +56,20 @@ function renderSection(title, items, indices, source, opts) {
 function renderCTACard(type) {
   if (type === 'premium') {
     return `<div class="cta-card cta-premium" onclick="switchTab('profile')">
-      <div class="cta-icon"><iconify-icon icon="solar:crown-bold" style="font-size:24px;color:var(--primary)"></iconify-icon></div>
+      <img class="cta-img" src="assets/premium_left.png" alt="Premium">
       <div class="cta-content">
         <div class="cta-title">Premium'a Geç</div>
         <div class="cta-desc">Reklamsız deneyim, özel tarifler ve ücretsiz teslimat ayrıcalıkları</div>
       </div>
-      <div class="cta-arrow"><iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:rgba(255,255,255,0.4)"></iconify-icon></div>
     </div>`;
   }
   if (type === 'ai') {
     return `<div class="cta-card cta-ai" onclick="switchTab('ai')">
-      <div class="cta-icon"><iconify-icon icon="solar:star-circle-bold" style="font-size:24px;color:#FF9F43"></iconify-icon></div>
+      <img class="cta-img" src="assets/ai_chef_left.png" alt="AI Chef">
       <div class="cta-content">
         <div class="cta-title">AI'ya Sor</div>
         <div class="cta-desc">Ne yiyeceğine karar veremedin mi? AI asistan sana özel öneriler sunsun</div>
       </div>
-      <div class="cta-arrow"><iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:18px;color:rgba(255,255,255,0.4)"></iconify-icon></div>
     </div>`;
   }
   return '';
@@ -122,7 +120,7 @@ function _cardAllergenBadge(item){
   if(typeof _getMatchingAllergens!=='function') return '';
   var m=_getMatchingAllergens(item);
   if(!m.length) return '';
-  return '<div style="position:absolute;top:8px;right:8px;background:rgba(239,68,68,.9);color:#fff;padding:3px 8px;border-radius:12px;display:flex;align-items:center;gap:4px;z-index:2"><iconify-icon icon="solar:shield-warning-bold" style="font-size:12px"></iconify-icon><span style="font:var(--fw-semibold) 9px/1 var(--font)">Alerjen</span></div>';
+  return '<div style="position:absolute;top:8px;left:8px;background:rgba(225,29,72,0.55);color:var(--text-primary);padding:3px 8px;border:1px solid var(--border-danger);border-radius:12px;display:flex;align-items:center;gap:4px;z-index:2;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)"><iconify-icon icon="solar:shield-warning-bold" style="font-size:12px;color:var(--text-primary)"></iconify-icon><span style="font:var(--fw-bold) 9px/1 var(--font);color:var(--text-primary)">Alerjen</span></div>';
 }
 
 function renderMenuCard(item,idx){
