@@ -754,7 +754,7 @@ const USER_PROFILE = {
       desc: 'Kayseri usulü el açması mantı, sarımsaklı yoğurt ve tereyağlı sos ile.',
       ingredients: ['Un 3 su bardağı', 'Kıyma 300g', 'Soğan 2 adet', 'Yoğurt 500g', 'Sarımsak 3 diş', 'Tereyağı 50g', 'Pul biber'],
       steps: ['Hamuru yoğurun ve 30dk dinlendirin', 'İç harcını hazırlayın', 'Hamuru ince açıp küçük kareler kesin', 'Kıymayı karelere koyup kapatın', 'Kaynayan suda 15-20dk haşlayın', 'Sarımsaklı yoğurt ve tereyağlı sos ile servis edin'],
-      date: '2025-03-15'
+      date: '2025-03-15', status: 'approved', submittedAt: '2025-03-13T10:00:00Z', approvedAt: '2025-03-14T12:30:00Z'
     },
     {
       id: 2, name: 'Fırında Sebzeli Tavuk', category: 'Ana Yemek',
@@ -763,8 +763,38 @@ const USER_PROFILE = {
       desc: 'Marine edilmiş tavuk but, renkli sebzeler ile fırında.',
       ingredients: ['Tavuk but 4 adet', 'Patates 3 adet', 'Havuç 2 adet', 'Biber 2 adet', 'Zeytinyağı', 'Kekik, tuz, karabiber'],
       steps: ['Tavukları marine edin', 'Sebzeleri doğrayıp tepsiye dizin', 'Tavukları üzerine yerleştirin', '200°C fırında 45dk pişirin'],
-      date: '2025-04-02'
+      date: '2025-04-02', status: 'approved', submittedAt: '2025-03-31T14:00:00Z', approvedAt: '2025-04-01T09:20:00Z'
     },
+    {
+      id: 3, name: 'Karamelize Soğanlı Makarna', category: 'Ana Yemek',
+      img: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&h=400&fit=crop',
+      prepTime: '10dk', cookTime: '35dk', difficulty: 'Orta', servings: 2,
+      desc: 'Yavaş pişmiş soğan, parmesan ve taze biberiye ile sade bir makarna.',
+      ingredients: ['Makarna 300g','Soğan 3 adet','Tereyağı','Parmesan','Zeytinyağı','Biberiye'],
+      steps: ['Soğanları 20dk yavaşça kavurun','Makarnayı haşlayın','Karamelize soğanla karıştırın, parmesan serpin'],
+      date: new Date().toISOString().slice(0,10), status: 'pending', submittedAt: new Date(Date.now() - 6 * 3600000).toISOString()
+    },
+    {
+      id: 4, name: 'Çikolatalı Sufle', category: 'Tatlı',
+      img: 'https://images.unsplash.com/photo-1551887196-72e32bfc7bf3?w=400&h=400&fit=crop',
+      prepTime: '15dk', cookTime: '12dk', difficulty: 'Orta', servings: 2,
+      desc: 'Akışkan merkezli çikolatalı sufle.',
+      ingredients: ['Bitter çikolata 100g','Tereyağı 60g','Yumurta 2 adet','Un 2 yk','Pudra şekeri'],
+      steps: ['Çikolata ve tereyağı eritin','Yumurtaları çırpıp karıştırın','180°C fırında 10-12dk pişirin'],
+      date: '2026-04-10', status: 'approved', submittedAt: '2026-04-19T10:00:00Z', approvedAt: new Date(Date.now() - 4 * 3600000).toISOString()
+    },
+    {
+      id: 5, name: 'Dondurmalı Baklava Sunumu', category: 'Tatlı',
+      img: 'https://images.unsplash.com/photo-1566702306121-ac65aa8e2531?w=400&h=400&fit=crop',
+      prepTime: '5dk', cookTime: '0dk', difficulty: 'Kolay', servings: 1,
+      desc: 'Hazır baklava + ticari marka dondurma ile hızlı tatlı.',
+      ingredients: ['Hazır baklava','Ticari marka dondurma'],
+      steps: ['Baklavaları tabağa dizin','Üzerine topları koyun'],
+      date: '2026-04-05', status: 'rejected',
+      submittedAt: '2026-04-05T12:00:00Z',
+      rejectedAt: '2026-04-07T09:30:00Z',
+      rejectionReason: 'Tarifiniz içinde ticari marka adı geçiyor ve hazır ürün kullanımı ağırlıkta. Kendi hazırlayacağınız veya markasız, özgün bir tarif olarak yeniden düzenleyebilirsiniz.'
+    }
   ],
   // ── Alerjen & İntoleranslar ──
   allergens: ['gluten', 'laktoz'],  // aktif alerjen id'leri

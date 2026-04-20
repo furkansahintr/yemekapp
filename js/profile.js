@@ -980,10 +980,59 @@ function closeMyRecipesPage() {
 }
 
 /* ── Liste Görünümü ── */
+/* ── Status helpers ── */
+function _mrStatus(r) {
+  var s = r.status || 'approved';
+  if (s === 'approved' && r.approvedAt) {
+    var hoursSince = (Date.now() - new Date(r.approvedAt).getTime()) / 3600000;
+    if (hoursSince < 24) return 'fresh';  // 24 saat yeşil badge
+  }
+  return s;  // 'pending' | 'approved' | 'rejected'
+}
+
+function _mrStatusSort(a, b) {
+  // Öncelik: pending → fresh → rejected → approved (old)
+  var order = { pending: 0, fresh: 1, rejected: 2, approved: 3 };
+  var sa = _mrStatus(a), sb = _mrStatus(b);
+  if (order[sa] !== order[sb]) return order[sa] - order[sb];
+  // Aynı gruptaysa tarihe göre yeni önce
+  var da = new Date(a.submittedAt || a.date || 0).getTime();
+  var db = new Date(b.submittedAt || b.date || 0).getTime();
+  return db - da;
+}
+
+function _mrInjectStatusStyles() {
+  if (document.getElementById('mrStatusStyles')) return;
+  var s = document.createElement('style');
+  s.id = 'mrStatusStyles';
+  s.textContent = [
+    '@keyframes mrFreshIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}',
+    '@keyframes mrPulse{0%,100%{box-shadow:0 0 0 0 rgba(234,179,8,.5)}50%{box-shadow:0 0 0 6px rgba(234,179,8,0)}}',
+    '.mr-card{position:relative;display:flex;gap:12px;padding:12px;background:var(--glass-card);border-radius:var(--r-xl);margin-bottom:8px;cursor:pointer;transition:transform .3s ease, opacity .3s ease}',
+    '.mr-card--pending{opacity:.7;filter:saturate(.6)}',
+    '.mr-card--pending .mr-card-img{filter:blur(2px) brightness(.9)}',
+    '.mr-card--fresh{border:1.5px solid #16A34A;background:linear-gradient(135deg,rgba(34,197,94,.08),var(--glass-card));animation:mrFreshIn .4s ease}',
+    '.mr-card--rejected{border:1.5px solid rgba(239,68,68,.35)}',
+    '.mr-card-img{width:72px;height:72px;border-radius:var(--r-lg);object-fit:cover;flex-shrink:0;transition:filter .3s}',
+    '.mr-card-body{flex:1;min-width:0}',
+    '.mr-card-name{font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.mr-card-meta{font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px}',
+    '.mr-card-stats{display:flex;gap:10px;margin-top:6px}',
+    '.mr-card-stats span{font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);display:flex;align-items:center;gap:3px}',
+    '.mr-status-tag{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:3px 8px;border-radius:var(--r-full);font:var(--fw-bold) 10px/1.3 var(--font);letter-spacing:.2px}',
+    '.mr-status-tag--pending{background:rgba(234,179,8,.14);color:#CA8A04;animation:mrPulse 1.6s infinite}',
+    '.mr-status-tag--fresh{background:rgba(34,197,94,.14);color:#16A34A}',
+    '.mr-status-tag--rejected{background:rgba(239,68,68,.14);color:#DC2626}',
+    '.mr-card-del{position:absolute;top:12px;right:12px;cursor:pointer;color:var(--text-muted);padding:4px}'
+  ].join('\n');
+  document.head.appendChild(s);
+}
+
 function _mrRenderList() {
+  _mrInjectStatusStyles();
   var content = document.getElementById('mrContent');
   if (!content) return;
-  var recipes = USER_PROFILE.myRecipes || [];
+  var recipes = (USER_PROFILE.myRecipes || []).slice().sort(_mrStatusSort);
 
   var html = '';
 
@@ -1004,18 +1053,29 @@ function _mrRenderList() {
     html += '</div>';
   } else {
     recipes.forEach(function(r) {
-      html += '<div style="display:flex;gap:12px;padding:12px;background:var(--glass-card);border-radius:var(--r-xl);margin-bottom:8px;cursor:pointer;position:relative" onclick="_mrViewRecipe(' + r.id + ')">';
-      html += '<img src="' + r.img + '" style="width:72px;height:72px;border-radius:var(--r-lg);object-fit:cover;flex-shrink:0">';
-      html += '<div style="flex:1;min-width:0">';
-      html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.name + '</div>';
-      html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px">' + (r.category || '') + ' · ' + (r.difficulty || '') + '</div>';
-      html += '<div style="display:flex;gap:10px;margin-top:6px">';
-      html += '<span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);display:flex;align-items:center;gap:3px"><iconify-icon icon="solar:clock-circle-linear" style="font-size:12px"></iconify-icon>' + (r.prepTime || '') + '</span>';
-      html += '<span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);display:flex;align-items:center;gap:3px"><iconify-icon icon="solar:fire-linear" style="font-size:12px"></iconify-icon>' + (r.cookTime || '') + '</span>';
-      html += '<span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);display:flex;align-items:center;gap:3px"><iconify-icon icon="solar:users-group-rounded-linear" style="font-size:12px"></iconify-icon>' + (r.servings || 1) + ' kişi</span>';
-      html += '</div></div>';
-      /* Sil butonu */
-      html += '<div onclick="event.stopPropagation();_mrDeleteRecipe(' + r.id + ')" style="position:absolute;top:12px;right:12px;cursor:pointer;color:var(--text-muted)"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:18px"></iconify-icon></div>';
+      var st = _mrStatus(r);
+      var cls = 'mr-card' + (st === 'pending' ? ' mr-card--pending' : st === 'fresh' ? ' mr-card--fresh' : st === 'rejected' ? ' mr-card--rejected' : '');
+      html += '<div class="' + cls + '" onclick="_mrViewRecipe(' + r.id + ')">';
+      html += '<img class="mr-card-img" src="' + r.img + '">';
+      html += '<div class="mr-card-body">';
+      html += '<div class="mr-card-name">' + r.name + '</div>';
+      html += '<div class="mr-card-meta">' + (r.category || '') + ' · ' + (r.difficulty || '') + '</div>';
+      // Status tag
+      if (st === 'pending') {
+        html += '<div class="mr-status-tag mr-status-tag--pending"><iconify-icon icon="solar:clock-circle-bold" style="font-size:10px"></iconify-icon>Onay Bekliyor</div>';
+      } else if (st === 'fresh') {
+        html += '<div class="mr-status-tag mr-status-tag--fresh"><iconify-icon icon="solar:check-circle-bold" style="font-size:10px"></iconify-icon>Onaylandı</div>';
+      } else if (st === 'rejected') {
+        html += '<div class="mr-status-tag mr-status-tag--rejected"><iconify-icon icon="solar:close-circle-bold" style="font-size:10px"></iconify-icon>Onaylanmadı</div>';
+      } else {
+        html += '<div class="mr-card-stats">';
+        html += '<span><iconify-icon icon="solar:clock-circle-linear" style="font-size:12px"></iconify-icon>' + (r.prepTime || '') + '</span>';
+        html += '<span><iconify-icon icon="solar:fire-linear" style="font-size:12px"></iconify-icon>' + (r.cookTime || '') + '</span>';
+        html += '<span><iconify-icon icon="solar:users-group-rounded-linear" style="font-size:12px"></iconify-icon>' + (r.servings || 1) + ' kişi</span>';
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '<div class="mr-card-del" onclick="event.stopPropagation();_mrDeleteRecipe(' + r.id + ')"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:18px"></iconify-icon></div>';
       html += '</div>';
     });
   }
@@ -1033,8 +1093,37 @@ function _mrViewRecipe(id) {
   if (!content) return;
 
   _mrInjectRecipeStyles();
+  _mrInjectStatusStyles();
   var html = '';
   html += '<div onclick="_mrRenderList()" style="display:inline-flex;align-items:center;gap:4px;padding:8px 0;cursor:pointer;color:var(--primary);font:var(--fw-medium) var(--fs-sm)/1 var(--font);margin-bottom:8px"><iconify-icon icon="solar:arrow-left-outline" style="font-size:16px"></iconify-icon>Geri</div>';
+
+  // Status paneli (detay üstünde)
+  var st = _mrStatus(r);
+  if (st === 'pending') {
+    html += '<div style="display:flex;gap:10px;padding:12px 14px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25);border-radius:var(--r-lg);margin-bottom:12px">'
+      + '<iconify-icon icon="solar:clock-circle-bold" style="font-size:22px;color:#CA8A04;flex-shrink:0"></iconify-icon>'
+      + '<div><div style="font:var(--fw-bold) 13px/1.3 var(--font);color:#92400E;margin-bottom:4px">İnceleme sürüyor</div>'
+      + '<div style="font:var(--fw-regular) 12px/1.4 var(--font);color:var(--text-secondary)">Tarifiniz 48 saat içinde değerlendirilecek. Onaylanana kadar toplulukta görünmez.</div></div></div>';
+  } else if (st === 'fresh') {
+    html += '<div style="display:flex;gap:10px;padding:12px 14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:var(--r-lg);margin-bottom:12px">'
+      + '<iconify-icon icon="solar:check-circle-bold" style="font-size:22px;color:#16A34A;flex-shrink:0"></iconify-icon>'
+      + '<div><div style="font:var(--fw-bold) 13px/1.3 var(--font);color:#166534;margin-bottom:4px">Onaylandı 🎉</div>'
+      + '<div style="font:var(--fw-regular) 12px/1.4 var(--font);color:var(--text-secondary)">Tarifiniz yayında ve toplulukta görünüyor. Bu özel rozet 24 saat boyunca sabit kalır.</div></div></div>';
+  } else if (st === 'rejected') {
+    html += '<div style="padding:12px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.28);border-radius:var(--r-lg);margin-bottom:12px">'
+      + '<div style="display:flex;gap:10px;margin-bottom:10px">'
+      +   '<iconify-icon icon="solar:close-circle-bold" style="font-size:22px;color:#DC2626;flex-shrink:0"></iconify-icon>'
+      +   '<div style="flex:1"><div style="font:var(--fw-bold) 13px/1.3 var(--font);color:#991B1B;margin-bottom:4px">Onaylanmadı</div>'
+      +     '<div style="font:var(--fw-medium) 11px/1 var(--font);color:var(--text-muted)">Red Nedeni</div>'
+      +     '<div style="font:var(--fw-regular) 12px/1.5 var(--font);color:var(--text-secondary);margin-top:4px">' + _escHtmlAttr(r.rejectionReason || 'Detay verilmedi.') + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:10px">'
+      +   '<button onclick="_mrResubmit(' + r.id + ')" style="flex:1;padding:10px;border:none;border-radius:var(--r-md);background:var(--primary);color:#fff;font:var(--fw-bold) 12px/1 var(--font);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px"><iconify-icon icon="solar:pen-2-linear" style="font-size:13px"></iconify-icon>Düzenle ve Tekrar Gönder</button>'
+      +   '<button onclick="_mrOpenRecipeSupport(' + r.id + ')" style="flex:1;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-md);background:var(--bg-phone);color:var(--text-primary);font:var(--fw-bold) 12px/1 var(--font);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px"><iconify-icon icon="solar:headphones-round-bold" style="font-size:13px"></iconify-icon>Destek Al</button>'
+      + '</div>'
+      + '</div>';
+  }
 
   // Çoklu kapak → carousel; yoksa tek görsel
   var imgs = r.images && r.images.length > 0 ? r.images : (r.img ? [r.img] : []);
@@ -1518,12 +1607,13 @@ function _mrSaveRecipe() {
   var imgs = (_mrForm.images || []).slice();
   var coverImg = imgs[0] || dummyImgs[USER_PROFILE.myRecipes.length % dummyImgs.length];
 
+  var now = new Date();
   var newRecipe = {
     id: Date.now(),
     name: _mrForm.name.trim(),
     category: _mrForm.category || 'Ana Yemek',
     img: coverImg,                 // Liste/kart görünümü için tek kapak
-    images: imgs,                  // Carousel için tüm kapaklar (yeni)
+    images: imgs,                  // Carousel için tüm kapaklar
     prepTime: _mrForm.prepTime || '',
     cookTime: _mrForm.cookTime || '',
     difficulty: _mrForm.difficulty || 'Orta',
@@ -1533,11 +1623,63 @@ function _mrSaveRecipe() {
     steps: _mrForm.steps
       .filter(function(s) { return s && s.text && s.text.trim(); })
       .map(function(s) { return { text: s.text.trim(), img: s.img || '' }; }),
-    date: new Date().toISOString().slice(0, 10)
+    date: now.toISOString().slice(0, 10),
+    status: 'pending',
+    submittedAt: now.toISOString()
   };
 
   USER_PROFILE.myRecipes.push(newRecipe);
-
-  if (typeof showToast === 'function') showToast('Tarif kaydedildi!');
   _mrRenderList();
+  _mrShowSubmitPopup();
+}
+
+/* ── Gönderim onayı popup ── */
+function _mrShowSubmitPopup() {
+  var existing = document.getElementById('mrSubmitPopup');
+  if (existing) existing.remove();
+  var m = document.createElement('div');
+  m.id = 'mrSubmitPopup';
+  m.style.cssText = 'position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .25s';
+  m.onclick = function(e){ if (e.target === m) _mrClosePopup(); };
+  m.innerHTML = '<div style="max-width:360px;width:100%;background:var(--bg-phone);border-radius:var(--r-xl);overflow:hidden;transform:translateY(16px);transition:transform .3s ease" id="mrPopupBox">'
+    + '<div style="padding:24px 20px 16px;text-align:center;background:linear-gradient(135deg,rgba(234,179,8,.1),var(--bg-phone))">'
+    +   '<div style="width:60px;height:60px;border-radius:50%;background:rgba(234,179,8,.15);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px"><iconify-icon icon="solar:clock-circle-bold" style="font-size:34px;color:#CA8A04"></iconify-icon></div>'
+    +   '<div style="font:var(--fw-bold) 16px/1.3 var(--font);color:var(--text-primary);margin-bottom:8px">Tarifiniz İncelemeye Alındı</div>'
+    +   '<div style="font:var(--fw-regular) 12.5px/1.5 var(--font);color:var(--text-secondary)">Yazmış olduğunuz tarifi <b>Superresto</b> sistemine dahil edebilmemiz için değerlendireceğiz. <b>48 saat</b> içerisinde sizlere geri dönüş sağlayacağız. Süreci <b>Tariflerim</b> sayfasından takip edebilirsiniz.</div>'
+    + '</div>'
+    + '<div style="padding:14px 20px 20px">'
+    +   '<button onclick="_mrClosePopup()" style="width:100%;padding:12px;border:none;border-radius:var(--r-lg);background:var(--primary);color:#fff;font:var(--fw-bold) 13px/1 var(--font);cursor:pointer">Anladım, Takibe Al</button>'
+    + '</div>'
+    + '</div>';
+  document.body.appendChild(m);
+  requestAnimationFrame(function(){
+    m.style.opacity = '1';
+    var box = document.getElementById('mrPopupBox');
+    if (box) box.style.transform = 'translateY(0)';
+  });
+}
+function _mrClosePopup() {
+  var m = document.getElementById('mrSubmitPopup');
+  if (!m) return;
+  m.style.opacity = '0';
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 260);
+}
+
+/* ── Reddedilen tarifi yeniden gönder ── */
+function _mrResubmit(id) {
+  var r = (USER_PROFILE.myRecipes || []).find(function(x){ return x.id === id; });
+  if (!r) return;
+  r.status = 'pending';
+  r.submittedAt = new Date().toISOString();
+  r.rejectedAt = null;
+  r.rejectionReason = null;
+  if (typeof showToast === 'function') showToast('Tarif yeniden incelemeye gönderildi');
+  _mrRenderList();
+}
+
+/* ── Destek aç ── */
+function _mrOpenRecipeSupport(id) {
+  if (typeof openSupport === 'function') { openSupport(); return; }
+  if (typeof _supOpen === 'function') { _supOpen(); return; }
+  alert('Destek ekibiyle iletişime geçiliyor — tarif #' + id + ' referansıyla sohbet başlatılacak.');
 }
