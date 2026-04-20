@@ -514,7 +514,7 @@ function _renderStep1() {
               return `<label class="wiz-img-slot wiz-img-add">
                 <iconify-icon icon="solar:camera-add-bold" style="font-size:26px;color:var(--primary)"></iconify-icon>
                 <span>${idx === 0 ? 'Kapak Ekle' : 'Görsel Ekle'}</span>
-                <input type="file" accept="image/jpeg,image/jpg,image/png" multiple style="display:none" onchange="wizHandleImageUpload(this)">
+                <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple style="display:none" onchange="wizHandleImageUpload(this)">
               </label>`;
             }
             return `<div class="wiz-img-slot wiz-img-empty"><iconify-icon icon="solar:gallery-linear" style="font-size:20px;color:var(--text-tertiary)"></iconify-icon></div>`;
@@ -580,7 +580,7 @@ function _renderStep1() {
 
 /* ═══ STEP 1 — ÜRÜN GÖRSELLERİ (zorunlu, 3 slot, drag-drop) ═══ */
 const _WIZ_MAX_IMAGES = 3;
-const _WIZ_ALLOWED_MIMES = ['image/jpeg', 'image/jpg', 'image/png'];
+const _WIZ_ALLOWED_MIMES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 function _wizToast(msg) {
   if (typeof _admToast === 'function') _admToast(msg, 'err');
@@ -1377,6 +1377,7 @@ function openComboCreationWizard(editComboId) {
     step: 1,
     isEdit: isEdit,
     editComboId: editComboId || null,
+    images: existingCombo && existingCombo.images ? existingCombo.images.slice() : [],
     name: existingCombo ? existingCombo.name : '',
     description: existingCombo ? existingCombo.description : '',
     category: existingCombo ? existingCombo.category : '',
@@ -1452,6 +1453,10 @@ function closeComboWizard() {
 function comboWizNext() {
   if (_comboState.step === 1) {
     _collectComboStep1();
+    if (!_comboState.images || _comboState.images.length < 1) {
+      _wizToast('Grubunuzun en az bir görseli olmalıdır');
+      return;
+    }
     if (_comboState.selectedProductIds.length + _comboState.selectedMenuItemIds.length < 2) {
       alert('En az 2 ürün seçmelisiniz.');
       return;
@@ -1499,6 +1504,46 @@ function _renderComboStep1() {
           <div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Ürün Seçimi & Gruplama</div>
           <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Pakete dahil edilecek ürünleri seçin</div>
         </div>
+      </div>
+
+      <!-- Grup Ürün Görselleri (zorunlu, en az 1 / en fazla 3) -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Paket Görselleri *</label>
+          <span style="font:var(--fw-regular) 10px/1 var(--font);color:var(--text-muted)">(en az 1, en fazla 3)</span>
+        </div>
+        <div class="wiz-img-row">
+          ${[0,1,2].map(idx => {
+            const img = _comboState.images[idx];
+            if (img) {
+              return `<div class="wiz-img-slot wiz-img-filled" draggable="true" ondragstart="comboImgDragStart(event,${idx})" ondragover="comboImgDragOver(event,${idx})" ondrop="comboImgDrop(event,${idx})" ondragend="comboImgDragEnd(event)">
+                <img src="${img}" alt="">
+                ${idx === 0 ? '<div class="wiz-img-cover">KAPAK</div>' : `<div class="wiz-img-idx">${idx + 1}</div>`}
+                <div class="wiz-img-actions">
+                  <div class="wiz-img-act" onclick="comboRemoveImage(${idx})" title="Sil"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:13px"></iconify-icon></div>
+                </div>
+              </div>`;
+            } else if (idx === _comboState.images.length) {
+              return `<label class="wiz-img-slot wiz-img-add" style="border-color:#8B5CF6;color:#8B5CF6">
+                <iconify-icon icon="solar:camera-add-bold" style="font-size:26px"></iconify-icon>
+                <span>${idx === 0 ? 'Kapak Ekle' : 'Görsel Ekle'}</span>
+                <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple style="display:none" onchange="comboHandleImageUpload(this)">
+              </label>`;
+            }
+            return `<div class="wiz-img-slot wiz-img-empty"><iconify-icon icon="solar:gallery-linear" style="font-size:20px;color:var(--text-tertiary)"></iconify-icon></div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:6px;margin-top:8px;padding:8px 10px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.22);border-radius:var(--r-md)">
+          <iconify-icon icon="solar:lightbulb-bold" style="font-size:14px;color:#8B5CF6;flex-shrink:0;margin-top:1px"></iconify-icon>
+          <span style="font:var(--fw-regular) 11px/1.5 var(--font);color:var(--text-secondary)">Grup ürün fotoğraflarında paket içeriğindeki tüm ürünlerin bir arada göründüğü bir sunum tercih etmeniz, kullanıcı güvenini artırır.</span>
+        </div>
+        ${_comboState.images.length >= 2 ? `
+        <div style="margin-top:10px;padding:10px;border:1px dashed var(--border-subtle);border-radius:var(--r-md);background:var(--bg-btn)">
+          <div style="font:var(--fw-bold) 10px/1 var(--font);color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:8px">Menüde nasıl görünecek</div>
+          <div style="display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none" class="combo-preview-carousel">
+            ${_comboState.images.map(src => `<img src="${src}" style="width:90px;height:90px;border-radius:var(--r-md);object-fit:cover;flex-shrink:0;scroll-snap-align:start">`).join('')}
+          </div>
+        </div>` : ''}
       </div>
 
       <!-- Combo Name -->
@@ -1630,6 +1675,65 @@ function _collectComboStep1() {
   const descEl = document.getElementById('combo_desc');
   if (nameEl) _comboState.name = nameEl.value.trim();
   if (descEl) _comboState.description = descEl.value.trim();
+}
+
+/* ═══ COMBO — Görsel Yükleme (wizard ile aynı standart) ═══ */
+function comboHandleImageUpload(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  _comboState.images = _comboState.images || [];
+  const remaining = _WIZ_MAX_IMAGES - _comboState.images.length;
+  if (remaining <= 0) { _wizToast('En fazla ' + _WIZ_MAX_IMAGES + ' fotoğraf yükleyebilirsiniz.'); input.value = ''; return; }
+  if (files.length > remaining) _wizToast(remaining + ' slot kaldı. İlk ' + remaining + ' fotoğraf yüklendi.');
+
+  const accepted = files.slice(0, remaining).filter(f => {
+    if (!_WIZ_ALLOWED_MIMES.includes(f.type)) { _wizToast('Desteklenmeyen format: ' + f.name + ' (yalnızca JPG/PNG/WEBP)'); return false; }
+    return true;
+  });
+  if (!accepted.length) { input.value = ''; return; }
+
+  let loaded = 0;
+  accepted.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      _comboState.images.push(e.target.result);
+      loaded++;
+      if (loaded === accepted.length) { input.value = ''; _comboRefreshStep1(); }
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function comboRemoveImage(idx) {
+  _comboState.images.splice(idx, 1);
+  _comboRefreshStep1();
+}
+
+let _comboDragIdx = null;
+function comboImgDragStart(e, idx) {
+  _comboDragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', String(idx)); } catch(err) {}
+  if (e.currentTarget && e.currentTarget.classList) e.currentTarget.classList.add('wiz-img-dragging');
+}
+function comboImgDragEnd(e) {
+  if (e.currentTarget && e.currentTarget.classList) e.currentTarget.classList.remove('wiz-img-dragging');
+  _comboDragIdx = null;
+}
+function comboImgDragOver(e, idx) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function comboImgDrop(e, toIdx) {
+  e.preventDefault();
+  if (_comboDragIdx === null || _comboDragIdx === toIdx) return;
+  const moved = _comboState.images.splice(_comboDragIdx, 1)[0];
+  _comboState.images.splice(toIdx, 0, moved);
+  _comboDragIdx = null;
+  _comboRefreshStep1();
+}
+
+function _comboRefreshStep1() {
+  _collectComboStep1();
+  const body = document.getElementById('comboWizBody');
+  if (body) body.innerHTML = _renderComboStep1();
 }
 
 /* ═══ COMBO STEP 2: FİYAT & AI ANALİZ ═══ */
@@ -1885,6 +1989,8 @@ function _saveCombo() {
         comboPrice: _comboState.comboPrice,
         status: status,
         publishDate: publishDate,
+        images: _comboState.images.slice(),
+        image: _comboState.images[0] || null,
         allergens: _comboState.allergens,
         aiAnalysis: _comboState.aiAnalysis,
         updatedAt: now
@@ -1904,6 +2010,8 @@ function _saveCombo() {
       comboPrice: _comboState.comboPrice,
       status: status,
       publishDate: publishDate,
+      images: _comboState.images.slice(),
+      image: _comboState.images[0] || null,
       allergens: _comboState.allergens,
       aiAnalysis: _comboState.aiAnalysis,
       createdAt: now,
