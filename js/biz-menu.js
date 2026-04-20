@@ -356,6 +356,7 @@ function openProductCreationWizard(editMenuItemId) {
     editMenuItemId: editMenuItemId || null,
     editProductId: existingProduct ? existingProduct.id : null,
     // Step 1: Temel Bilgiler
+    images: existingProduct && existingProduct.images ? existingProduct.images.slice() : [],
     name: existingMenuItem ? existingMenuItem.name : '',
     description: existingProduct ? existingProduct.description : '',
     prepTime: existingProduct ? existingProduct.prepTime : '',
@@ -489,6 +490,42 @@ function _renderStep1() {
         </div>
       </div>
 
+      <!-- Ürün Görselleri (zorunlu, en az 1 / en fazla 3) -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Ürün Görselleri *</label>
+          <span style="font:var(--fw-regular) 10px/1 var(--font);color:var(--text-muted)">(en az 1, en fazla 3)</span>
+          <button type="button" onclick="wizShowSampleImages()" style="margin-left:auto;padding:5px 10px;border:1px solid var(--border-subtle);background:var(--bg-phone);border-radius:var(--r-full);font:var(--fw-medium) 10px/1 var(--font);color:var(--text-secondary);cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+            <iconify-icon icon="solar:gallery-check-linear" style="font-size:12px"></iconify-icon>Örnek Fotoğraflar
+          </button>
+        </div>
+        <div class="wiz-img-row">
+          ${[0,1,2].map(idx => {
+            const img = _wizardState.images[idx];
+            if (img) {
+              return `<div class="wiz-img-slot wiz-img-filled" draggable="true" ondragstart="wizImgDragStart(event,${idx})" ondragover="wizImgDragOver(event,${idx})" ondrop="wizImgDrop(event,${idx})" ondragend="wizImgDragEnd(event)">
+                <img src="${img}" alt="">
+                ${idx === 0 ? '<div class="wiz-img-cover">KAPAK</div>' : `<div class="wiz-img-idx">${idx + 1}</div>`}
+                <div class="wiz-img-actions">
+                  <div class="wiz-img-act" onclick="wizRemoveImage(${idx})" title="Sil"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:13px"></iconify-icon></div>
+                </div>
+              </div>`;
+            } else if (idx === _wizardState.images.length) {
+              return `<label class="wiz-img-slot wiz-img-add">
+                <iconify-icon icon="solar:camera-add-bold" style="font-size:26px;color:var(--primary)"></iconify-icon>
+                <span>${idx === 0 ? 'Kapak Ekle' : 'Görsel Ekle'}</span>
+                <input type="file" accept="image/jpeg,image/jpg,image/png" multiple style="display:none" onchange="wizHandleImageUpload(this)">
+              </label>`;
+            }
+            return `<div class="wiz-img-slot wiz-img-empty"><iconify-icon icon="solar:gallery-linear" style="font-size:20px;color:var(--text-tertiary)"></iconify-icon></div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:6px;margin-top:8px;padding:8px 10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.22);border-radius:var(--r-md)">
+          <iconify-icon icon="solar:lightbulb-bold" style="font-size:14px;color:#16A34A;flex-shrink:0;margin-top:1px"></iconify-icon>
+          <span style="font:var(--fw-regular) 11px/1.5 var(--font);color:var(--text-secondary)">Kaliteli ve iştah açıcı fotoğraflar sipariş oranını %40'a kadar artırır. Ürünün net göründüğü, iyi ışıklandırılmış fotoğraflar tercih edin.</span>
+        </div>
+      </div>
+
       <!-- Ürün Adı -->
       <div>
         <label style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary);display:block;margin-bottom:6px">Ürün Adı *</label>
@@ -541,6 +578,146 @@ function _renderStep1() {
   `;
 }
 
+/* ═══ STEP 1 — ÜRÜN GÖRSELLERİ (zorunlu, 3 slot, drag-drop) ═══ */
+const _WIZ_MAX_IMAGES = 3;
+const _WIZ_ALLOWED_MIMES = ['image/jpeg', 'image/jpg', 'image/png'];
+
+function _wizToast(msg) {
+  if (typeof _admToast === 'function') _admToast(msg, 'err');
+  else alert(msg);
+}
+
+function wizHandleImageUpload(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+
+  const remaining = _WIZ_MAX_IMAGES - _wizardState.images.length;
+  if (remaining <= 0) {
+    _wizToast('En fazla ' + _WIZ_MAX_IMAGES + ' fotoğraf yükleyebilirsiniz.');
+    input.value = '';
+    return;
+  }
+  if (files.length > remaining) {
+    _wizToast(remaining + ' slot kaldı. İlk ' + remaining + ' fotoğraf yüklendi.');
+  }
+
+  const accepted = files.slice(0, remaining).filter(f => {
+    if (!_WIZ_ALLOWED_MIMES.includes(f.type)) {
+      _wizToast('Desteklenmeyen format: ' + f.name + ' (yalnızca JPG/PNG)');
+      return false;
+    }
+    return true;
+  });
+
+  let loaded = 0;
+  const target = accepted.length;
+  if (target === 0) { input.value = ''; return; }
+
+  accepted.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      _wizardState.images.push(e.target.result);
+      loaded++;
+      if (loaded === target) {
+        input.value = '';
+        _wizRefreshStep1();
+      }
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function wizRemoveImage(idx) {
+  _wizardState.images.splice(idx, 1);
+  _wizRefreshStep1();
+}
+
+/* Drag-drop sıralama — hangi fotoğraf kapak olacak */
+let _wizDragIdx = null;
+function wizImgDragStart(e, idx) {
+  _wizDragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', String(idx)); } catch(err) {}
+  if (e.currentTarget && e.currentTarget.classList) e.currentTarget.classList.add('wiz-img-dragging');
+}
+function wizImgDragEnd(e) {
+  if (e.currentTarget && e.currentTarget.classList) e.currentTarget.classList.remove('wiz-img-dragging');
+  _wizDragIdx = null;
+}
+function wizImgDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+function wizImgDrop(e, toIdx) {
+  e.preventDefault();
+  if (_wizDragIdx === null || _wizDragIdx === toIdx) return;
+  const moved = _wizardState.images.splice(_wizDragIdx, 1)[0];
+  _wizardState.images.splice(toIdx, 0, moved);
+  _wizDragIdx = null;
+  _wizRefreshStep1();
+}
+
+function _wizRefreshStep1() {
+  const body = document.getElementById('wizardBody');
+  if (body) body.innerHTML = _renderStep1();
+}
+
+function wizShowSampleImages() {
+  const overlay = document.createElement('div');
+  overlay.id = 'wizSampleOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:85;display:flex;align-items:flex-end;justify-content:center;padding:16px';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  const samples = [
+    { src:'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=400&fit=crop', tip:'Yemek tam kadrajda, üstten çekim' },
+    { src:'https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=400&h=400&fit=crop', tip:'Doğal ışık, net odak' },
+    { src:'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop', tip:'Sade arka plan, renk kontrastı' },
+    { src:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop', tip:'Servis tabağıyla sunum' }
+  ];
+  overlay.innerHTML = `<div style="width:100%;max-width:480px;background:var(--bg-page);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:18px;max-height:86vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <iconify-icon icon="solar:gallery-check-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
+      <div style="flex:1"><div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">Örnek Fotoğraflar</div>
+      <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px">Başarılı işletmelerden ilham al</div></div>
+      <div onclick="document.getElementById('wizSampleOverlay').remove()" class="btn-icon" style="width:32px;height:32px"><iconify-icon icon="solar:close-circle-linear" style="font-size:18px"></iconify-icon></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${samples.map(s => `<div style="display:flex;flex-direction:column;gap:6px">
+        <img src="${s.src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--r-lg);border:1px solid var(--border-subtle)">
+        <span style="font:var(--fw-medium) 11px/1.3 var(--font);color:var(--text-secondary)">${s.tip}</span>
+      </div>`).join('')}
+    </div>
+    <div style="margin-top:14px;padding:10px;background:rgba(246,80,19,0.06);border:1px solid rgba(246,80,19,0.2);border-radius:var(--r-md);font:var(--fw-regular) 11px/1.5 var(--font);color:var(--text-secondary)">
+      <b style="color:var(--text-primary)">İpuçları:</b> üstten/45° açı · doğal veya yumuşak ışık · sade arka plan · gerçek porsiyon · markasız ve filtresiz.
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function _wizInjectImageStyles() {
+  if (document.getElementById('wizImageStyles')) return;
+  const s = document.createElement('style');
+  s.id = 'wizImageStyles';
+  s.textContent = [
+    '.wiz-img-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}',
+    '.wiz-img-slot{aspect-ratio:1;border-radius:var(--r-lg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}',
+    '.wiz-img-empty{background:var(--bg-phone);border:1.5px dashed var(--border-subtle)}',
+    '.wiz-img-add{background:var(--bg-phone);border:1.5px dashed var(--primary);cursor:pointer;flex-direction:column;gap:4px;color:var(--primary);font:var(--fw-semibold) 11px/1 var(--font)}',
+    '.wiz-img-add:hover{background:rgba(246,80,19,0.06)}',
+    '.wiz-img-filled{background:var(--bg-phone);border:1px solid var(--border-subtle);cursor:grab}',
+    '.wiz-img-filled:active{cursor:grabbing}',
+    '.wiz-img-filled.wiz-img-dragging{opacity:.55}',
+    '.wiz-img-filled img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}',
+    '.wiz-img-cover{position:absolute;top:4px;left:4px;padding:2px 6px;border-radius:4px;background:var(--primary);color:#fff;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.4px}',
+    '.wiz-img-idx{position:absolute;top:4px;left:4px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.55);color:#fff;font:var(--fw-bold) 9px/1.4 var(--font)}',
+    '.wiz-img-actions{position:absolute;top:4px;right:4px;display:flex;gap:4px}',
+    '.wiz-img-act{width:24px;height:24px;border-radius:6px;background:rgba(0,0,0,0.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(4px)}'
+  ].join('\n');
+  document.head.appendChild(s);
+}
+
+// Styles'ı ilk wizard render'ında enjekte et
+(function(){ if (typeof document !== 'undefined') _wizInjectImageStyles(); })();
+
 function wizSelectCat(cat) {
   _wizardState.category = cat;
   const body = document.getElementById('wizardBody');
@@ -562,6 +739,7 @@ function _validateStep1() {
   _wizardState.description = desc ? desc.value.trim() : _wizardState.description;
   _wizardState.prepTime = prepTime ? parseInt(prepTime.value) : _wizardState.prepTime;
 
+  if (!_wizardState.images || _wizardState.images.length < 1) { _wizToast('Lütfen en az bir ürün fotoğrafı ekleyin.'); return false; }
   if (!_wizardState.name) { alert('Ürün adı zorunludur.'); return false; }
   if (!_wizardState.prepTime || _wizardState.prepTime < 1) { alert('Hazırlanma süresi giriniz.'); return false; }
   if (!_wizardState.category) { alert('Menü kategorisi seçiniz.'); return false; }
@@ -1112,6 +1290,8 @@ function _saveProduct() {
         kitchenCategory: _wizardState.kitchenCategory,
         status: status,
         publishDate: publishDate,
+        images: _wizardState.images.slice(),
+        image: _wizardState.images[0] || null,
         ingredients: _wizardState.ingredients.filter(i => i.name),
         variations: _wizardState.variations.filter(v => v.label),
         allergens: _wizardState.allergens,
@@ -1162,6 +1342,8 @@ function _buildProductObject(menuItemId, status, publishDate, now) {
     status: status,
     publishDate: publishDate,
     menuItemId: menuItemId,
+    images: _wizardState.images.slice(),
+    image: _wizardState.images[0] || null,
     ingredients: _wizardState.ingredients.filter(i => i.name),
     variations: _wizardState.variations.filter(v => v.label),
     allergens: _wizardState.allergens,
