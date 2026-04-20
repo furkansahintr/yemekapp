@@ -973,6 +973,51 @@ const BIZ_ORDERS = [
     completedAt: '2026-04-10T11:15:00Z',
     waiterName: null,
     courierName: 'Barış Güzel'
+  },
+  // ── Teslimat ekranı için aktif online siparişler ──
+  {
+    id: '#1061', branchId: 'b1', type: 'online',
+    customerName: 'Muhammed Solak', customerPhone: '+905551234567',
+    customerAddress: 'Caferağa Mah. Moda Cad. No:128 D:4, Kadıköy / İstanbul',
+    customerNote: 'Kapıda temassız teslim alacağım, zili çalmayın.',
+    items: [
+      { name: 'Big Burger Menu', qty: 1, price: 145.00 },
+      { name: 'Kızarmış Soğan Halkası', qty: 1, price: 55.00 },
+      { name: 'Cola 500ml', qty: 2, price: 35.00 }
+    ],
+    total: 270.00, paymentMethod: 'online', status: 'ready',
+    createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
+    prepStartedAt: new Date(Date.now() - 25 * 60000).toISOString(),
+    completedAt: null, courierName: null
+  },
+  {
+    id: '#1062', branchId: 'b1', type: 'online',
+    customerName: 'Zeynep Arslan', customerPhone: '+905552345678',
+    customerAddress: 'Fenerbahçe Mah. Bağdat Cad. No:86 Kat:3, Kadıköy / İstanbul',
+    customerNote: null,
+    items: [
+      { name: 'Tavuklu Wrap', qty: 2, price: 75.00 },
+      { name: 'Patates Kızartması', qty: 1, price: 45.00 }
+    ],
+    total: 195.00, paymentMethod: 'online', status: 'on_the_way',
+    createdAt: new Date(Date.now() - 35 * 60000).toISOString(),
+    prepStartedAt: new Date(Date.now() - 45 * 60000).toISOString(),
+    dispatchedAt: new Date(Date.now() - 8 * 60000).toISOString(),
+    completedAt: null, courierName: 'Kemal Y.'
+  },
+  {
+    id: '#1063', branchId: 'b1', type: 'online',
+    customerName: 'Ece Kaya', customerPhone: '+905553456789',
+    customerAddress: 'Göztepe Mah. Fahrettin Kerim Gökay Cad. No:14, Kadıköy / İstanbul',
+    customerNote: 'Ketçap eklemeyin lütfen.',
+    items: [
+      { name: 'Cheeseburger', qty: 1, price: 135.00 },
+      { name: 'Ayran', qty: 1, price: 20.00 }
+    ],
+    total: 155.00, paymentMethod: 'online', status: 'ready',
+    createdAt: new Date(Date.now() - 6 * 60000).toISOString(),
+    prepStartedAt: new Date(Date.now() - 20 * 60000).toISOString(),
+    completedAt: null, courierName: null
   }
 ];
 

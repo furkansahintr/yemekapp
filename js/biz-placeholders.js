@@ -160,7 +160,7 @@ function openBizBar() { if (!bizRoleGuard('bar')) return; bizKitchenActiveStatio
 
 // openBizReservations → js/biz-reservations.js
 
-function openBizDelivery() { if (!bizRoleGuard('delivery')) return; alert('Teslimatlar — yakında!'); }
+// openBizDelivery → js/biz-deliveries.js
 
 function closeBizMyBusiness() { /* handled by screen system */ }
 
