@@ -1265,6 +1265,151 @@ const BIZ_DASHBOARD_STATS = {
   ]
 };
 
+// ═══ DASHBOARD EXTENDED METRICS ═══
+// 4 ana bölüm için ek veriler: kanallar, heatmap, bölge, masa, retention, ziyaretçi,
+//                              kanal kırılımlı ürün, funnel, gizli cevher, geliştirme, İK, AI
+const BIZ_DASHBOARD_EXT = {
+  // Zaman periyodu karşılaştırması (her periyod için ciro + sipariş + kanal dağılımı)
+  periods: {
+    daily: {
+      label: 'Bugün', prevLabel: 'Dün',
+      revenue: 12450, prevRevenue: 11120,
+      orders: 47, prevOrders: 43,
+      channelRevenue: { online: 4980, table: 7470 },
+      // Son 7 günlük günlük ciro (çizgi grafik için)
+      series: [9400, 10100, 11850, 10800, 11200, 11120, 12450]
+    },
+    weekly: {
+      label: 'Bu Hafta', prevLabel: 'Geçen Hafta',
+      revenue: 78500, prevRevenue: 71300,
+      orders: 312, prevOrders: 288,
+      channelRevenue: { online: 32000, table: 46500 },
+      series: [9400, 10100, 11850, 10800, 11200, 11120, 12450]
+    },
+    monthly: {
+      label: 'Bu Ay', prevLabel: 'Geçen Ay',
+      revenue: 324000, prevRevenue: 298500,
+      orders: 1280, prevOrders: 1195,
+      channelRevenue: { online: 124000, table: 200000 },
+      // Son 4 hafta (4 nokta)
+      series: [72500, 78900, 80100, 82500]
+    }
+  },
+
+  // Isı haritası: 7 gün × 12 saat (10:00-22:00 arası yoğunluk 0-10)
+  heatmap: {
+    days: ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'],
+    hours: ['10','11','12','13','14','15','16','17','18','19','20','21'],
+    // 0..10 yoğunluk değerleri
+    matrix: [
+      [2,3,7,8,5,3,2,3,5,7,6,3], // Pzt
+      [2,3,6,7,4,2,2,3,5,8,7,4], // Sal
+      [2,4,8,9,6,4,3,4,6,8,7,4], // Çar (öğle düşük dikkat)
+      [3,4,8,9,6,4,3,4,7,9,8,5], // Per
+      [3,5,9,10,7,5,4,5,8,10,9,6], // Cum (zirve)
+      [4,6,9,10,8,6,5,6,9,10,9,7], // Cmt
+      [3,5,8,9,7,5,4,5,7,8,7,4]  // Paz
+    ]
+  },
+
+  // En yoğun bölgeler (online siparişler)
+  topDistricts: [
+    { name: 'Caferağa', count: 78, revenue: 19450 },
+    { name: 'Moda',     count: 65, revenue: 16200 },
+    { name: 'Fenerbahçe', count: 51, revenue: 14800 },
+    { name: 'Göztepe',  count: 42, revenue: 10500 },
+    { name: 'Kozyatağı', count: 28, revenue: 7100 }
+  ],
+
+  // En çok ciro yapan masalar
+  topTables: [
+    { tableNo: 4, orders: 42, revenue: 8950 },
+    { tableNo: 7, orders: 38, revenue: 7820 },
+    { tableNo: 2, orders: 35, revenue: 6940 },
+    { tableNo: 11, orders: 29, revenue: 5610 }
+  ],
+
+  // Retention: ilk kez / 2. kez / 3+ kez
+  retention: {
+    firstTime: 28,   // %
+    secondTime: 34,  // %
+    returning: 38    // %
+  },
+
+  // Ziyaretçi karşılaştırma
+  visitors: {
+    community: 1420,   // topluluk sayfası ziyareti
+    table: 320,        // masada oturan
+    online: 640        // online sipariş veren
+  },
+
+  // Kanal bazlı en çok satan (ilk 4)
+  topItemsByChannel: {
+    online: [
+      { name: 'Big Burger Menu', qty: 56, revenue: 8120 },
+      { name: 'Chicken Wrap',    qty: 42, revenue: 3150 },
+      { name: 'Patates Kızartması', qty: 38, revenue: 1710 },
+      { name: 'Kola 500ml',      qty: 71, revenue: 2485 }
+    ],
+    table: [
+      { name: 'İskender Kebap',  qty: 48, revenue: 8640 },
+      { name: 'Adana Kebap',     qty: 44, revenue: 7480 },
+      { name: 'Ayran',           qty: 92, revenue: 1840 },
+      { name: 'Çoban Salata',    qty: 36, revenue: 2520 }
+    ]
+  },
+
+  // Görüntülenme → Sepet → Satın alma hunisi (%)
+  funnel: {
+    views: 8420,
+    addedToCart: 2610,   // 31%
+    purchased: 1280      // 15%
+  },
+
+  // Gizli cevher: az görüntülenen ama conversion yüksek ürünler
+  hiddenGems: [
+    { name: 'Ev Yapımı Kurabiyeli Sütlaç', views: 124, conversion: 0.42, price: 55 },
+    { name: 'Köz Biberli Izgara Sandviç',  views: 198, conversion: 0.38, price: 125 },
+    { name: 'Bal Kabağı Çorbası',          views: 162, conversion: 0.31, price: 48 }
+  ],
+
+  // Geliştirilmesi gerekenler (rating ≤ 3.9)
+  needsImprovement: [
+    { name: 'Sebzeli Makarna', rating: 3.5, reviews: 42, issue: 'Tuz miktarı yüksek yorumları' },
+    { name: 'Karışık Pizza',   rating: 3.7, reviews: 28, issue: 'Geç teslimat şikayetleri' },
+    { name: 'Fıstıklı Baklava', rating: 3.9, reviews: 18, issue: 'Tazelik soruları' }
+  ],
+
+  // Dönemin çalışanı
+  employeeOfPeriod: {
+    daily:   { name: 'Ayşe Kaya',    role: 'Garson',     orders: 28, rating: 4.9, avgTime: 11, avatar: 'https://i.pravatar.cc/120?img=45' },
+    weekly:  { name: 'Mehmet Çakır', role: 'Mutfak Şefi', orders: 186, rating: 4.8, avgTime: 13, avatar: 'https://i.pravatar.cc/120?img=33' },
+    monthly: { name: 'Fatih Demir',  role: 'Kurye',      orders: 742, rating: 4.9, avgTime: 22, avatar: 'https://i.pravatar.cc/120?img=12' }
+  },
+
+  // AI önerileri
+  aiSuggestions: [
+    {
+      icon: 'solar:calendar-mark-bold', color: '#8B5CF6',
+      title: 'Çarşamba öğlen fırsatı',
+      body: 'Çarşamba günleri 14:00-16:00 arası masalarınız boş kalıyor. Bu saatlere özel "İkinci Kahve %50 İndirimli" kampanyası yapmanızı öneririm.',
+      action: 'Kampanya Oluştur'
+    },
+    {
+      icon: 'solar:danger-triangle-bold', color: '#EF4444',
+      title: 'Sebzeli Makarna dikkat',
+      body: '"Sebzeli Makarna" puanı 3.5\'e düştü. Son 10 yorumda tuz miktarından şikayet var; mutfak ekibiyle hızlı bir değerlendirme önerilir.',
+      action: 'Yorumları İncele'
+    },
+    {
+      icon: 'solar:medal-star-bold', color: '#F59E0B',
+      title: 'Gizli cevher — öne çıkar',
+      body: '"Ev Yapımı Kurabiyeli Sütlaç" yalnızca 124 görüntüleme ile %42 satışa dönüşüyor. Menünün üst sıralarına taşımak siparişi 2x yapabilir.',
+      action: 'Menüde Öne Çıkar'
+    }
+  ]
+};
+
 const BIZ_NOTIFICATIONS = [
   {
     id: 'notif_001',
