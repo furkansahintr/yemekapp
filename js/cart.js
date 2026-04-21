@@ -53,6 +53,8 @@ function addToCart(idx, source) {
     });
   }
   updateCartBadge();
+  if (typeof showToast === 'function') showToast('Ürün sepetinize başarıyla eklendi.');
+  if (typeof bumpCartBadge === 'function') bumpCartBadge();
 }
 
 function removeFromCart(idx, source) {
