@@ -78,7 +78,65 @@ function _arvRefreshList() {
 
   if (_arv.tab === 'approved') { box.innerHTML = _arvRenderApproved(); return; }
   if (_arv.tab === 'pending') { box.innerHTML = _arvRenderPending(); return; }
-  box.innerHTML = '<div class="arv-placeholder">Liste (P8-P9) yakında...</div>';
+  if (_arv.tab === 'awaiting') { box.innerHTML = _arvRenderAwaiting(); return; }
+  box.innerHTML = '<div class="arv-placeholder">Liste (P9) yakında...</div>';
+}
+
+/* ═══ P8 — Cevap Bekleyen Tab ═══ */
+function _arvRenderAwaiting() {
+  var list = _arvFilterList('awaiting_response');
+  // Kronolojik en eskiden yeniye (editRequestedAt'a göre)
+  list.sort(function(a,b){ return new Date(a.editRequestedAt || a.date) - new Date(b.editRequestedAt || b.date); });
+
+  if (list.length === 0) {
+    return '<div class="arv-empty">'
+      + '<iconify-icon icon="solar:inbox-linear" style="font-size:42px;opacity:.3"></iconify-icon>'
+      + '<div>Cevap bekleyen tarif yok</div>'
+      + '<div class="arv-empty-sub">Düzenleme istediğin tarifler burada listelenir</div>'
+      + '</div>';
+  }
+
+  var h = '<div class="arv-info-bar">'
+    + '<iconify-icon icon="solar:chat-square-call-bold" style="font-size:14px;color:#8B5CF6"></iconify-icon>'
+    + '<span>Kullanıcı güncellemesi bekleniyor · ' + list.length + ' tarif</span>'
+    + '</div>';
+
+  h += '<div class="arv-pending-list">';
+  for (var i = 0; i < list.length; i++) {
+    h += _arvAwaitingCard(list[i]);
+  }
+  h += '</div>';
+  return h;
+}
+
+function _arvAwaitingCard(r) {
+  var waitDays = r.editRequestedAt ? Math.floor((Date.now() - new Date(r.editRequestedAt)) / 86400000) : 0;
+  var waitLbl = waitDays === 0 ? 'Bugün gönderildi' : waitDays + ' gün önce gönderildi';
+  var stale = waitDays >= 5;
+
+  return '<div class="arv-p-card arv-p-card--awaiting">'
+    + '<div class="arv-p-img" style="background-image:url(' + (r.cover || '') + ')"></div>'
+    + '<div class="arv-p-main" onclick="_arvOpenDetail(\'' + r.id + '\')">'
+    + '<div class="arv-p-title">' + _arvEsc(r.title || '') + '</div>'
+    + '<div class="arv-p-meta">'
+    + '<span><iconify-icon icon="solar:user-linear" style="font-size:11px"></iconify-icon>' + _arvEsc(r.userName || '—') + '</span>'
+    + '<span class="arv-dot">·</span>'
+    + '<span class="arv-cat-pill">' + _arvEsc(r.category || '—') + '</span>'
+    + '</div>'
+    + (r.editRequestNote
+        ? '<div class="arv-p-note">'
+          + '<iconify-icon icon="solar:pen-new-square-linear" style="font-size:11px;color:#8B5CF6"></iconify-icon>'
+          + '<span>' + _arvEsc(r.editRequestNote.length > 80 ? r.editRequestNote.slice(0, 80) + '...' : r.editRequestNote) + '</span>'
+          + '</div>'
+        : '')
+    + '<div class="arv-p-date">'
+    + '<iconify-icon icon="solar:clock-circle-linear" style="font-size:11px"></iconify-icon>'
+    + waitLbl
+    + (stale ? '<span class="arv-status-pill arv-status-pill--stale">Uzun sürdü</span>' : '<span class="arv-status-pill arv-status-pill--awaiting">Cevap Bekliyor</span>')
+    + '</div>'
+    + '</div>'
+    + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-muted);align-self:center"></iconify-icon>'
+    + '</div>';
 }
 
 /* ═══ P3 — Bekleyen Tab ═══ */
