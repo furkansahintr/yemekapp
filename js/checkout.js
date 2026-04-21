@@ -184,7 +184,79 @@ function _chkRender() {
       + '</div>';
   }
 
+  /* Cüzdan bloğu */
+  h += _chkRenderWalletBlock();
+
   body.innerHTML = h;
+}
+
+/* ═══ P4 — Cüzdan toggle + hibrit hesaplama ═══ */
+function _chkGetTokens() {
+  return (typeof USER_WALLET !== 'undefined' && USER_WALLET && typeof USER_WALLET.tokens === 'number')
+    ? USER_WALLET.tokens : 0;
+}
+
+/* 1 Token = 1 TL varsayımı — proje genelinde bu oran kullanılıyor */
+function _chkWalletCalc() {
+  var tokens = _chkGetTokens();
+  var total = _chk.total || 0;
+  var walletUse = _chk.useWallet ? Math.min(tokens, total) : 0;
+  var cardUse = Math.max(0, total - walletUse);
+  var insufficient = _chk.useWallet && walletUse < total;  // cüzdan yetmiyor → kart şart
+  return { tokens: tokens, walletUse: walletUse, cardUse: cardUse, insufficient: insufficient };
+}
+
+function _chkRenderWalletBlock() {
+  var calc = _chkWalletCalc();
+
+  var h = '<div class="chk-section">'
+    + '<div class="chk-sec-lbl"><iconify-icon icon="solar:wallet-money-bold" style="font-size:13px;color:#F59E0B"></iconify-icon>Cüzdan ile Öde</div>';
+
+  // Toggle row
+  h += '<div class="chk-wallet-row">'
+    + '<div class="chk-wallet-ico"><iconify-icon icon="solar:dollar-minimalistic-bold" style="font-size:22px;color:#F59E0B"></iconify-icon></div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div class="chk-wallet-title">Cüzdan Bakiyen</div>'
+    + '<div class="chk-wallet-sub">'
+    + '<span class="chk-token"><iconify-icon icon="solar:dollar-minimalistic-bold" style="font-size:11px;color:#F59E0B;vertical-align:-1px"></iconify-icon> ' + calc.tokens.toLocaleString('tr-TR') + ' Token</span>'
+    + '<span style="margin:0 5px;opacity:.4">·</span>'
+    + '<span>1 Token = 1 TL</span>'
+    + '</div></div>'
+    + '<label class="chk-switch">'
+    + '<input type="checkbox"' + (_chk.useWallet ? ' checked' : '') + ' onchange="_chkToggleWallet(this.checked)">'
+    + '<span class="chk-slider"></span></label>'
+    + '</div>';
+
+  // Aktifse hesaplama
+  if (_chk.useWallet) {
+    if (calc.walletUse >= _chk.total && calc.walletUse > 0) {
+      // Tamamı token
+      h += '<div class="chk-wallet-msg chk-wallet-msg--ok">'
+        + '<iconify-icon icon="solar:check-circle-bold" style="font-size:15px;color:#10B981"></iconify-icon>'
+        + '<span>Tüm tutar cüzdanından karşılanacak. Kart seçimi gerekli değil.</span>'
+        + '</div>';
+    } else {
+      // Hibrit
+      h += '<div class="chk-wallet-msg chk-wallet-msg--hybrid">'
+        + '<iconify-icon icon="solar:shield-warning-bold" style="font-size:15px;color:#F59E0B"></iconify-icon>'
+        + '<span><b>' + calc.walletUse + ' Token</b> kullanılacak, kalan <b>₺' + _chkFmtTL(calc.cardUse) + '</b> seçili kartından tahsil edilecektir.</span>'
+        + '</div>';
+      if (calc.insufficient && !_chk.cardId && !_chk.addingCard) {
+        h += '<div class="chk-wallet-msg chk-wallet-msg--err">'
+          + '<iconify-icon icon="solar:danger-triangle-bold" style="font-size:15px;color:#EF4444"></iconify-icon>'
+          + '<span>Cüzdan bakiyesi yetersiz — kalan tutar için <b>bir kart seçmelisin</b>.</span>'
+          + '</div>';
+      }
+    }
+  }
+
+  h += '</div>';
+  return h;
+}
+
+function _chkToggleWallet(on) {
+  _chk.useWallet = !!on;
+  _chkRender();
 }
 
 function _chkSelectCard(id) {
@@ -238,7 +310,25 @@ function _chkInjectCheckoutStyles() {
     '.chk-inp{padding:11px 13px;border:1.5px solid var(--border-soft);background:var(--bg-phone-secondary);border-radius:10px;color:var(--text-primary);font-size:13px;outline:none;font-family:inherit;width:100%}',
     '.chk-inp:focus{border-color:#10B981}',
     '.chk-save-lbl{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-primary);cursor:pointer;padding:4px 0}',
-    '.chk-save-lbl input{accent-color:#10B981}'
+    '.chk-save-lbl input{accent-color:#10B981}',
+    /* Wallet block */
+    '.chk-wallet-row{display:flex;align-items:center;gap:10px;padding:12px 13px;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(234,88,12,.05));border:1px solid rgba(245,158,11,.25);border-radius:12px}',
+    '.chk-wallet-ico{width:40px;height:40px;border-radius:12px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}',
+    '.chk-wallet-title{font-size:13px;font-weight:800;color:var(--text-primary)}',
+    '.chk-wallet-sub{font-size:10.5px;color:var(--text-muted);margin-top:3px;display:inline-flex;align-items:center;flex-wrap:wrap}',
+    '.chk-token{display:inline-flex;align-items:center;gap:3px;font-weight:800;color:#B45309;background:rgba(245,158,11,.12);padding:2px 7px;border-radius:999px;letter-spacing:.2px}',
+    '.chk-wallet-msg{display:flex;align-items:flex-start;gap:7px;padding:10px 12px;border-radius:10px;font-size:11.5px;line-height:1.5;margin-top:8px}',
+    '.chk-wallet-msg--ok{background:rgba(16,185,129,.08);color:#065F46;border:1px solid rgba(16,185,129,.22)}',
+    '.chk-wallet-msg--hybrid{background:rgba(245,158,11,.08);color:#92400E;border:1px dashed rgba(245,158,11,.3)}',
+    '.chk-wallet-msg--err{background:rgba(239,68,68,.08);color:#991B1B;border:1px solid rgba(239,68,68,.25)}',
+    '.chk-wallet-msg b{font-weight:800}',
+    /* Switch */
+    '.chk-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}',
+    '.chk-switch input{opacity:0;width:0;height:0}',
+    '.chk-slider{position:absolute;inset:0;cursor:pointer;background:var(--bg-phone-secondary);border-radius:999px;transition:background .22s}',
+    '.chk-slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .22s;box-shadow:0 1px 3px rgba(0,0,0,.18)}',
+    '.chk-switch input:checked + .chk-slider{background:#F59E0B}',
+    '.chk-switch input:checked + .chk-slider:before{transform:translateX(18px)}'
   ].join('\n');
   document.head.appendChild(s);
 }
