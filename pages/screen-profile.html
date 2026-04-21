@@ -126,6 +126,7 @@
           <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openPayments()">
             <iconify-icon icon="solar:card-bold" style="font-size:22px;color:var(--primary)"></iconify-icon>
             <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Ödeme Yöntemlerim</div>
+            <span id="profPaymentsCount" style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-right:4px"></span>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
           <div onclick="openWalletPage()" style="position:relative;border-radius:var(--r-lg);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;overflow:hidden;background:linear-gradient(135deg,#064E3B 0%,#059669 45%,#10B981 100%);box-shadow:0 4px 14px rgba(16,185,129,.25)">
@@ -161,6 +162,15 @@
             <iconify-icon icon="solar:heart-bold" style="font-size:22px;color:#EF4444"></iconify-icon>
             <div style="flex:1;font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Favorilerim</div>
             <span id="favCountBadge" style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-tertiary);margin-right:4px"></span>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
+          <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openMyReviewsPage()">
+            <iconify-icon icon="solar:star-bold" style="font-size:22px;color:#F59E0B"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Değerlendirmelerim</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px" id="profMyReviewsSummary">Puanların, yorumların ve bekleyen değerlendirmeler</div>
+            </div>
+            <span id="myReviewsPendingBadge" style="display:none;font:var(--fw-bold) 10px/1 var(--font);color:#fff;background:#EF4444;padding:4px 7px;border-radius:var(--r-full);margin-right:4px">0</span>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
           <div class="g-card" style="padding:16px;display:flex;align-items:center;gap:14px;border-radius:var(--r-lg);cursor:pointer" onclick="openMyRecipesPage()">

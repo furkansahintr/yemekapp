@@ -1970,6 +1970,68 @@ function bizUnpaidInvoiceCount(branchId) {
   return BIZ_INVOICES.filter(function(i){ return i.branchId === branchId && (i.status === 'pending' || i.status === 'overdue'); }).length;
 }
 
+// ═══ DUYURULAR (Admin Paneli Tarafından Gönderilir) ═══
+// Şube bazında okunmuş/okunmamış durumu takip edilir
+var BIZ_ANNOUNCEMENTS = [
+  {
+    id: 'ann_001', branchId: 'b1', read: false,
+    title: 'Yeni Komisyon Oranı Duyurusu',
+    preview: 'Mayıs 2026 itibariyle puan bazlı yeni komisyon tarifesi yürürlükte...',
+    body: 'Sevgili iş ortaklarımız,\n\n1 Mayıs 2026 tarihinden itibaren sistemimizde puan bazlı yeni komisyon tarifesi yürürlüğe girecektir. 4.5+ puana sahip işletmelerimizde komisyon %2\'ye kadar düşecek, 3.5 altındaki işletmelerde ise %6\'ya çıkacaktır.\n\nDetayları "Komisyon Ayarları" ekranınızdan inceleyebilirsiniz.\n\nSaygılarımızla.',
+    sentAt: '2026-04-21T10:00:00Z',
+    image: null, link: null, priority: 'high', tag: 'Sistem'
+  },
+  {
+    id: 'ann_002', branchId: 'b1', read: false,
+    title: 'Bayram Kampanyası Dönemi',
+    preview: 'Ramazan Bayramı\'na özel kampanya aracı ve görünürlük paketi açıldı.',
+    body: 'Değerli işletmemiz,\n\nRamazan Bayramı\'na özel olarak işletme paneline yeni bir kampanya aracı entegre edildi. Bu araçla:\n\n• Günlük 3 saatlik "Öne Çıkarma" paketleri satın alabilir\n• Bayram hediye çeki kupon kodları oluşturabilir\n• Müşterilerinize özel tatil mesajı gönderebilirsiniz.\n\nKampanya paketleri "Öne Çıkarma" sekmesinden erişilebilir.',
+    sentAt: '2026-04-18T14:30:00Z',
+    image: 'https://images.unsplash.com/photo-1583344281720-c0ed6366e5b0?w=600&h=300&fit=crop',
+    link: null, priority: 'normal', tag: 'Kampanya'
+  },
+  {
+    id: 'ann_003', branchId: 'b1', read: true,
+    title: 'Uygulama Güncellemesi v2.4',
+    preview: 'Yeni dashboard, AI asistanı ve masa rezervasyon akışı yayında.',
+    body: 'v2.4 güncellemesi ile:\n\n1) Yenilenen işletme dashboard\'ı — 4 bölüm (finans, yoğunluk, menü, İK+AI)\n2) AI sipariş/dashboard asistanı\n3) Masa rezervasyon token bloke sistemi\n\nTüm özelliklere ana sayfa üzerinden erişebilirsiniz.',
+    sentAt: '2026-04-10T09:15:00Z',
+    image: null, link: null, priority: 'normal', tag: 'Güncelleme'
+  },
+  {
+    id: 'ann_004', branchId: 'b1', read: true,
+    title: 'Sözleşme Yenileme Hatırlatması',
+    preview: 'Yıllık üyelik sözleşmeniz 60 gün içinde sona erecek.',
+    body: 'Yıllık üyelik sözleşmeniz 20 Haziran 2026 tarihinde sona erecek. Yenileme için aşağıdaki linke tıklayın.',
+    sentAt: '2026-04-05T11:00:00Z',
+    image: null, link: '/contract/renew', priority: 'normal', tag: 'Önemli'
+  },
+  {
+    id: 'ann_005', branchId: 'b1', read: true,
+    title: 'Hoş Geldiniz!',
+    preview: 'Burger Lab ailesine hoş geldiniz. Hızlı başlangıç rehberi ekte.',
+    body: 'Burger Lab · Lezzet Mutfak ailesine hoş geldiniz! Hesabınız başarıyla oluşturuldu. Hızlı başlangıç için menü yönetimi ve şube ayarlarınızı tamamlamanızı öneririz.',
+    sentAt: '2026-03-20T08:00:00Z',
+    image: null, link: null, priority: 'low', tag: 'Karşılama'
+  },
+  {
+    id: 'ann_006', branchId: 'b2', read: false,
+    title: 'Beşiktaş Şubesi — Test Duyurusu',
+    preview: 'Bu duyuru sadece Beşiktaş şubesi için örnek veridir.',
+    body: 'Bu duyuru şube bazlı gönderim testi amaçlıdır.',
+    sentAt: '2026-04-20T12:00:00Z',
+    image: null, link: null, priority: 'normal', tag: 'Test'
+  }
+];
+
+function bizAnnouncementsForBranch(branchId) {
+  return BIZ_ANNOUNCEMENTS.filter(function(a){ return a.branchId === branchId; })
+    .sort(function(a,b){ return new Date(b.sentAt) - new Date(a.sentAt); });
+}
+function bizUnreadAnnouncements(branchId) {
+  return BIZ_ANNOUNCEMENTS.filter(function(a){ return a.branchId === branchId && !a.read; }).length;
+}
+
 // ═══ YASAL EVRAKLAR (Şube Bazlı) ═══
 // Kritik alanlar (title, address, coords, taxNo, taxCertFile, iban) değişirse
 // şube "İnceleme Altında" moduna geçer ve 24 saat kadar satışa kapanır.

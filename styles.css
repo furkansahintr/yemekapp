@@ -970,6 +970,112 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 /* AI hint (opsiyonel alanlar eksikse) */
 .bmi-ai-hint{display:flex;align-items:flex-start;gap:7px;padding:10px 12px;background:rgba(139,92,246,.06);border:1px dashed rgba(139,92,246,.3);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-xs)/1.45 var(--font);color:var(--text-primary);width:100%;animation:fadeSlideUp .35s ease}
 
+/* ═══ BMI ADVANCED TILE (entry) ═══ */
+.bmi-adv-tile{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--r-xl);background:linear-gradient(135deg,rgba(236,72,153,.06),rgba(139,92,246,.08));border:1px solid rgba(139,92,246,.25);cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.bmi-adv-tile::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(236,72,153,.08),rgba(139,92,246,.12));opacity:0;transition:opacity .18s}
+.bmi-adv-tile:hover::before{opacity:1}
+.bmi-adv-tile:active{transform:scale(.98)}
+.bmi-adv-tile.is-filled{border-color:rgba(16,185,129,.35);background:linear-gradient(135deg,rgba(16,185,129,.06),rgba(139,92,246,.06))}
+.bmi-adv-tile-icon{width:40px;height:40px;border-radius:var(--r-lg);background:linear-gradient(135deg,#EC4899,#8B5CF6);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1}
+.bmi-adv-tile.is-filled .bmi-adv-tile-icon{background:linear-gradient(135deg,#10B981,#8B5CF6)}
+.bmi-adv-tile-body{flex:1;min-width:0;position:relative;z-index:1}
+.bmi-adv-tile-title{display:flex;align-items:center;gap:8px;font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);margin-bottom:3px}
+.bmi-adv-tile-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:var(--r-full);background:rgba(16,185,129,.12);color:#10B981;font:var(--fw-bold) 9px/1 var(--font);letter-spacing:.3px;text-transform:uppercase}
+.bmi-adv-tile-badge::before{content:"";width:5px;height:5px;border-radius:50%;background:#10B981}
+.bmi-adv-tile-desc{font:var(--fw-regular) var(--fs-xs)/1.35 var(--font);color:var(--text-muted)}
+
+/* ═══ BMI ADVANCED OVERLAY ═══ */
+.bmi-adv-overlay{position:fixed;inset:0;z-index:85;display:none;background:var(--bg-page);flex-direction:column}
+.bmi-adv-overlay.open{display:flex}
+.bmi-adv-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.bmi-adv-body{flex:1;overflow-y:auto;padding:14px var(--app-px) 80px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none}
+.bmi-adv-body::-webkit-scrollbar{display:none}
+.bmi-adv-reset{width:32px;height:32px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;background:var(--bg-surface);color:var(--text-muted);cursor:pointer}
+.bmi-adv-reset:active{transform:scale(.92)}
+
+/* Hero */
+.bmi-adv-hero{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-2xl);background:linear-gradient(135deg,rgba(236,72,153,.08),rgba(139,92,246,.10));border:1px solid rgba(139,92,246,.2)}
+.bmi-adv-hero-icon{width:46px;height:46px;border-radius:var(--r-lg);background:linear-gradient(135deg,#EC4899,#8B5CF6);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 14px rgba(139,92,246,.28)}
+.bmi-adv-hero-text{flex:1;min-width:0}
+.bmi-adv-hero-title{font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary);margin-bottom:3px}
+.bmi-adv-hero-desc{font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-secondary)}
+
+/* Section */
+.bmi-adv-section{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:var(--r-2xl);background:var(--glass-card);border:1px solid var(--border-subtle);box-shadow:var(--shadow-md)}
+.bmi-adv-section-head{display:flex;align-items:center;gap:10px}
+.bmi-adv-section-icon{width:34px;height:34px;border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bmi-adv-section-title{font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary);margin-bottom:2px}
+.bmi-adv-section-desc{font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted)}
+
+/* Field grid */
+.bmi-adv-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bmi-adv-field{display:flex;flex-direction:column;gap:5px}
+.bmi-adv-field label{font:var(--fw-medium) var(--fs-xs)/1.2 var(--font);color:var(--text-secondary);display:flex;align-items:center;justify-content:space-between;gap:4px}
+.bmi-adv-unit{font:var(--fw-semibold) 9px/1 var(--font);color:var(--text-muted);letter-spacing:.3px;text-transform:uppercase}
+.bmi-adv-input{width:100%;padding:10px 11px;border-radius:var(--r-lg);border:1.5px solid var(--border-subtle);background:var(--bg-phone);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);outline:none;-moz-appearance:textfield}
+.bmi-adv-input::-webkit-outer-spin-button,.bmi-adv-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.bmi-adv-input:focus{border-color:#8B5CF6;background:rgba(139,92,246,.04)}
+
+/* Upload */
+.bmi-adv-upload{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px dashed rgba(139,92,246,.35);border-radius:var(--r-lg);background:rgba(139,92,246,.04);cursor:pointer;transition:all .18s}
+.bmi-adv-upload:active{transform:scale(.98)}
+.bmi-adv-upload:hover{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.55)}
+.bmi-adv-upload-icon{width:32px;height:32px;border-radius:var(--r-lg);background:rgba(139,92,246,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bmi-adv-upload-text{flex:1;min-width:0}
+.bmi-adv-upload-title{font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)}
+.bmi-adv-upload-desc{font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px}
+
+/* Chips */
+.bmi-adv-chip-wrap{display:flex;flex-wrap:wrap;gap:7px}
+.bmi-adv-chip{display:inline-flex;align-items:center;gap:5px;padding:8px 12px;border-radius:var(--r-full);border:1.5px solid var(--border-subtle);background:var(--bg-phone);color:var(--text-secondary);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;transition:all .18s;white-space:nowrap}
+.bmi-adv-chip:active{transform:scale(.94)}
+.bmi-adv-chip.is-on{border-color:#F59E0B;background:rgba(245,158,11,.1);color:#B45309;font-weight:var(--fw-semibold)}
+.bmi-adv-chip.bmi-adv-chip--pink.is-on{border-color:#EC4899;background:rgba(236,72,153,.1);color:#BE185D}
+
+/* Lifestyle */
+.bmi-adv-lifestyle-item{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-top:1px solid var(--border-subtle)}
+.bmi-adv-lifestyle-item:first-of-type{border-top:none;padding-top:4px}
+.bmi-adv-lifestyle-label{display:flex;align-items:center;gap:7px;font:var(--fw-medium) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)}
+
+.bmi-adv-stepper{display:flex;align-items:center;gap:10px;padding:4px;border-radius:var(--r-xl);background:var(--bg-phone);border:1px solid var(--border-subtle);align-self:flex-start}
+.bmi-adv-step-btn{width:32px;height:32px;border-radius:var(--r-lg);border:none;background:var(--bg-surface);color:var(--text-primary);font:var(--fw-bold) var(--fs-lg)/1 var(--font);cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s}
+.bmi-adv-step-btn:active{transform:scale(.9)}
+.bmi-adv-step-value{min-width:100px;text-align:center;font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)}
+.bmi-adv-step-unit{font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-left:2px}
+
+.bmi-adv-day-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.bmi-adv-day{padding:8px 0;border:1.5px solid var(--border-subtle);background:var(--bg-phone);border-radius:var(--r-lg);font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.bmi-adv-day:active{transform:scale(.92)}
+.bmi-adv-day.is-on{border-color:#8B5CF6;background:rgba(139,92,246,.1);color:#7C3AED}
+
+/* Tag input */
+.bmi-adv-lifestyle-item--full{align-items:stretch}
+.bmi-adv-tag-input{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--border-subtle);border-radius:var(--r-lg);background:var(--bg-phone);min-height:44px}
+.bmi-adv-tag-input:focus-within{border-color:#EF4444;background:rgba(239,68,68,.03)}
+.bmi-adv-tag-list{display:contents}
+.bmi-adv-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 10px;border-radius:var(--r-full);background:rgba(239,68,68,.1);color:#B91C1C;font:var(--fw-semibold) var(--fs-xs)/1 var(--font);border:1px solid rgba(239,68,68,.2)}
+.bmi-adv-tag-x{width:18px;height:18px;border-radius:50%;border:none;background:rgba(239,68,68,.18);color:#B91C1C;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font:var(--fw-bold) 12px/1 var(--font);padding:0}
+.bmi-adv-tag-x:active{transform:scale(.88)}
+.bmi-adv-tag-input-field{flex:1;min-width:120px;border:none;background:transparent;outline:none;font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);padding:4px 6px}
+
+/* Goal */
+.bmi-adv-goal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.bmi-adv-goal{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 6px;border:1.5px solid var(--border-subtle);background:var(--bg-phone);border-radius:var(--r-lg);cursor:pointer;transition:all .18s;--gt:#8B5CF6}
+.bmi-adv-goal:active{transform:scale(.94)}
+.bmi-adv-goal span{font:var(--fw-semibold) var(--fs-xs)/1 var(--font);color:var(--text-secondary)}
+.bmi-adv-goal.is-on{border-color:var(--gt);background:color-mix(in srgb,var(--gt) 10%,transparent);box-shadow:0 2px 8px color-mix(in srgb,var(--gt) 22%,transparent)}
+.bmi-adv-goal.is-on span{color:var(--gt)}
+
+/* Privacy + Save */
+.bmi-adv-privacy{display:flex;align-items:flex-start;gap:8px;padding:11px 13px;background:linear-gradient(135deg,rgba(16,185,129,.06),rgba(59,130,246,.05));border:1px solid rgba(16,185,129,.25);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-xs)/1.5 var(--font);color:var(--text-primary)}
+.bmi-adv-save-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:var(--r-xl);border:none;background:linear-gradient(135deg,#10B981,#059669);color:#fff;font:var(--fw-semibold) var(--fs-md)/1 var(--font);cursor:pointer;box-shadow:0 8px 18px rgba(16,185,129,.28);transition:all .2s}
+.bmi-adv-save-btn:active{transform:scale(.97);opacity:.92}
+
+/* Premium AI button (result area) */
+.bmi-ai-btn--premium{background:linear-gradient(135deg,#EC4899 0%,#8B5CF6 45%,#3B82F6 100%);background-size:200% 100%;animation:bmiAiShift 4s ease infinite;position:relative;overflow:hidden}
+.bmi-ai-btn-chip{margin-left:6px;padding:2px 7px;border-radius:var(--r-full);background:rgba(255,255,255,.22);font:var(--fw-bold) 9px/1 var(--font);letter-spacing:.5px}
+@keyframes bmiAiShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
 /* ═══ ORDER HISTORY OVERLAY ═══ */
 .order-history-overlay{position:fixed;inset:0;z-index:80;display:none;background:var(--bg-page);flex-direction:column}
 .order-history-overlay.open{display:flex}

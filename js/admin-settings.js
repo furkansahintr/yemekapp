@@ -23,25 +23,8 @@ function renderAdminSettings() {
   var pendingRecipes = REC.filter(function(r) { return r.status === 'pending'; }).length;
   var activeCampaigns = CP.filter(function(c) { return c.status === 'active'; }).length;
 
-  /* ═══ HIZLI ERİŞİM — 3 priority 2x tile ═══ */
-  var priority = [
-    { id:'orders',    label:'Siparişler',           icon:'solar:bag-check-bold',       tone:'#22C55E',
-      summary:_admFmt(S.dailyOrders || 0)+' bugün • '+_admFmtTL(S.dailyRevenue || 0),
-      action:"adminSwitchTab('adminOrders')" },
-    { id:'support',   label:'Destek',               icon:'solar:chat-round-dots-bold', tone:'#0EA5E9',
-      summary:openTickets+' açık talep',
-      action:"(typeof openAdminSupport==='function'?openAdminSupport():_admOpenTickets())" },
-    { id:'bizApps',   label:'İşletme Başvuruları',  icon:'solar:inbox-in-bold',        tone:'#F59E0B',
-      summary:((typeof ADMIN_BIZ_APPLICATIONS!=='undefined')
-        ? ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='pending';}).length+' yeni • '+ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='awaiting_response';}).length+' cevap bekliyor'
-        : (M.bizApplications && M.bizApplications.pending ? M.bizApplications.pending+' Yeni Başvuru' : '—')),
-      action:"_admOpenBizApps()" },
-    { id:'aiAssistantMgmt', label:'Yapay Zeka Asistanı', icon:'solar:magic-stick-3-bold', tone:'#8B5CF6',
-      summary:((typeof ADMIN_AI_PROMPTS!=='undefined')
-        ? ADMIN_AI_PROMPTS.length+' hızlı komut • Stratejik analiz'
-        : 'Analiz • Aksiyon • Onay'),
-      action:"_admOpenAI()" }
-  ];
+  /* ═══ HIZLI ERİŞİM — 4 priority tile (Genel sayfası ile ortak veri) ═══ */
+  var priority = _admGetPriorityTiles();
 
   /* ═══ 5 GRUP ═══ */
   var groups = [
@@ -108,7 +91,12 @@ function renderAdminSettings() {
           summary:((typeof ADMIN_NOTIF_AUTOMATION!=='undefined')
             ? ADMIN_NOTIF_CHANNELS.length+' kanal • '+(function(){var t=0,a=0;ADMIN_NOTIF_AUTOMATION.forEach(function(g){g.scenarios.forEach(function(s){t++;if(s.active)a++;});});return a+'/'+t+' otomasyon';})()
             : 'Şablonlar & toplu gönderim'),
-          action:"_admOpenNotifications()" }
+          action:"_admOpenNotifications()" },
+        { id:'bizAnnouncements',label:'İşletme Duyuru Yönetimi', icon:'solar:megaphone-bold', tone:'#EC4899',
+          summary:((typeof ADMIN_BIZ_ANNOUNCEMENTS!=='undefined')
+            ? ADMIN_BIZ_ANNOUNCEMENTS.filter(function(a){return !a.deleted;}).length+' yayında • '+ADMIN_BIZ_ANNOUNCEMENTS.filter(function(a){return a.deleted;}).length+' arşivde'
+            : 'Duyuru oluştur · hedefle · arşiv'),
+          action:"openAdmBizAnnouncements()" }
       ]
     },
     {
@@ -202,6 +190,32 @@ function renderAdminSettings() {
   html += '</div>';
 
   c.innerHTML = html;
+}
+
+/* ─── Hızlı Erişim priority tile listesi (Yönetim + Genel sayfalar ortak kullanır) ─── */
+function _admGetPriorityTiles() {
+  var S = (typeof ADMIN_STATS !== 'undefined') ? ADMIN_STATS : {};
+  var M = (typeof ADMIN_MGMT_METRICS !== 'undefined') ? ADMIN_MGMT_METRICS : {};
+  var TK = (typeof ADMIN_TICKETS !== 'undefined') ? ADMIN_TICKETS : [];
+  var openTickets = TK.filter(function(t) { return t.status === 'open' || t.status === 'in_progress'; }).length;
+  return [
+    { id:'orders',    label:'Siparişler',           icon:'solar:bag-check-bold',       tone:'#22C55E',
+      summary:_admFmt(S.dailyOrders || 0)+' bugün • '+_admFmtTL(S.dailyRevenue || 0),
+      action:"adminSwitchTab('adminOrders')" },
+    { id:'support',   label:'Destek',               icon:'solar:chat-round-dots-bold', tone:'#0EA5E9',
+      summary:openTickets+' açık talep',
+      action:"(typeof openAdminSupport==='function'?openAdminSupport():_admOpenTickets())" },
+    { id:'bizApps',   label:'İşletme Başvuruları',  icon:'solar:inbox-in-bold',        tone:'#F59E0B',
+      summary:((typeof ADMIN_BIZ_APPLICATIONS!=='undefined')
+        ? ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='pending';}).length+' yeni • '+ADMIN_BIZ_APPLICATIONS.filter(function(a){return a.status==='awaiting_response';}).length+' cevap bekliyor'
+        : (M.bizApplications && M.bizApplications.pending ? M.bizApplications.pending+' Yeni Başvuru' : '—')),
+      action:"_admOpenBizApps()" },
+    { id:'aiAssistantMgmt', label:'Yapay Zeka Asistanı', icon:'solar:magic-stick-3-bold', tone:'#8B5CF6',
+      summary:((typeof ADMIN_AI_PROMPTS!=='undefined')
+        ? ADMIN_AI_PROMPTS.length+' hızlı komut • Stratejik analiz'
+        : 'Analiz • Aksiyon • Onay'),
+      action:"_admOpenAI()" }
+  ];
 }
 
 /* ─── Yönetim Merkezi tile (priority flag) ─── */

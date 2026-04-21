@@ -234,7 +234,15 @@ function openCookingSteps() {
 }
 
 function closeCookingSteps() {
-  document.getElementById('cookingOverlay').classList.remove('open');
+  var overlay = document.getElementById('cookingOverlay');
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.classList.remove('is-completed');
+  }
+  var actions = document.querySelector('.cooking-completion-actions');
+  if (actions) actions.remove();
+  var conf = document.getElementById('cookingConfetti');
+  if (conf) conf.remove();
   stopTTS();
   closeHandsfreeMode();
   cookingItem = null;
@@ -271,6 +279,7 @@ function nextStep() {
 }
 
 function finishCooking() {
+  _cookInjectCompletionStyles();
   const card = document.getElementById('cookingStepCard');
   card.style.animation = 'none';
   card.offsetHeight;
@@ -279,15 +288,334 @@ function finishCooking() {
 
   document.getElementById('cookingStepIcon').setAttribute('icon', 'solar:check-circle-bold');
   document.getElementById('cookingStepNumber').textContent = 'TAMAMLANDI';
-  document.getElementById('cookingStepTitle').textContent = 'Afiyet Olsun!';
-  document.getElementById('cookingStepDesc').textContent = cookingItem.name + ' tarifini başarıyla tamamladınız. Harika iş çıkardınız!';
+  document.getElementById('cookingStepTitle').textContent = 'Tamamlandı, Afiyet Olsun!';
+  document.getElementById('cookingStepDesc').textContent = cookingItem.name + ' tarifini başarıyla tamamladın. Harika iş çıkardın!';
   document.getElementById('cookingStepDuration').textContent = 'Toplam ' + cookingItem.cookTime;
   document.getElementById('cookingProgressFill').style.width = '100%';
 
-  const nextBtn = document.getElementById('cookingNextBtn');
-  nextBtn.innerHTML = '<iconify-icon icon="solar:home-2-linear" style="font-size:20px"></iconify-icon><span>Ana Sayfa</span>';
-  nextBtn.classList.add('finish');
-  nextBtn.onclick = function () { closeCookingSteps(); closeDetail(); nextBtn.onclick = function () { nextStep(); }; };
+  // Completion mode: bottom bar + TTS controls kendi state'ine geçer
+  const overlay = document.getElementById('cookingOverlay');
+  if (overlay) overlay.classList.add('is-completed');
+
+  // Bottom bar: Değerlendir + Ana Sayfaya Dön butonları
+  const bottom = document.querySelector('.cooking-bottom-bar');
+  if (bottom) {
+    let actions = bottom.querySelector('.cooking-completion-actions');
+    if (!actions) {
+      actions = document.createElement('div');
+      actions.className = 'cooking-completion-actions';
+      actions.innerHTML = ''
+        + '<button type="button" class="cook-review-btn" onclick="_cookOpenReview()">'
+        +   '<iconify-icon icon="solar:star-bold" style="font-size:18px"></iconify-icon>'
+        +   '<span>Değerlendir</span>'
+        + '</button>'
+        + '<button type="button" class="cook-home-btn" onclick="_cookGoHome()">'
+        +   '<iconify-icon icon="solar:home-2-linear" style="font-size:18px"></iconify-icon>'
+        +   '<span>Ana Sayfaya Dön</span>'
+        + '</button>';
+      bottom.appendChild(actions);
+    }
+  }
+
+  // Konfeti
+  _cookLaunchConfetti();
+}
+
+/* ═══════════════════════════════════════════════
+   COOKING COMPLETION — Değerlendirme + Konfeti + Ana Sayfa
+   ═══════════════════════════════════════════════ */
+
+function _cookLaunchConfetti() {
+  var area = document.getElementById('cookingStepArea');
+  if (!area) return;
+  var host = document.getElementById('cookingConfetti');
+  if (host) host.remove();
+  host = document.createElement('div');
+  host.id = 'cookingConfetti';
+  host.className = 'cook-confetti';
+  var colors = ['#F65013','#F59E0B','#10B981','#3B82F6','#EC4899','#8B5CF6','#EAB308'];
+  var N = 36;
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < N; i++) {
+    var p = document.createElement('span');
+    p.className = 'cook-confetti-p';
+    var left = Math.random() * 100;
+    var delay = Math.random() * 0.6;
+    var dur = 2.4 + Math.random() * 1.6;
+    var rot = Math.random() * 720 - 360;
+    var size = 6 + Math.random() * 6;
+    var c = colors[i % colors.length];
+    p.style.cssText = 'left:' + left + '%;background:' + c + ';width:' + size + 'px;height:' + (size * 1.6) + 'px;animation-duration:' + dur + 's;animation-delay:' + delay + 's;--r:' + rot + 'deg';
+    frag.appendChild(p);
+  }
+  host.appendChild(frag);
+  area.appendChild(host);
+  setTimeout(function(){ if (host.parentNode) host.remove(); }, 5200);
+}
+
+function _cookGoHome() {
+  closeCookingSteps();
+  closeDetail();
+  if (typeof switchTab === 'function') switchTab('menu');
+}
+
+/* ─── Değerlendirme sheet ─── */
+var _cookReview = { rating: 0, comment: '', photo: null };
+
+function _cookOpenReview() {
+  _cookInjectCompletionStyles();
+  _cookReview = { rating: 0, comment: '', photo: null };
+  var phone = document.getElementById('phone') || document.body;
+  var existing = document.getElementById('cookReviewBd');
+  if (existing) existing.remove();
+
+  var bd = document.createElement('div');
+  bd.id = 'cookReviewBd';
+  bd.className = 'cook-review-bd';
+  bd.onclick = function(e){ if (e.target === bd) _cookCloseReview(); };
+  bd.innerHTML = '<div class="cook-review-sheet" id="cookReviewSheet"><div id="cookReviewBody"></div></div>';
+  phone.appendChild(bd);
+  requestAnimationFrame(function(){
+    bd.classList.add('open');
+    var s = document.getElementById('cookReviewSheet');
+    if (s) s.classList.add('open');
+  });
+  _cookRenderReview();
+}
+
+function _cookCloseReview() {
+  var bd = document.getElementById('cookReviewBd');
+  if (!bd) return;
+  bd.classList.remove('open');
+  setTimeout(function(){ if (bd.parentNode) bd.remove(); }, 260);
+}
+
+function _cookRenderReview() {
+  var body = document.getElementById('cookReviewBody');
+  if (!body) return;
+  var r = _cookReview;
+  var labels = ['', 'Çok kötü', 'Kötü', 'Fena değil', 'İyi', 'Harika!'];
+  var colors = ['', '#DC2626', '#EA580C', '#EAB308', '#16A34A', '#15803D'];
+
+  var h = ''
+    + '<div class="cook-sheet-head">'
+    +   '<div class="cook-sheet-close" onclick="_cookCloseReview()" title="Kapat"><iconify-icon icon="solar:close-circle-bold" style="font-size:22px;color:var(--text-muted)"></iconify-icon></div>'
+    +   '<div class="cook-sheet-head-text">'
+    +     '<div class="cook-sheet-title"><iconify-icon icon="solar:chef-hat-bold" style="font-size:17px;color:var(--primary)"></iconify-icon>Tarifi Değerlendir</div>'
+    +     '<div class="cook-sheet-sub">' + _cookEsc(cookingItem && cookingItem.name || '') + '</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="cook-stars">';
+  for (var i = 1; i <= 5; i++) {
+    var on = i <= r.rating;
+    h += '<button type="button" class="cook-star' + (on ? ' on' : '') + '" onclick="_cookSetRating(' + i + ')">'
+      +    '<iconify-icon icon="' + (on ? 'solar:star-bold' : 'solar:star-linear') + '" style="font-size:38px"></iconify-icon>'
+      + '</button>';
+  }
+  h += '</div>';
+  if (r.rating > 0) h += '<div class="cook-rating-lbl" style="color:' + colors[r.rating] + '">' + labels[r.rating] + '</div>';
+  else h += '<div class="cook-rating-hint">Puan vermek için yıldızlara dokun</div>';
+
+  h += '<div class="cook-field-label">Tarif hakkındaki düşüncelerin neler?</div>';
+  h += '<textarea class="cook-note" placeholder="Deneyimini paylaş (opsiyonel)..." maxlength="400" oninput="_cookReview.comment=this.value">' + _cookEsc(r.comment) + '</textarea>';
+
+  // Foto
+  h += '<div class="cook-photo-slot">';
+  if (r.photo) {
+    h += '<div class="cook-photo-preview"><img src="' + _cookEsc(r.photo) + '" alt=""><button type="button" class="cook-photo-remove" onclick="_cookRemovePhoto()"><iconify-icon icon="solar:close-circle-bold" style="font-size:18px"></iconify-icon></button></div>';
+  } else {
+    h += '<label class="cook-photo-pick">'
+      +    '<iconify-icon icon="solar:camera-add-bold" style="font-size:18px;color:var(--primary)"></iconify-icon>'
+      +    '<div class="cook-photo-pick-text"><div class="cook-photo-pick-title">Bir Fotoğraf Yükle</div><div class="cook-photo-pick-desc">Yaptığın yemeği topluluğa göster · 1 foto</div></div>'
+      +    '<input type="file" accept="image/*" capture="environment" onchange="_cookPickPhoto(event)" style="display:none">'
+      +  '</label>';
+  }
+  h += '</div>';
+
+  h += '<div class="cook-sheet-footer">'
+    +    '<button type="button" class="cook-skip-btn" onclick="_cookCloseReview();_cookGoHome()">Atla</button>'
+    +    '<button type="button" class="cook-submit-btn' + (r.rating > 0 ? '' : ' is-disabled') + '"' + (r.rating > 0 ? ' onclick="_cookSubmitReview()"' : '') + '>'
+    +      '<iconify-icon icon="solar:check-circle-bold" style="font-size:16px"></iconify-icon>Onayla ve Yayınla'
+    +    '</button>'
+    +  '</div>';
+
+  body.innerHTML = h;
+}
+
+function _cookSetRating(n) {
+  _cookReview.rating = n;
+  _cookRenderReview();
+}
+
+function _cookPickPhoto(e) {
+  var f = e.target && e.target.files && e.target.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    _cookReview.photo = ev.target.result;
+    _cookRenderReview();
+  };
+  reader.readAsDataURL(f);
+}
+
+function _cookRemovePhoto() {
+  _cookReview.photo = null;
+  _cookRenderReview();
+}
+
+function _cookSubmitReview() {
+  var r = _cookReview;
+  if (!r.rating || !cookingItem) return;
+
+  // 1) Tarifin ana sayfasındaki "Tüm Değerlendirmeler" listesine ekle (prepend)
+  try {
+    if (typeof _RR_SEED !== 'undefined') {
+      var userName = (typeof USER_PROFILE !== 'undefined' && USER_PROFILE.name) || 'Sen';
+      var avatar = (typeof USER_PROFILE !== 'undefined' && USER_PROFILE.avatar) || 'https://i.pravatar.cc/80?img=11';
+      // Aynı kullanıcının eski yorumu varsa çıkar (mükerrer önleme)
+      for (var k = _RR_SEED.length - 1; k >= 0; k--) {
+        if (_RR_SEED[k] && _RR_SEED[k].name === userName && _RR_SEED[k].__ownedBy === 'me') _RR_SEED.splice(k, 1);
+      }
+      _RR_SEED.unshift({
+        name: userName,
+        avatar: avatar,
+        rating: r.rating,
+        daysAgo: 0,
+        text: r.comment || '',
+        photo: r.photo || null,
+        helpful: 0,
+        __ownedBy: 'me'
+      });
+    }
+  } catch (e) { /* noop */ }
+
+  // 2) USER_RECIPE_REVIEWS'a yaz (Değerlendirmelerim > Tarifler sekmesinde görünür)
+  try {
+    if (typeof USER_RECIPE_REVIEWS === 'undefined') window.USER_RECIPE_REVIEWS = {};
+    var rid = 'cook_' + (cookingItem.name || 'recipe').toLowerCase().replace(/\s+/g, '_');
+    USER_RECIPE_REVIEWS[rid] = {
+      recipeName: cookingItem.name,
+      chef: (cookingItem.author && cookingItem.author.name) || '',
+      rating: r.rating,
+      comment: r.comment || '',
+      photo: r.photo || null,
+      createdAt: new Date().toISOString()
+    };
+  } catch (e2) { /* noop */ }
+
+  _cookCloseReview();
+  setTimeout(function() {
+    _cookShowThanks();
+  }, 260);
+}
+
+function _cookShowThanks() {
+  var phone = document.getElementById('phone') || document.body;
+  var existing = document.getElementById('cookThanksBd');
+  if (existing) existing.remove();
+  var m = document.createElement('div');
+  m.id = 'cookThanksBd';
+  m.className = 'cook-thanks-bd';
+  m.onclick = function(e){ if (e.target === m) _cookCloseThanks(); };
+  m.innerHTML = ''
+    + '<div class="cook-thanks">'
+    +   '<div class="cook-thanks-ico"><iconify-icon icon="solar:heart-angle-bold" style="font-size:52px;color:#F59E0B"></iconify-icon></div>'
+    +   '<div class="cook-thanks-title">Teşekkürler!</div>'
+    +   '<div class="cook-thanks-body">Değerlendirmeler topluluğa büyük katkı sunar, yapmış olduğun değerlendirmeler için teşekkür ederiz.</div>'
+    +   '<button type="button" class="cook-thanks-btn" onclick="_cookCloseThanks()"><iconify-icon icon="solar:check-circle-bold" style="font-size:15px"></iconify-icon>Harika</button>'
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+  // Oto kapat + ana sayfaya yönlen
+  setTimeout(_cookCloseThanks, 4500);
+}
+
+function _cookCloseThanks() {
+  var m = document.getElementById('cookThanksBd');
+  if (!m || m.dataset.closing === '1') return;
+  m.dataset.closing = '1';
+  m.classList.remove('open');
+  setTimeout(function(){
+    if (m.parentNode) m.remove();
+    _cookGoHome();
+  }, 260);
+}
+
+function _cookEsc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function _cookInjectCompletionStyles() {
+  if (document.getElementById('cookCompletionStyles')) return;
+  var s = document.createElement('style');
+  s.id = 'cookCompletionStyles';
+  s.textContent = [
+    /* Completion state — gizlemeler */
+    '.cooking-step-card.completion .cooking-tts-controls{display:none}',
+    '.cooking-overlay.is-completed .cooking-prev-btn,.cooking-overlay.is-completed .cooking-step-dots,.cooking-overlay.is-completed .cooking-next-btn{display:none}',
+    '.cooking-bottom-bar{min-height:56px}',
+    '.cooking-completion-actions{display:flex;gap:10px;flex:1;width:100%;animation:cookFadeUp .4s .1s ease both}',
+    '.cook-review-btn,.cook-home-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 10px;border:none;border-radius:var(--r-xl);font:var(--fw-bold) var(--fs-md)/1 var(--font);cursor:pointer;transition:all .2s}',
+    '.cook-review-btn{flex:1.35;background:linear-gradient(135deg,#F65013,#F97316);color:#fff;box-shadow:0 8px 20px rgba(246,80,19,.35)}',
+    '.cook-review-btn:active{transform:scale(.97)}',
+    '.cook-home-btn{background:var(--bg-surface);color:var(--text-primary);border:1.5px solid var(--border-subtle)}',
+    '.cook-home-btn:active{transform:scale(.97);background:var(--bg-phone)}',
+    '@keyframes cookFadeUp{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}',
+    /* Konfeti */
+    '.cooking-step-area{position:relative}',
+    '.cook-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}',
+    '.cook-confetti-p{position:absolute;top:-20px;border-radius:2px;animation:cookConfetti linear forwards;opacity:.95;transform-origin:center}',
+    '@keyframes cookConfetti{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(110vh) rotate(var(--r,360deg))}}',
+    /* Review sheet */
+    '.cook-review-bd{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:flex-end;opacity:0;transition:opacity .22s}',
+    '.cook-review-bd.open{opacity:1}',
+    '.cook-review-sheet{width:100%;max-height:90vh;overflow-y:auto;background:var(--bg-page);border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .28s cubic-bezier(.22,.61,.36,1);padding:14px 14px 22px;scrollbar-width:none}',
+    '.cook-review-sheet.open{transform:translateY(0)}',
+    '.cook-review-sheet::-webkit-scrollbar{display:none}',
+    '.cook-sheet-head{display:flex;gap:10px;align-items:flex-start;padding:4px 0 6px}',
+    '.cook-sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg-phone);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}',
+    '.cook-sheet-head-text{flex:1;min-width:0}',
+    '.cook-sheet-title{display:flex;align-items:center;gap:7px;font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)}',
+    '.cook-sheet-sub{font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:3px}',
+    '.cook-stars{display:flex;justify-content:center;gap:6px;padding:14px 0 6px}',
+    '.cook-star{background:none;border:none;padding:2px;cursor:pointer;color:#CBD5E1}',
+    '.cook-star.on{color:#F59E0B}',
+    '.cook-star:active{transform:scale(.92)}',
+    '.cook-rating-lbl{text-align:center;font:var(--fw-bold) var(--fs-sm)/1 var(--font);margin-bottom:10px}',
+    '.cook-rating-hint{text-align:center;font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-muted);margin-bottom:10px}',
+    '.cook-field-label{font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary);margin:6px 2px}',
+    '.cook-note{width:100%;min-height:88px;padding:11px;border:1.5px solid var(--border-subtle);background:var(--bg-phone);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1.45 var(--font);color:var(--text-primary);outline:none;resize:vertical;margin-bottom:10px}',
+    '.cook-note:focus{border-color:var(--primary)}',
+    '.cook-photo-slot{margin-bottom:12px}',
+    '.cook-photo-preview{position:relative;width:100%;max-height:200px;border-radius:var(--r-lg);overflow:hidden;background:var(--bg-phone)}',
+    '.cook-photo-preview img{width:100%;max-height:200px;object-fit:cover;display:block}',
+    '.cook-photo-remove{position:absolute;top:8px;right:8px;border:none;background:rgba(0,0,0,.55);color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer}',
+    '.cook-photo-pick{display:flex;align-items:center;gap:10px;padding:12px;border:1.5px dashed rgba(246,80,19,.35);background:rgba(246,80,19,.04);border-radius:var(--r-lg);cursor:pointer;transition:all .15s}',
+    '.cook-photo-pick:hover{background:rgba(246,80,19,.08);border-color:rgba(246,80,19,.55)}',
+    '.cook-photo-pick:active{transform:scale(.98)}',
+    '.cook-photo-pick-text{flex:1;min-width:0}',
+    '.cook-photo-pick-title{font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)}',
+    '.cook-photo-pick-desc{font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px}',
+    '.cook-sheet-footer{display:flex;gap:8px;margin-top:4px}',
+    '.cook-skip-btn{padding:13px 18px;border:1.5px solid var(--border-subtle);background:var(--bg-phone);color:var(--text-secondary);border-radius:var(--r-xl);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer}',
+    '.cook-skip-btn:active{transform:scale(.97)}',
+    '.cook-submit-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px;border:none;border-radius:var(--r-xl);background:linear-gradient(135deg,#F65013,#F97316);color:#fff;font:var(--fw-bold) var(--fs-md)/1 var(--font);cursor:pointer;box-shadow:0 6px 16px rgba(246,80,19,.28)}',
+    '.cook-submit-btn.is-disabled{opacity:.42;pointer-events:none;box-shadow:none}',
+    '.cook-submit-btn:active{transform:scale(.97)}',
+    /* Thanks popup */
+    '.cook-thanks-bd{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;transition:opacity .24s;padding:20px}',
+    '.cook-thanks-bd.open{opacity:1}',
+    '.cook-thanks{width:100%;max-width:340px;background:linear-gradient(180deg,#FFFBEB,#FFFFFF 60%);border-radius:20px;padding:24px 20px 18px;text-align:center;transform:scale(.92);transition:transform .28s cubic-bezier(.2,.9,.25,1);border:1px solid rgba(245,158,11,.22);box-shadow:0 20px 50px rgba(0,0,0,.2)}',
+    '.cook-thanks-bd.open .cook-thanks{transform:scale(1)}',
+    '.cook-thanks-ico{animation:cookPop .5s ease;margin-bottom:6px}',
+    '@keyframes cookPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}',
+    '.cook-thanks-title{font:800 19px/1 var(--font);color:#B45309;margin-bottom:6px}',
+    '.cook-thanks-body{font:var(--fw-regular) 12.5px/1.6 var(--font);color:var(--text-primary);max-width:300px;margin:0 auto 14px}',
+    '.cook-thanks-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;border-radius:var(--r-xl);background:linear-gradient(135deg,#F59E0B,#F97316);color:#fff;font:var(--fw-bold) var(--fs-md)/1 var(--font);cursor:pointer;box-shadow:0 6px 16px rgba(245,158,11,.28)}',
+    '.cook-thanks-btn:active{transform:scale(.97)}'
+  ].join('\n');
+  document.head.appendChild(s);
 }
 
 function renderCookingStep() {
@@ -300,6 +628,14 @@ function renderCookingStep() {
   card.offsetHeight;
   card.style.animation = 'stepCardIn .45s cubic-bezier(.4,0,.2,1)';
   card.classList.remove('completion');
+
+  // Completion state temizliği (geri gelinirse)
+  var overlay = document.getElementById('cookingOverlay');
+  if (overlay) overlay.classList.remove('is-completed');
+  var actions = document.querySelector('.cooking-completion-actions');
+  if (actions) actions.remove();
+  var conf = document.getElementById('cookingConfetti');
+  if (conf) conf.remove();
 
   document.getElementById('cookingStepLabel').textContent = 'Adım ' + (cookingStepIndex + 1) + '/' + total;
   document.getElementById('cookingStepNumber').textContent = 'ADIM ' + (cookingStepIndex + 1);

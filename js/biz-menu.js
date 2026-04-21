@@ -250,10 +250,11 @@ function renderBizMenuItems() {
           <span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)">${item.category}</span>
           ${kitchenCat ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:${kitchenCat.color};background:${kitchenCat.color}12">→ ${kitchenCat.name}</span>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           <span style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:var(--primary)">₺${item.price.toFixed(2)}</span>
           ${hasDetail && product.prepTime ? `<span style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted)"><iconify-icon icon="solar:clock-circle-linear" style="font-size:10px;vertical-align:-1px"></iconify-icon> ${product.prepTime} dk</span>` : ''}
           ${hasDetail && product.allergens && product.allergens.length > 0 ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:#EF4444;background:rgba(239,68,68,0.1)"><iconify-icon icon="solar:danger-triangle-linear" style="font-size:9px;vertical-align:-1px"></iconify-icon> ${product.allergens.length} alerjen</span>` : ''}
+          ${(function(){ if (typeof bmsBadgeHtml !== 'function') return ''; item._kind = 'item'; return bmsBadgeHtml(item); })()}
         </div>
       </div>
       ${itemEditable ? (_menuIsHome() ? `
@@ -289,6 +290,10 @@ function renderBizComboItems() {
     const discount = combo.originalTotalPrice > 0 ? Math.round((1 - combo.comboPrice / combo.originalTotalPrice) * 100) : 0;
     const itemNames = _getComboItemNames(combo);
 
+    const canEditCombo = _menuCanEdit();
+    const comboActive = combo.status === 'active';
+    const scheduleBadge = (typeof bmsBadgeHtml === 'function') ? (function(){ combo._kind = 'combo'; return bmsBadgeHtml(combo); })() : '';
+
     return `
     <div onclick="openComboDetail('${combo.id}')" style="background:var(--bg-phone);border-radius:var(--r-xl);padding:14px;border:1px solid var(--border-subtle);box-shadow:var(--shadow-md);cursor:pointer">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -298,8 +303,9 @@ function renderBizComboItems() {
         <div style="flex:1;min-width:0">
           <div style="font:var(--fw-semibold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">${escHtml(combo.name)}</div>
           <div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);margin-top:2px">${itemNames}</div>
+          ${scheduleBadge ? `<div style="margin-top:4px">${scheduleBadge}</div>` : ''}
         </div>
-        <div style="text-align:right">
+        <div style="text-align:right;flex-shrink:0">
           ${discount > 0 ? `<div style="font:var(--fw-bold) var(--fs-xs)/1 var(--font);color:#22C55E;background:rgba(34,197,94,0.1);padding:3px 8px;border-radius:var(--r-full);margin-bottom:4px">%${discount} İndirim</div>` : ''}
           <div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--primary)">₺${combo.comboPrice.toFixed(2)}</div>
           <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);text-decoration:line-through">₺${combo.originalTotalPrice.toFixed(2)}</div>
@@ -311,6 +317,15 @@ function renderBizComboItems() {
           const al = BIZ_ALLERGEN_LIST.find(a => a.id === aId);
           return al ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:${al.color};background:${al.color}12"><iconify-icon icon="${al.icon}" style="font-size:9px;vertical-align:-1px"></iconify-icon> ${al.label}</span>` : '';
         }).join('')}
+      </div>` : ''}
+      ${canEditCombo ? `
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border-subtle)" onclick="event.stopPropagation()">
+        <iconify-icon icon="${comboActive ? 'solar:check-circle-bold' : 'solar:close-circle-bold'}" style="font-size:14px;color:${comboActive ? '#22C55E' : '#EF4444'}"></iconify-icon>
+        <span style="flex:1;font:var(--fw-semibold) 11.5px/1 var(--font);color:${comboActive ? '#16A34A' : '#DC2626'};letter-spacing:.2px">${comboActive ? 'Stokta Var' : 'Satışa Kapalı'}</span>
+        <div onclick="bizToggleComboStock('${combo.id}')" style="width:40px;height:22px;border-radius:var(--r-full);background:${comboActive ? '#22C55E' : 'var(--glass-card-strong)'};position:relative;cursor:pointer;transition:background .2s">
+          <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;${comboActive ? 'right:2px' : 'left:2px'};box-shadow:0 1px 3px rgba(0,0,0,.2);transition:all .2s"></div>
+        </div>
+        <iconify-icon onclick="openBmSchedule('${combo.id}','combo')" icon="solar:clock-circle-linear" style="font-size:18px;color:var(--text-muted);cursor:pointer;margin-left:2px" title="Zamanlama"></iconify-icon>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -339,6 +354,10 @@ function bizToggleMenuItem(itemId) {
   const item = BIZ_MENU_ITEMS.find(i => i.id === itemId);
   if (item && _menuCanEditItem(item)) {
     item.status = item.status === 'active' ? 'inactive' : 'active';
+    // Pasife alındıysa combo bağımlılık kontrolü (kullanıcı onaylarsa combo'lar da kapanır)
+    if (item.status === 'inactive' && typeof bmsCheckComboDependencies === 'function') {
+      bmsCheckComboDependencies(itemId);
+    }
     // Sync combo stock
     _syncComboStock();
     const list = document.getElementById('bizMenuItemsList');
