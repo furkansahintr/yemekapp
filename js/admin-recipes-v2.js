@@ -247,8 +247,153 @@ function _arvStatCell(icon, color, val) {
     + '</div>';
 }
 
+/* ═══ P4 — Detay Drawer (sağdan açılır) ═══ */
 function _arvOpenDetail(id) {
-  if (typeof _admToast === 'function') _admToast('Detay drawer P4 yakında... (' + id + ')', 'ok');
+  _arvCloseDetail();
+  var r = _arvRecipe(id);
+  if (!r) return;
+  _arv.detailId = id;
+  _arv.editingAllergens = (r.aiAllergens || []).slice();
+  _arv.showSimilar = false;
+
+  var host = document.getElementById('adminPhone');
+  if (!host) return;
+  var bd = document.createElement('div');
+  bd.id = 'arvDrawerBd';
+  bd.className = 'arv-drawer-bd';
+  bd.onclick = _arvCloseDetail;
+
+  var dr = document.createElement('div');
+  dr.id = 'arvDrawer';
+  dr.className = 'arv-drawer';
+  dr.innerHTML = '<div id="arvDrawerBody"></div>';
+
+  host.appendChild(bd);
+  host.appendChild(dr);
+  requestAnimationFrame(function(){
+    bd.classList.add('open');
+    dr.classList.add('open');
+  });
+  _arvRenderDetail();
+}
+
+function _arvCloseDetail() {
+  var bd = document.getElementById('arvDrawerBd');
+  var dr = document.getElementById('arvDrawer');
+  if (bd) { bd.classList.remove('open'); setTimeout(function(){ if (bd.parentNode) bd.remove(); }, 260); }
+  if (dr) { dr.classList.remove('open'); setTimeout(function(){ if (dr.parentNode) dr.remove(); }, 260); }
+  _arv.detailId = null;
+  _arv.actionOpen = null;
+}
+
+function _arvRecipe(id) {
+  for (var i = 0; i < ADMIN_RECIPES.length; i++) {
+    if (ADMIN_RECIPES[i].id === id) return ADMIN_RECIPES[i];
+  }
+  return null;
+}
+
+function _arvRenderDetail() {
+  var body = document.getElementById('arvDrawerBody');
+  if (!body) return;
+  var r = _arvRecipe(_arv.detailId);
+  if (!r) return;
+
+  var statusMeta = _arvStatusMeta(r.status);
+  var h = '<div class="arv-dr-hero" style="background-image:url(' + (r.cover || '') + ')">'
+    + '<div class="arv-dr-close" onclick="_arvCloseDetail()">'
+    + '<iconify-icon icon="solar:close-circle-bold" style="font-size:22px;color:#fff"></iconify-icon>'
+    + '</div>'
+    + '<div class="arv-dr-hero-grad">'
+    + '<span class="arv-dr-status" style="background:' + statusMeta.color + ';color:#fff">'
+    + '<iconify-icon icon="' + statusMeta.icon + '" style="font-size:12px"></iconify-icon>' + statusMeta.label + '</span>'
+    + '<div class="arv-dr-title">' + _arvEsc(r.title || '') + '</div>'
+    + '<div class="arv-dr-user">'
+    + '<iconify-icon icon="solar:user-linear" style="font-size:12px"></iconify-icon> ' + _arvEsc(r.userName || '—')
+    + ' · ' + _arvEsc(r.category || '') + ' · ' + _arvFmtDate(r.date)
+    + '</div>'
+    + '</div>'
+    + '</div>';
+
+  h += '<div class="arv-dr-body">';
+
+  // Açıklama
+  if (r.description) {
+    h += '<div class="arv-dr-section">'
+      + '<div class="arv-dr-sec-title"><iconify-icon icon="solar:document-text-linear" style="font-size:14px"></iconify-icon>Açıklama</div>'
+      + '<div class="arv-dr-desc">' + _arvEsc(r.description) + '</div>'
+      + '</div>';
+  }
+
+  // Malzemeler
+  if (r.ingredients && r.ingredients.length) {
+    h += '<div class="arv-dr-section">'
+      + '<div class="arv-dr-sec-title"><iconify-icon icon="solar:checklist-minimalistic-linear" style="font-size:14px"></iconify-icon>Malzemeler (' + r.ingredients.length + ')</div>'
+      + '<div class="arv-dr-ing-list">';
+    for (var i = 0; i < r.ingredients.length; i++) {
+      var ing = r.ingredients[i];
+      h += '<div class="arv-dr-ing-row"><span>' + _arvEsc(ing.name) + '</span><b>' + _arvEsc(ing.amount) + '</b></div>';
+    }
+    h += '</div></div>';
+  }
+
+  // Adımlar
+  if (r.steps && r.steps.length) {
+    h += '<div class="arv-dr-section">'
+      + '<div class="arv-dr-sec-title"><iconify-icon icon="solar:list-bold" style="font-size:14px"></iconify-icon>Yapılış (' + r.steps.length + ' adım)</div>'
+      + '<div class="arv-dr-steps">';
+    for (var s = 0; s < r.steps.length; s++) {
+      h += '<div class="arv-dr-step">'
+        + '<div class="arv-dr-step-num">' + (s + 1) + '</div>'
+        + '<div class="arv-dr-step-txt">' + _arvEsc(r.steps[s]) + '</div>'
+        + '</div>';
+    }
+    h += '</div></div>';
+  }
+
+  // Fotoğraflar
+  if (r.media && r.media.length) {
+    h += '<div class="arv-dr-section">'
+      + '<div class="arv-dr-sec-title"><iconify-icon icon="solar:gallery-linear" style="font-size:14px"></iconify-icon>Fotoğraflar (' + r.media.length + ')</div>'
+      + '<div class="arv-dr-media">';
+    for (var m = 0; m < r.media.length; m++) {
+      var md = r.media[m];
+      h += '<div class="arv-dr-media-item' + (md.flagged ? ' flagged' : '') + '" style="background-image:url(' + md.url + ')">'
+        + (md.flagged ? '<div class="arv-dr-flag"><iconify-icon icon="solar:flag-bold" style="font-size:11px"></iconify-icon>İşaretli</div>' : '')
+        + '</div>';
+    }
+    h += '</div></div>';
+  }
+
+  // Red gerekçesi (rejected için)
+  if (r.status === 'rejected' && r.rejectReason) {
+    h += '<div class="arv-dr-reject-box">'
+      + '<iconify-icon icon="solar:close-circle-bold" style="font-size:16px;color:#EF4444"></iconify-icon>'
+      + '<div><div class="arv-dr-box-lbl">Red Gerekçesi</div>'
+      + '<div class="arv-dr-box-txt">' + _arvEsc(r.rejectReason) + '</div></div>'
+      + '</div>';
+  }
+
+  // Düzenleme isteği (awaiting için)
+  if (r.status === 'awaiting_response' && r.editRequestNote) {
+    h += '<div class="arv-dr-edit-box">'
+      + '<iconify-icon icon="solar:pen-new-square-bold" style="font-size:16px;color:#8B5CF6"></iconify-icon>'
+      + '<div><div class="arv-dr-box-lbl">Admin Notu (Düzenleme İsteği)</div>'
+      + '<div class="arv-dr-box-txt">' + _arvEsc(r.editRequestNote) + '</div>'
+      + '<div class="arv-dr-box-sub">Gönderim: ' + _arvFmtDate(r.editRequestedAt) + '</div></div>'
+      + '</div>';
+  }
+
+  h += '</div>';
+  body.innerHTML = h;
+}
+
+function _arvStatusMeta(status) {
+  if (status === 'approved') return { label:'Onaylı', color:'#22C55E', icon:'solar:check-circle-bold' };
+  if (status === 'pending') return { label:'Bekliyor', color:'#F59E0B', icon:'solar:clock-circle-bold' };
+  if (status === 'awaiting_response') return { label:'Cevap Bekliyor', color:'#8B5CF6', icon:'solar:chat-square-call-bold' };
+  if (status === 'rejected') return { label:'Reddedildi', color:'#EF4444', icon:'solar:close-circle-bold' };
+  return { label:status, color:'#6B7280', icon:'solar:question-circle-linear' };
 }
 
 function _arvSetTab(tab) {
