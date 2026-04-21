@@ -262,7 +262,7 @@ function adjBMI(field, delta) {
   let input;
   if (field === 'height') input = document.getElementById('bmiHeight');
   else if (field === 'weight') input = document.getElementById('bmiWeight');
-  else input = document.getElementById('bmiAge');
+  else return; // Yaş inputu kaldırıldı — DOB kullanılıyor
   if (!input) return;
   let val = parseInt(input.value) || 0;
   val += delta;
@@ -270,12 +270,45 @@ function adjBMI(field, delta) {
   input.value = val;
 }
 
+/* DOB'dan yaşı hesapla (YYYY-MM-DD) */
+function _bmiAgeFromDob(dobStr) {
+  if (!dobStr) return null;
+  const d = new Date(dobStr);
+  if (isNaN(d)) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age > 0 && age < 130 ? age : null;
+}
+
+/* Mifflin-St Jeor BMR (kcal/gün)
+   Erkek: 10*kg + 6.25*cm - 5*yaş + 5
+   Kadın: 10*kg + 6.25*cm - 5*yaş - 161 */
+function _bmiCalcBMR(w, hCm, age, gender) {
+  if (!w || !hCm || !age || (gender !== 'male' && gender !== 'female')) return null;
+  const base = 10 * w + 6.25 * hCm - 5 * age;
+  return Math.round(base + (gender === 'male' ? 5 : -161));
+}
+
+function _bmiGetGender() {
+  const nodes = document.getElementsByName('bmiGender');
+  for (let i = 0; i < nodes.length; i++) if (nodes[i].checked) return nodes[i].value;
+  return 'na';
+}
+
 function calculateBMI() {
-  const h = parseFloat(document.getElementById('bmiHeight').value) / 100;
+  const hCm = parseFloat(document.getElementById('bmiHeight').value);
   const w = parseFloat(document.getElementById('bmiWeight').value);
+  const h = hCm / 100;
   if (!h || !w || h <= 0) return;
   const bmi = w / (h * h);
   const bmiRounded = Math.round(bmi * 10) / 10;
+
+  const dob = (document.getElementById('bmiDob') || {}).value || '';
+  const age = _bmiAgeFromDob(dob);
+  const gender = _bmiGetGender();
+  const bmr = _bmiCalcBMR(w, hCm, age, gender);
 
   let label, color, info;
   if (bmi < 18.5) {
@@ -302,6 +335,33 @@ function calculateBMI() {
   const pct = Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100));
   document.getElementById('bmiGaugeMarker').style.left = pct + '%';
 
+  /* BMR paneli — opsiyonel alanlar dolduysa göster */
+  const bmrEl = document.getElementById('bmiBmrPanel');
+  if (bmrEl) {
+    if (bmr) {
+      bmrEl.style.display = 'flex';
+      bmrEl.innerHTML = '<iconify-icon icon="solar:fire-bold" style="font-size:18px;color:#F97316;flex-shrink:0"></iconify-icon>'
+        + '<div style="flex:1">'
+        + '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">Bazal Metabolizma Hızı</div>'
+        + '<div style="font:var(--fw-regular) var(--fs-xs)/1.4 var(--font);color:var(--text-muted);margin-top:2px">' + age + ' yaş · ' + (gender === 'male' ? 'Erkek' : 'Kadın') + ' · Dinlenik enerji tüketimi</div>'
+        + '</div>'
+        + '<div style="text-align:right"><div style="font:var(--fw-bold) var(--fs-lg)/1 var(--font);color:#F97316">' + bmr.toLocaleString('tr-TR') + '</div>'
+        + '<div style="font:var(--fw-regular) 9.5px/1 var(--font);color:var(--text-muted);margin-top:3px;letter-spacing:.4px">KCAL/GÜN</div></div>';
+    } else {
+      bmrEl.style.display = 'none';
+    }
+  }
+
+  /* AI motivation — opsiyonel alanlar eksikse kullanıcıya hatırlat */
+  const hintEl = document.getElementById('bmiAiHint');
+  if (hintEl) {
+    if (!age || gender === 'na') {
+      hintEl.style.display = 'flex';
+    } else {
+      hintEl.style.display = 'none';
+    }
+  }
+
   const res = document.getElementById('bmiResult');
   if (res) res.style.display = 'flex';
 }
@@ -311,11 +371,24 @@ function bmiAskAI() {
   closeSettingsPanel();
   const h = document.getElementById('bmiHeight').value;
   const w = document.getElementById('bmiWeight').value;
+  const dob = (document.getElementById('bmiDob') || {}).value || '';
+  const age = _bmiAgeFromDob(dob);
+  const gender = _bmiGetGender();
+  const bmr = _bmiCalcBMR(parseFloat(w), parseFloat(h), age, gender);
+
+  const extras = [];
+  if (age) extras.push('Yaş: ' + age);
+  if (gender === 'male') extras.push('Cinsiyet: Erkek');
+  else if (gender === 'female') extras.push('Cinsiyet: Kadın');
+  if (bmr) extras.push('BMR: ' + bmr + ' kcal/gün');
+
+  const extraStr = extras.length ? '. ' + extras.join(', ') : '';
+
   switchTab('ai');
   setTimeout(function() {
     const input = document.getElementById('aiChatInput');
     if (input) {
-      input.value = 'BMI sonucuma göre sağlıklı diyet önerisi ver. Boy: ' + h + 'cm, Kilo: ' + w + 'kg';
+      input.value = 'BMI sonucuma göre sağlıklı diyet önerisi ver. Boy: ' + h + 'cm, Kilo: ' + w + 'kg' + extraStr;
       aiSend();
     }
   }, 400);

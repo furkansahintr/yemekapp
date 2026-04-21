@@ -29,13 +29,40 @@
               <button class="bmi-adj-btn" onclick="adjBMI('weight',1)">+</button>
             </div>
           </div>
+          <!-- Opsiyonel bölüm — BMR + AI için -->
+          <div class="bmi-optional-divider">
+            <span class="bmi-optional-label">Opsiyonel — Daha isabetli sonuç</span>
+          </div>
+
           <div class="bmi-input-group">
-            <label>Yaş</label>
+            <label>Doğum Tarihi <span class="bmi-opt-tag">Opsiyonel</span></label>
             <div class="bmi-input-row">
-              <button class="bmi-adj-btn" onclick="adjBMI('age',-1)">−</button>
-              <input type="number" id="bmiAge" value="26" class="bmi-input">
-              <button class="bmi-adj-btn" onclick="adjBMI('age',1)">+</button>
+              <input type="date" id="bmiDob" class="bmi-input bmi-input--date" max="2026-04-21">
             </div>
+          </div>
+
+          <div class="bmi-input-group">
+            <label>Cinsiyet <span class="bmi-opt-tag">Opsiyonel</span></label>
+            <div class="bmi-gender-row">
+              <label class="bmi-gender-opt">
+                <input type="radio" name="bmiGender" value="male">
+                <span class="bmi-gender-pill"><iconify-icon icon="solar:men-bold" style="font-size:14px"></iconify-icon> Erkek</span>
+              </label>
+              <label class="bmi-gender-opt">
+                <input type="radio" name="bmiGender" value="female">
+                <span class="bmi-gender-pill"><iconify-icon icon="solar:women-bold" style="font-size:14px"></iconify-icon> Kadın</span>
+              </label>
+              <label class="bmi-gender-opt">
+                <input type="radio" name="bmiGender" value="na" checked>
+                <span class="bmi-gender-pill"><iconify-icon icon="solar:lock-keyhole-minimalistic-linear" style="font-size:14px"></iconify-icon> Belirtmek istemiyorum</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Bilgi kutusu -->
+          <div class="bmi-info-box">
+            <iconify-icon icon="solar:shield-user-bold" style="font-size:15px;color:#8B5CF6;flex-shrink:0;margin-top:1px"></iconify-icon>
+            <span>Bu bilgiler kilo endeksinizi hesaplamak ve yapay zekanın oluşturacağı içeriklerde kullanılacaktır.</span>
           </div>
 
           <button class="bmi-calc-btn" onclick="calculateBMI()">
@@ -56,6 +83,13 @@
               </div>
             </div>
             <div class="bmi-result-info" id="bmiInfo">—</div>
+            <!-- BMR paneli (opsiyonel alanlar dolduysa JS ile render edilir) -->
+            <div id="bmiBmrPanel" class="bmi-bmr-panel" style="display:none"></div>
+            <!-- AI hint (opsiyonel alanlar eksikse) -->
+            <div id="bmiAiHint" class="bmi-ai-hint" style="display:none">
+              <iconify-icon icon="solar:lightbulb-bold" style="font-size:14px;color:#8B5CF6;flex-shrink:0;margin-top:1px"></iconify-icon>
+              <span>Doğum tarihi ve cinsiyeti doldurursan yapay zeka sana yaş ve metabolizmana özel öneriler sunabilir.</span>
+            </div>
             <button class="bmi-ai-btn" onclick="bmiAskAI()">
               <iconify-icon icon="solar:star-circle-bold" style="font-size:18px"></iconify-icon>
               AI Şef'ten Diyet Önerisi Al
