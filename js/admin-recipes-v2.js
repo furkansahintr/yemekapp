@@ -77,7 +77,93 @@ function _arvRefreshList() {
   if (!box) return;
 
   if (_arv.tab === 'approved') { box.innerHTML = _arvRenderApproved(); return; }
-  box.innerHTML = '<div class="arv-placeholder">Liste (P3-P8-P9) yakında...</div>';
+  if (_arv.tab === 'pending') { box.innerHTML = _arvRenderPending(); return; }
+  box.innerHTML = '<div class="arv-placeholder">Liste (P8-P9) yakında...</div>';
+}
+
+/* ═══ P3 — Bekleyen Tab ═══ */
+function _arvRenderPending() {
+  var list = _arvFilterList('pending');
+  // Kronolojik en eskiden yeniye (ilk gelen ilk işlenir)
+  list.sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+
+  if (list.length === 0) {
+    return '<div class="arv-empty">'
+      + '<iconify-icon icon="solar:check-circle-bold" style="font-size:42px;opacity:.3;color:#22C55E"></iconify-icon>'
+      + '<div>Tüm tarifler denetlendi</div>'
+      + '<div class="arv-empty-sub">Onay bekleyen tarif kalmadı 🎉</div>'
+      + '</div>';
+  }
+
+  var selectedCount = Object.keys(_arv.selectedIds).filter(function(k){ return _arv.selectedIds[k]; }).length;
+
+  var h = '<div class="arv-pending-bar">'
+    + '<label class="arv-bulk-toggle">'
+    + '<input type="checkbox"' + (_arv.bulkMode ? ' checked' : '') + ' onchange="_arv.bulkMode=this.checked;_arv.selectedIds={};_arvRefreshList()">'
+    + '<span>Toplu Mod</span></label>'
+    + '<span class="arv-pending-count"><iconify-icon icon="solar:clock-circle-bold" style="font-size:13px;color:#F59E0B"></iconify-icon>' + list.length + ' tarif bekliyor</span>'
+    + '</div>';
+
+  // Bulk action bar (toplu mod + seçim var ise)
+  if (_arv.bulkMode && selectedCount > 0) {
+    h += '<div class="arv-bulk-actions">'
+      + '<span class="arv-bulk-selcnt"><b>' + selectedCount + '</b> tarif seçildi</span>'
+      + '<button class="arv-btn-mini arv-btn-mini--sel" onclick="_arvSelectAllPending()">Tümünü Seç</button>'
+      + '<button class="arv-btn-mini arv-btn-mini--clr" onclick="_arv.selectedIds={};_arvRefreshList()">Temizle</button>'
+      + '<button class="arv-btn-bulk" onclick="_arvBulkApprove()">'
+      + '<iconify-icon icon="solar:check-read-bold" style="font-size:14px"></iconify-icon>Toplu Onayla (' + selectedCount + ')</button>'
+      + '</div>';
+  }
+
+  h += '<div class="arv-pending-list">';
+  for (var i = 0; i < list.length; i++) {
+    h += _arvPendingCard(list[i], i + 1);
+  }
+  h += '</div>';
+  return h;
+}
+
+function _arvPendingCard(r, rank) {
+  var sel = !!_arv.selectedIds[r.id];
+  return '<div class="arv-p-card' + (sel ? ' selected' : '') + '">'
+    + (_arv.bulkMode
+        ? '<div class="arv-p-check" onclick="_arvToggleSelect(\'' + r.id + '\')">'
+          + (sel
+              ? '<iconify-icon icon="solar:check-square-bold" style="font-size:24px;color:#F65013"></iconify-icon>'
+              : '<iconify-icon icon="solar:square-linear" style="font-size:24px;color:var(--text-muted)"></iconify-icon>')
+          + '</div>'
+        : '<div class="arv-p-rank">#' + rank + '</div>')
+    + '<div class="arv-p-img" style="background-image:url(' + (r.cover || '') + ')"></div>'
+    + '<div class="arv-p-main" onclick="_arvOpenDetail(\'' + r.id + '\')">'
+    + '<div class="arv-p-title">' + _arvEsc(r.title || '') + '</div>'
+    + '<div class="arv-p-meta">'
+    + '<span><iconify-icon icon="solar:user-linear" style="font-size:11px"></iconify-icon>' + _arvEsc(r.userName || '—') + '</span>'
+    + '<span class="arv-dot">·</span>'
+    + '<span class="arv-cat-pill">' + _arvEsc(r.category || '—') + '</span>'
+    + '</div>'
+    + '<div class="arv-p-date">'
+    + '<iconify-icon icon="solar:clock-circle-linear" style="font-size:11px"></iconify-icon>'
+    + _arvFmtDate(r.date)
+    + '<span class="arv-status-pill arv-status-pill--pending">Bekliyor</span>'
+    + '</div>'
+    + '</div>'
+    + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-muted);align-self:center"></iconify-icon>'
+    + '</div>';
+}
+
+function _arvToggleSelect(id) {
+  _arv.selectedIds[id] = !_arv.selectedIds[id];
+  _arvRefreshList();
+}
+
+function _arvSelectAllPending() {
+  var list = _arvFilterList('pending');
+  for (var i = 0; i < list.length; i++) _arv.selectedIds[list[i].id] = true;
+  _arvRefreshList();
+}
+
+function _arvBulkApprove() {
+  if (typeof _admToast === 'function') _admToast('Toplu onay P10 yakında...', 'ok');
 }
 
 /* ═══ P2 — Onaylanmış Tab ═══ */
