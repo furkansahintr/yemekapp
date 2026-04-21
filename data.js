@@ -1588,3 +1588,20 @@ var DELETE_SURVEY_OPTIONS = [
 var ACCOUNT_DELETION_STATE = null;
 // Örnek aktif askı: { scheduledAt: '2026-04-18T12:00:00', deleteAt: '2026-05-18T12:00:00', reasons:['slow','notif'], note:'' }
 
+
+/* ═══════════════════════════════════════════════════════════
+   ORDER REVIEWS — Sipariş Değerlendirmeleri (Kullanıcı)
+   İşletme + ürün bazlı 5-yıldız + yorum
+   ═══════════════════════════════════════════════════════════ */
+
+// Yapı: { orderId: { biz:{rating,comment,createdAt}, items:{[itemKey]:{rating,comment}} } }
+// itemKey: ürün adı (basit prototip için)
+var USER_ORDER_REVIEWS = {
+  // Örnek: tx_... benzeri bir order için önceden doldurulmuş
+  'ord_seed_example': {
+    biz: { rating: 5, comment: 'Her zamanki gibi tertemiz ve hızlı.', createdAt: '2026-04-12T20:10:00' },
+    items: {
+      'Example': { rating: 5, comment: '' }
+    }
+  }
+};
