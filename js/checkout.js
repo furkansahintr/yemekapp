@@ -74,6 +74,25 @@ function buttonTick(btn, opts) {
   }, holdMs);
 }
 
+/* Sepet ikonu boşken gri, doluyken marka rengi
+   Cart count'a göre #headerCartBtn'e .chk-cart-active sınıfı ekler/çıkarır */
+function refreshCartIconState() {
+  var btn = document.getElementById('headerCartBtn');
+  if (!btn) return;
+  var count = 0;
+  if (typeof cart !== 'undefined' && Array.isArray(cart)) {
+    for (var i = 0; i < cart.length; i++) count += (cart[i].qty || 0);
+  }
+  btn.classList.toggle('chk-cart-active', count > 0);
+}
+
+/* İlk yüklemede durumu ayarla */
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(refreshCartIconState, 600);
+  });
+}
+
 /* Sepet badge bump — addToCart sonrası ikon hafif zıplasın */
 function bumpCartBadge() {
   ['headerCartBadge', 'stickyCartBadge'].forEach(function(id) {
