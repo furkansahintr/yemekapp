@@ -53,8 +53,20 @@ function addToCart(idx, source) {
     });
   }
   updateCartBadge();
-  if (typeof showToast === 'function') showToast('Ürün sepetinize başarıyla eklendi.');
+  if (typeof showToast === 'function') {
+    showToast('Ürün sepetinize başarıyla eklendi.', {
+      icon: 'solar:check-circle-bold',
+      color: '#22C55E',
+      actionLabel: 'Sepete Git',
+      duration: 2500,
+      onAction: function() {
+        if (typeof openCartOverlay === 'function') openCartOverlay();
+        else if (typeof openCart === 'function') openCart();
+      }
+    });
+  }
   if (typeof bumpCartBadge === 'function') bumpCartBadge();
+  if (typeof refreshCartIconState === 'function') refreshCartIconState();
 }
 
 function removeFromCart(idx, source) {
@@ -64,6 +76,7 @@ function removeFromCart(idx, source) {
     if (cart[i].qty <= 0) cart.splice(i, 1);
   }
   updateCartBadge();
+  if (typeof refreshCartIconState === 'function') refreshCartIconState();
   renderCartItems();
 }
 
@@ -95,6 +108,7 @@ function updateCartQuantity(idx, source) {
   const existing = cart.find(c => c.idx === idx && c.source === source);
   if (existing) existing.qty++;
   updateCartBadge();
+  if (typeof refreshCartIconState === 'function') refreshCartIconState();
   renderCartItems();
 }
 
@@ -102,6 +116,7 @@ function removeCartItem(idx, source) {
   const i = cart.findIndex(c => c.idx === idx && c.source === source);
   if (i > -1) cart.splice(i, 1);
   updateCartBadge();
+  if (typeof refreshCartIconState === 'function') refreshCartIconState();
   renderCartItems();
 }
 
@@ -135,12 +150,14 @@ function increaseCartItem(idx, source) {
   const existing = cart.find(c => c.idx === idx && c.source === source);
   if (existing) existing.qty++;
   updateCartBadge();
+  if (typeof refreshCartIconState === 'function') refreshCartIconState();
   renderCartItems();
 }
 
 function clearCart() {
   cart = [];
   updateCartBadge();
+  if (typeof refreshCartIconState === 'function') refreshCartIconState();
   renderCartItems();
 }
 

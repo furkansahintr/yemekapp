@@ -133,7 +133,17 @@ function showDetail(i,source){
     document.getElementById('detailServing').textContent='1 Adet';
     detailServing=1;
     startBtn.textContent='Sepete Ekle — ₺'+item.price;
-    startBtn.onclick=function(){addToCart(currentItem,currentSource);closeDetail();};
+    startBtn.onclick=function(){
+      if (typeof buttonTick === 'function') {
+        buttonTick(startBtn, { hold: 520, done: function() {
+          addToCart(currentItem, currentSource);
+          closeDetail();
+        }});
+      } else {
+        addToCart(currentItem, currentSource);
+        closeDetail();
+      }
+    };
     /* Restaurants da Plana Ekle butonu görür (Tarife Başla ile birebir aynı davranış) */
     calendarBtn.style.display='flex';
   }else{
