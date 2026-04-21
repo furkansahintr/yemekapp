@@ -83,6 +83,13 @@
               </div>
             </div>
             <div class="bmi-result-info" id="bmiInfo">—</div>
+            <!-- BMR paneli (opsiyonel alanlar dolduysa JS ile render edilir) -->
+            <div id="bmiBmrPanel" class="bmi-bmr-panel" style="display:none"></div>
+            <!-- AI hint (opsiyonel alanlar eksikse) -->
+            <div id="bmiAiHint" class="bmi-ai-hint" style="display:none">
+              <iconify-icon icon="solar:lightbulb-bold" style="font-size:14px;color:#8B5CF6;flex-shrink:0;margin-top:1px"></iconify-icon>
+              <span>Doğum tarihi ve cinsiyeti doldurursan yapay zeka sana yaş ve metabolizmana özel öneriler sunabilir.</span>
+            </div>
             <button class="bmi-ai-btn" onclick="bmiAskAI()">
               <iconify-icon icon="solar:star-circle-bold" style="font-size:18px"></iconify-icon>
               AI Şef'ten Diyet Önerisi Al
