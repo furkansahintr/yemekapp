@@ -393,7 +393,131 @@ function _arvRenderDetail() {
   }
 
   h += '</div>';
+
+  // Footer aksiyonları (pending ve awaiting için)
+  if (r.status === 'pending' || r.status === 'awaiting_response') {
+    h += _arvRenderFooter(r);
+  }
+
+  // Aksiyon dialogu
+  if (_arv.actionOpen) {
+    h += _arvRenderActionDialog(r);
+  }
+
   body.innerHTML = h;
+}
+
+/* ═══ P7 — Drawer Footer + Aksiyonlar ═══ */
+function _arvRenderFooter(r) {
+  return '<div class="arv-dr-footer">'
+    + '<button class="arv-btn-danger" onclick="_arv.actionOpen=\'reject\';_arv.actionNote=\'\';_arvRenderDetail()">'
+    + '<iconify-icon icon="solar:close-circle-bold" style="font-size:14px"></iconify-icon>Reddet</button>'
+    + '<button class="arv-btn-violet" onclick="_arv.actionOpen=\'edit\';_arv.actionNote=\'\';_arvRenderDetail()">'
+    + '<iconify-icon icon="solar:pen-new-square-bold" style="font-size:14px"></iconify-icon>Düzenle İste</button>'
+    + '<button class="arv-btn-green" onclick="_arvApproveRecipe(\'' + r.id + '\')">'
+    + '<iconify-icon icon="solar:check-circle-bold" style="font-size:14px"></iconify-icon>Onayla & Yayınla</button>'
+    + '</div>';
+}
+
+function _arvRenderActionDialog(r) {
+  var isReject = _arv.actionOpen === 'reject';
+  var title = isReject ? 'Tarifi Reddet' : 'Düzenleme İste';
+  var hint = isReject
+    ? 'Red gerekçesi kullanıcıya iletilecektir. Net ve yapıcı olun.'
+    : 'Kullanıcı tarifi düzenleyip tekrar gönderecek. Hangi değişikliklerin gerektiğini yazın.';
+  var placeholder = isReject
+    ? 'Örn: Tarif zaten kayıtlı / Görsel uygun değil / Gıda güvenliği sakıncalı...'
+    : 'Örn: Pişirme sıcaklığı eklenmeli, fotoğraf netleştirilmeli...';
+  var color = isReject ? '#EF4444' : '#8B5CF6';
+  var icon = isReject ? 'solar:close-circle-bold' : 'solar:pen-new-square-bold';
+
+  return '<div class="arv-action-dialog">'
+    + '<div class="arv-ad-card">'
+    + '<div class="arv-ad-head" style="color:' + color + '">'
+    + '<iconify-icon icon="' + icon + '" style="font-size:18px"></iconify-icon>'
+    + '<span>' + title + '</span>'
+    + '</div>'
+    + '<textarea class="arv-ad-textarea" placeholder="' + placeholder + '" maxlength="300" '
+    + 'oninput="_arv.actionNote=this.value" autofocus>' + _arvEsc(_arv.actionNote) + '</textarea>'
+    + '<div class="arv-ad-hint">' + hint + '</div>'
+    + '<div class="arv-ad-btns">'
+    + '<button class="arv-btn-ghost" onclick="_arv.actionOpen=null;_arvRenderDetail()">Vazgeç</button>'
+    + (isReject
+        ? '<button class="arv-btn-danger" onclick="_arvRejectRecipe(\'' + r.id + '\')">'
+          + '<iconify-icon icon="solar:close-circle-bold" style="font-size:13px"></iconify-icon>Reddet ve Gönder</button>'
+        : '<button class="arv-btn-violet" onclick="_arvEditRequest(\'' + r.id + '\')">'
+          + '<iconify-icon icon="solar:send-square-bold" style="font-size:13px"></iconify-icon>İsteği Gönder</button>')
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+/* ═══ Aksiyon İşleyicileri ═══ */
+function _arvLogNotification(recipeId, type, note) {
+  if (typeof ADMIN_RECIPE_NOTIFICATIONS === 'undefined') return;
+  ADMIN_RECIPE_NOTIFICATIONS.unshift({
+    id: 'ntf_' + Date.now().toString(36),
+    recipeId: recipeId,
+    type: type,           // 'approved' | 'edit_requested' | 'rejected'
+    note: note || '',
+    sentAt: new Date().toISOString()
+  });
+}
+
+function _arvApproveRecipe(id) {
+  var r = _arvRecipe(id);
+  if (!r) return;
+  r.status = 'approved';
+  r.aiAllergens = _arv.editingAllergens.slice();
+  r.allergens = _arv.editingAllergens.slice();
+  (r.responseHistory = r.responseHistory || []).push({ action:'approved', at: new Date().toISOString(), by:'admin' });
+
+  _arvLogNotification(id, 'approved',
+    'Tarifiniz sistem tarafından doğrulandı ve yayına alındı. Topluluk artık tarifinizi keşfedebilir!');
+
+  if (typeof _admToast === 'function') _admToast('✓ ' + (r.title || 'Tarif') + ' onaylandı · Kullanıcıya bildirim gitti', 'ok');
+  _arvCloseDetail();
+  _arvRender(document.getElementById('adminRecipesContainer'));
+}
+
+function _arvEditRequest(id) {
+  var note = (_arv.actionNote || '').trim();
+  if (note.length < 10) {
+    if (typeof _admToast === 'function') _admToast('Not en az 10 karakter olmalı', 'err');
+    return;
+  }
+  var r = _arvRecipe(id);
+  if (!r) return;
+  r.status = 'awaiting_response';
+  r.editRequestNote = note;
+  r.editRequestedAt = new Date().toISOString();
+  (r.responseHistory = r.responseHistory || []).push({ action:'edit_requested', at: r.editRequestedAt, by:'admin', note: note });
+
+  _arvLogNotification(id, 'edit_requested', note);
+
+  if (typeof _admToast === 'function') _admToast('Düzenleme isteği kullanıcıya iletildi', 'ok');
+  _arvCloseDetail();
+  _arvRender(document.getElementById('adminRecipesContainer'));
+}
+
+function _arvRejectRecipe(id) {
+  var note = (_arv.actionNote || '').trim();
+  if (note.length < 10) {
+    if (typeof _admToast === 'function') _admToast('Red gerekçesi en az 10 karakter olmalı', 'err');
+    return;
+  }
+  var r = _arvRecipe(id);
+  if (!r) return;
+  r.status = 'rejected';
+  r.rejectReason = note;
+  r.rejectedAt = new Date().toISOString();
+  (r.responseHistory = r.responseHistory || []).push({ action:'rejected', at: r.rejectedAt, by:'admin', note: note });
+
+  _arvLogNotification(id, 'rejected', note);
+
+  if (typeof _admToast === 'function') _admToast('Tarif reddedildi · Gerekçe kullanıcıya iletildi', 'err');
+  _arvCloseDetail();
+  _arvRender(document.getElementById('adminRecipesContainer'));
 }
 
 /* ═══ P6 — Benzer Tarif Algoritması ═══ */
