@@ -104,7 +104,97 @@ function _orvRender() {
   else h += _orvRenderItemsTab(order);
   h += '</div>';
 
+  // Footer (onayla)
+  h += _orvRenderFooter(order);
+
   body.innerHTML = h;
+}
+
+/* ═══ P6 — Onayla Footer + Submit ═══ */
+function _orvRenderFooter(order) {
+  var bizOk = _orv.biz.rating > 0;
+  var anyItemRated = Object.keys(_orv.items).some(function(k){ return (_orv.items[k].rating || 0) > 0; });
+  var valid = bizOk || anyItemRated;
+
+  var hint = !valid
+    ? 'Onay için işletme veya en az bir ürün puanlanmalı'
+    : (bizOk && anyItemRated ? 'Hazır — onayla ve tamamla' : (bizOk ? 'İstersen ürünleri de puanla' : 'İstersen işletmeyi de puanla'));
+
+  return '<div class="orv-footer">'
+    + '<div class="orv-footer-hint"><iconify-icon icon="solar:info-circle-linear" style="font-size:12px"></iconify-icon><span>' + _orvEsc(hint) + '</span></div>'
+    + '<button class="orv-btn-submit' + (valid ? '' : ' disabled') + '"' + (valid ? ' onclick="_orvSubmit()"' : '') + '>'
+    + (_orv.submitting
+        ? '<iconify-icon icon="solar:refresh-linear" style="font-size:14px;animation:orvSpin 1s linear infinite"></iconify-icon>Gönderiliyor...'
+        : '<iconify-icon icon="solar:check-circle-bold" style="font-size:15px"></iconify-icon>Onayla')
+    + '</button>'
+    + '</div>';
+}
+
+function _orvSubmit() {
+  if (_orv.submitting) return;
+  _orv.submitting = true;
+  _orvRender();
+
+  setTimeout(function() {
+    // Kayıt
+    if (typeof USER_ORDER_REVIEWS === 'undefined') window.USER_ORDER_REVIEWS = {};
+    var itemsOut = {};
+    Object.keys(_orv.items).forEach(function(k) {
+      if ((_orv.items[k].rating || 0) > 0 || (_orv.items[k].comment || '').length > 0) {
+        itemsOut[k] = { rating: _orv.items[k].rating, comment: _orv.items[k].comment || '' };
+      }
+    });
+    USER_ORDER_REVIEWS[_orv.orderId] = {
+      biz: {
+        rating: _orv.biz.rating,
+        comment: _orv.biz.comment || '',
+        createdAt: new Date().toISOString()
+      },
+      items: itemsOut
+    };
+
+    // Kapat ve teşekkür
+    closeOrderReview();
+    setTimeout(function() {
+      _orvShowThanks();
+    }, 280);
+
+    // Sipariş detayını güncelle (Değerlendirildi pasif olacak)
+    setTimeout(function() {
+      var detailBody = document.getElementById('ordDetailBody');
+      if (detailBody && typeof openOrderDetail === 'function') {
+        openOrderDetail(_orv.orderId);
+      }
+    }, 420);
+  }, 600);
+}
+
+function _orvShowThanks() {
+  var phone = document.getElementById('phone');
+  var existing = document.getElementById('orvThanks');
+  if (existing) existing.remove();
+
+  var m = document.createElement('div');
+  m.id = 'orvThanks';
+  m.className = 'orv-thanks-bd';
+  m.onclick = function(e){ if (e.target === m) _orvCloseThanks(); };
+  m.innerHTML = '<div class="orv-thanks">'
+    + '<div class="orv-thanks-ico"><iconify-icon icon="solar:heart-angle-bold" style="font-size:52px;color:#F59E0B"></iconify-icon></div>'
+    + '<div class="orv-thanks-title">Teşekkürler!</div>'
+    + '<div class="orv-thanks-body">Değerlendirmeler topluluğa büyük katkı sunar, yapmış olduğun değerlendirmeler için teşekkür ederiz.</div>'
+    + '<button class="orv-btn-submit" onclick="_orvCloseThanks()"><iconify-icon icon="solar:check-circle-bold" style="font-size:14px"></iconify-icon>Harika</button>'
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+  // Oto kapat
+  setTimeout(_orvCloseThanks, 4500);
+}
+
+function _orvCloseThanks() {
+  var m = document.getElementById('orvThanks');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 260);
 }
 
 /* ═══ P4 — İşletme Tab ═══ */
