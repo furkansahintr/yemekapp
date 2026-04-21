@@ -182,7 +182,7 @@ function renderBizMenuSingleTab() {
       ${renderBizMenuItems()}
     </div>
 
-    ${canEdit ? `
+    ${canEdit && !_menuIsHome() ? `
     <div onclick="openProductCreationWizard()" style="margin-top:16px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
       <iconify-icon icon="solar:add-circle-bold" style="font-size:18px;color:#fff"></iconify-icon>
       <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Ürün Oluştur</span>
@@ -196,7 +196,7 @@ function renderBizMenuComboTab() {
   const combos = BIZ_COMBO_PRODUCTS.filter(c => c.branchId === bizActiveBranch);
   const singleProducts = BIZ_PRODUCTS.filter(p => p.branchId === bizActiveBranch && p.type === 'single');
 
-  if (singleProducts.length === 0 && canEdit) {
+  if (singleProducts.length === 0 && canEdit && !_menuIsHome()) {
     return `
     <div style="padding:40px 16px;text-align:center">
       <iconify-icon icon="solar:danger-triangle-bold" style="font-size:40px;color:#F59E0B;display:block;margin:0 auto 12px"></iconify-icon>
@@ -212,7 +212,7 @@ function renderBizMenuComboTab() {
     <div id="bizMenuItemsList" style="display:flex;flex-direction:column;gap:10px">
       ${renderBizComboItems()}
     </div>
-    ${canEdit ? `
+    ${canEdit && !_menuIsHome() ? `
     <div onclick="openComboCreationWizard()" style="margin-top:16px;background:linear-gradient(135deg,#8B5CF6,#6366F1);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
       <iconify-icon icon="solar:layers-bold" style="font-size:18px;color:#fff"></iconify-icon>
       <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Grup Ürün Oluştur</span>
