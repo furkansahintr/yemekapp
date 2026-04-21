@@ -384,8 +384,78 @@ function _arvRenderDetail() {
       + '</div>';
   }
 
+  // AI Alerjen Analizi (pending ve awaiting için editable)
+  h += _arvRenderAIAllergens(r);
+
   h += '</div>';
   body.innerHTML = h;
+}
+
+/* ═══ P5 — AI Alerjen Paneli ═══ */
+function _arvRenderAIAllergens(r) {
+  var editable = (r.status === 'pending' || r.status === 'awaiting_response');
+  var currentList = editable ? _arv.editingAllergens : (r.aiAllergens || []);
+
+  var h = '<div class="arv-dr-ai">'
+    + '<div class="arv-dr-ai-head">'
+    + '<div class="arv-dr-ai-badge">'
+    + '<iconify-icon icon="solar:magic-stick-3-bold" style="font-size:13px"></iconify-icon>'
+    + '<span>AI ANALİZ</span>'
+    + '</div>'
+    + '<div class="arv-dr-ai-title">Alerjen & İntolerans Önizlemesi</div>'
+    + '</div>';
+
+  if (currentList.length === 0) {
+    h += '<div class="arv-ai-empty">'
+      + '<iconify-icon icon="solar:check-circle-linear" style="font-size:18px;color:#22C55E"></iconify-icon>'
+      + '<span>AI, bu tarifte bilinen bir alerjen tespit etmedi.</span>'
+      + '</div>';
+  } else {
+    h += '<div class="arv-ai-chips">';
+    for (var i = 0; i < currentList.length; i++) {
+      var a = currentList[i];
+      h += '<div class="arv-ai-chip' + (a.indexOf('Risk') > -1 ? ' arv-ai-chip--risk' : '') + '">'
+        + '<iconify-icon icon="solar:danger-triangle-bold" style="font-size:11px"></iconify-icon>'
+        + '<span>' + _arvEsc(a) + '</span>'
+        + (editable
+            ? '<button class="arv-ai-chip-x" onclick="_arvRemoveAllergen(' + i + ')" title="Kaldır">'
+              + '<iconify-icon icon="solar:close-circle-bold" style="font-size:12px"></iconify-icon></button>'
+            : '')
+        + '</div>';
+    }
+    h += '</div>';
+  }
+
+  if (editable) {
+    h += '<div class="arv-ai-add">'
+      + '<input type="text" id="arvAllergenInput" placeholder="Alerjen ekle (Örn: Kabuklu Deniz Ürünleri)" '
+      + 'onkeydown="if(event.key===\'Enter\')_arvAddAllergen()">'
+      + '<button class="arv-btn-mini arv-btn-mini--add" onclick="_arvAddAllergen()">'
+      + '<iconify-icon icon="solar:add-circle-bold" style="font-size:13px"></iconify-icon>Ekle</button>'
+      + '</div>'
+      + '<div class="arv-ai-hint">'
+      + '<iconify-icon icon="solar:info-circle-linear" style="font-size:11px;color:#8B5CF6"></iconify-icon>'
+      + '<span>Önerileri inceleyin, ekleyebilir veya kaldırabilirsiniz. Onay aşamasında bu liste son hâli alacaktır.</span>'
+      + '</div>';
+  }
+
+  h += '</div>';
+  return h;
+}
+
+function _arvAddAllergen() {
+  var inp = document.getElementById('arvAllergenInput');
+  if (!inp) return;
+  var v = (inp.value || '').trim();
+  if (!v) return;
+  if (_arv.editingAllergens.indexOf(v) === -1) _arv.editingAllergens.push(v);
+  inp.value = '';
+  _arvRenderDetail();
+}
+
+function _arvRemoveAllergen(idx) {
+  _arv.editingAllergens.splice(idx, 1);
+  _arvRenderDetail();
 }
 
 function _arvStatusMeta(status) {
