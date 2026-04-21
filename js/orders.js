@@ -475,7 +475,20 @@ function _ordRenderDetailBody(o) {
 }
 
 function _ordDetailFooter(o) {
-  var canCancel = (o.state === 'preparing'); // sadece hazırlık aşamasında iptal edilebilir
+  var canCancel = (o.state === 'preparing');
+
+  // Teslim edildi: Paylaş ve Tekrar Sipariş yerine "Değerlendir" — daha önce yapıldıysa pasif
+  if (o.state === 'delivered') {
+    var alreadyReviewed = (typeof USER_ORDER_REVIEWS !== 'undefined') && !!USER_ORDER_REVIEWS[o.id];
+    var btn = alreadyReviewed
+      ? '<button disabled style="flex:1;padding:14px;border-radius:var(--r-xl);background:var(--bg-btn);border:1px solid var(--border-subtle);color:var(--text-tertiary);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:not-allowed;display:inline-flex;align-items:center;justify-content:center;gap:6px" title="Bu sipariş değerlendirildi"><iconify-icon icon="solar:star-linear" style="font-size:16px"></iconify-icon>Değerlendirildi</button>'
+      : '<button onclick="openOrderReview(\'' + o.id + '\')" style="flex:1;padding:14px;border-radius:var(--r-xl);background:linear-gradient(135deg,#F59E0B,#EA580C);border:none;color:#fff;font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 10px rgba(245,158,11,.3)"><iconify-icon icon="solar:star-bold" style="font-size:16px"></iconify-icon>Değerlendir</button>';
+
+    return '<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px max(env(safe-area-inset-bottom),12px);background:var(--bg-page);border-top:1px solid var(--border-subtle);display:flex;gap:8px">'
+      + btn
+      + '</div>';
+  }
+
   var shareBtn = '<button onclick="_ordShare(\'' + o.id + '\')" style="flex:1;padding:14px;border-radius:var(--r-xl);background:var(--bg-phone);border:1px solid var(--border-subtle);color:var(--text-primary);font:var(--fw-semibold) var(--fs-sm)/1 var(--font);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px"><iconify-icon icon="solar:share-linear" style="font-size:16px"></iconify-icon>Paylaş</button>';
 
   var cancelBtn = canCancel
