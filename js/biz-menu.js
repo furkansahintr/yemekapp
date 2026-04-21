@@ -37,24 +37,40 @@ function _menuCanEditItem(item) {
 }
 
 /* ═══ OPEN MENU MANAGEMENT ═══ */
-function openBizMenuMgmt() {
+/* ═══ MENU VIEW MODE ═══
+   'full' (default): tam yetki — Ürün/Grup oluştur, ayarlar, düzenle/sil aktif
+   'home': sadece izleme + stok toggle. Şube Ayarları'nda tam moda geçilir. */
+var bizMenuViewMode = 'full';
+
+function openBizMenuMgmt(mode) {
   if (!bizRoleGuard('menu')) return;
+  if (mode) bizMenuViewMode = mode;
   bizMenuActiveCategory = 'all';
   bizMenuActiveTab = 'single';
   const overlay = createBizOverlay('bizMenuOverlay', 'Menü Yönetimi', renderBizMenuContent());
   document.getElementById('bizPhone').appendChild(overlay);
-  /* Topbar'a Ayarlar (çark) butonu enjekte et — createBizOverlay varsayılan olarak
-     sağ aksiyon butonu sunmuyor, bu yüzden son child olarak ekliyoruz. */
-  const topbar = overlay.firstElementChild;
-  if (topbar) {
-    const gear = document.createElement('div');
-    gear.className = 'btn-icon';
-    gear.title = 'Menü Ayarları';
-    gear.onclick = openBizMenuSettings;
-    gear.innerHTML = '<iconify-icon icon="solar:settings-linear" style="font-size:20px"></iconify-icon>';
-    topbar.appendChild(gear);
+  /* Topbar'a Ayarlar (çark) butonu enjekte et — sadece tam yetki (full) modunda.
+     createBizOverlay varsayılan olarak sağ aksiyon butonu sunmuyor. */
+  if (bizMenuViewMode === 'full') {
+    const topbar = overlay.firstElementChild;
+    if (topbar) {
+      const gear = document.createElement('div');
+      gear.className = 'btn-icon';
+      gear.title = 'Menü Ayarları';
+      gear.onclick = openBizMenuSettings;
+      gear.innerHTML = '<iconify-icon icon="solar:settings-linear" style="font-size:20px"></iconify-icon>';
+      topbar.appendChild(gear);
+    }
   }
 }
+
+/* Home mode için wrapper — Navbar > Anasayfa tile'ından çağrılır */
+function openBizMenuView() {
+  openBizMenuMgmt('home');
+}
+
+/* Home mode helper */
+function _menuIsHome() { return bizMenuViewMode === 'home'; }
 
 /* ═══ SWITCH CATEGORY ═══ */
 function switchBizMenuCategory(cat) {
