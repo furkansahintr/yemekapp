@@ -362,6 +362,15 @@ function openBizBranchDetail(branchId) {
             ${(typeof bizBranchLegal === 'function' && bizBranchLegal(branch.id).pending && new Date(bizBranchLegal(branch.id).pending.reviewDeadline) > new Date()) ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(245,158,11,.14);color:#D97706;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">İNCELEMEDE</span>' : ''}
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizAnnouncements('${branch.id}')">
+            <iconify-icon icon="solar:megaphone-bold" style="font-size:20px;color:#EC4899"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Duyurular</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(function(){ if (typeof bizUnreadAnnouncements !== 'function') return 'Admin panel duyuruları'; const n = bizUnreadAnnouncements(branch.id); return n > 0 ? n + ' okunmamış duyuru var' : 'Admin panel duyuruları'; })()}</div>
+            </div>
+            ${(typeof bizUnreadAnnouncements === 'function' && bizUnreadAnnouncements(branch.id) > 0) ? `<span style="min-width:18px;height:18px;padding:0 6px;border-radius:var(--r-full);background:#EF4444;color:#fff;font:var(--fw-bold) 10px/18px var(--font);text-align:center">${bizUnreadAnnouncements(branch.id)}</span>` : ''}
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
           <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;background:linear-gradient(90deg,rgba(239,68,68,.06),transparent)" onclick="openBizBranchDeletePage('${branch.id}')">
             <iconify-icon icon="solar:shop-minus-bold" style="font-size:20px;color:#EF4444"></iconify-icon>
             <div style="flex:1">

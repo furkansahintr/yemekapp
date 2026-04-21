@@ -65,6 +65,21 @@
             <span>Bu bilgiler kilo endeksinizi hesaplamak ve yapay zekanın oluşturacağı içeriklerde kullanılacaktır.</span>
           </div>
 
+          <!-- Detaylı Analiz Tile -->
+          <div class="bmi-adv-tile" id="bmiAdvTile" onclick="openBMIAdvanced()">
+            <div class="bmi-adv-tile-icon">
+              <iconify-icon icon="solar:medical-kit-bold" style="font-size:24px;color:#fff"></iconify-icon>
+            </div>
+            <div class="bmi-adv-tile-body">
+              <div class="bmi-adv-tile-title">
+                <span>Detaylı Analiz &amp; Uzman Diyeti İçin Veri Gir</span>
+                <span class="bmi-adv-tile-badge" id="bmiAdvTileBadge" style="display:none">Tamamlandı</span>
+              </div>
+              <div class="bmi-adv-tile-desc" id="bmiAdvTileDesc">Kan değerleri, kronik durumlar ve yaşam tarzı — diyetisyen hassasiyetinde.</div>
+            </div>
+            <iconify-icon icon="solar:arrow-right-linear" style="font-size:18px;color:var(--text-muted);flex-shrink:0"></iconify-icon>
+          </div>
+
           <button class="bmi-calc-btn" onclick="calculateBMI()">
             <iconify-icon icon="solar:calculator-bold" style="font-size:18px"></iconify-icon> Hesapla
           </button>
@@ -94,7 +109,191 @@
               <iconify-icon icon="solar:star-circle-bold" style="font-size:18px"></iconify-icon>
               AI Şef'ten Diyet Önerisi Al
             </button>
+            <!-- Premium AI buton — detaylı profil doluysa görünür -->
+            <button class="bmi-ai-btn bmi-ai-btn--premium" id="bmiAiPremiumBtn" onclick="bmiAskAIDetailed()" style="display:none">
+              <iconify-icon icon="solar:health-bold" style="font-size:18px"></iconify-icon>
+              Yapay Zeka Destekli Detaylı Diyet Önerisi Al
+              <span class="bmi-ai-btn-chip">YENİ</span>
+            </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BMI ADVANCED PROFILE OVERLAY ═══ -->
+    <div class="bmi-adv-overlay" id="bmiAdvOverlay">
+      <div class="bmi-adv-panel">
+        <div class="notif-header">
+          <div class="btn-icon" onclick="closeBMIAdvanced()"><iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon></div>
+          <span style="font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary);flex:1">Detaylı Sağlık Profili</span>
+          <div class="bmi-adv-reset" onclick="resetBMIAdvanced()" title="Sıfırla"><iconify-icon icon="solar:refresh-linear" style="font-size:16px"></iconify-icon></div>
+        </div>
+        <div class="bmi-adv-body">
+
+          <!-- Hero -->
+          <div class="bmi-adv-hero">
+            <div class="bmi-adv-hero-icon"><iconify-icon icon="solar:health-bold" style="font-size:26px;color:#fff"></iconify-icon></div>
+            <div class="bmi-adv-hero-text">
+              <div class="bmi-adv-hero-title">Uzman Diyeti İçin Veri Gir</div>
+              <div class="bmi-adv-hero-desc">Tüm alanlar opsiyoneldir — ne kadar çok bilgi verirsen AI o kadar isabetli öneri sunar.</div>
+            </div>
+          </div>
+
+          <!-- ═══ KAN DEĞERLERİ ═══ -->
+          <div class="bmi-adv-section">
+            <div class="bmi-adv-section-head">
+              <div class="bmi-adv-section-icon" style="background:rgba(239,68,68,.12)"><iconify-icon icon="solar:test-tube-bold" style="font-size:18px;color:#EF4444"></iconify-icon></div>
+              <div>
+                <div class="bmi-adv-section-title">Kan Değerleri</div>
+                <div class="bmi-adv-section-desc">Son tahlil sonuçlarını gir veya belgeni yükle.</div>
+              </div>
+            </div>
+
+            <div class="bmi-adv-field-grid">
+              <div class="bmi-adv-field">
+                <label>Açlık Kan Şekeri <span class="bmi-adv-unit">mg/dL</span></label>
+                <input type="number" id="bmiAdvFbs" placeholder="örn. 92" class="bmi-adv-input">
+              </div>
+              <div class="bmi-adv-field">
+                <label>HbA1c <span class="bmi-adv-unit">%</span></label>
+                <input type="number" step="0.1" id="bmiAdvHba1c" placeholder="örn. 5.4" class="bmi-adv-input">
+              </div>
+              <div class="bmi-adv-field">
+                <label>B12 <span class="bmi-adv-unit">pg/mL</span></label>
+                <input type="number" id="bmiAdvB12" placeholder="örn. 320" class="bmi-adv-input">
+              </div>
+              <div class="bmi-adv-field">
+                <label>Demir <span class="bmi-adv-unit">µg/dL</span></label>
+                <input type="number" id="bmiAdvIron" placeholder="örn. 85" class="bmi-adv-input">
+              </div>
+              <div class="bmi-adv-field">
+                <label>Ferritin <span class="bmi-adv-unit">ng/mL</span></label>
+                <input type="number" id="bmiAdvFerritin" placeholder="örn. 45" class="bmi-adv-input">
+              </div>
+              <div class="bmi-adv-field">
+                <label>TSH <span class="bmi-adv-unit">mIU/L</span></label>
+                <input type="number" step="0.01" id="bmiAdvTsh" placeholder="örn. 2.1" class="bmi-adv-input">
+              </div>
+              <div class="bmi-adv-field">
+                <label>Kolesterol (Total) <span class="bmi-adv-unit">mg/dL</span></label>
+                <input type="number" id="bmiAdvChol" placeholder="örn. 180" class="bmi-adv-input">
+              </div>
+              <div class="bmi-adv-field">
+                <label>D Vitamini <span class="bmi-adv-unit">ng/mL</span></label>
+                <input type="number" id="bmiAdvVitD" placeholder="örn. 28" class="bmi-adv-input">
+              </div>
+            </div>
+
+            <label class="bmi-adv-upload" for="bmiAdvLabFile">
+              <div class="bmi-adv-upload-icon"><iconify-icon icon="solar:upload-linear" style="font-size:18px;color:#8B5CF6"></iconify-icon></div>
+              <div class="bmi-adv-upload-text">
+                <div class="bmi-adv-upload-title">Tahlil Sonucu Yükle</div>
+                <div class="bmi-adv-upload-desc" id="bmiAdvUploadDesc">PDF / JPG / PNG — OCR ile otomatik okuma</div>
+              </div>
+              <input type="file" id="bmiAdvLabFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="_bmiAdvFilePicked(event)">
+            </label>
+          </div>
+
+          <!-- ═══ KRONİK DURUMLAR ═══ -->
+          <div class="bmi-adv-section">
+            <div class="bmi-adv-section-head">
+              <div class="bmi-adv-section-icon" style="background:rgba(245,158,11,.12)"><iconify-icon icon="solar:heart-pulse-bold" style="font-size:18px;color:#F59E0B"></iconify-icon></div>
+              <div>
+                <div class="bmi-adv-section-title">Kronik Durumlar</div>
+                <div class="bmi-adv-section-desc">Teşhis konulmuş rahatsızlıklarını seç.</div>
+              </div>
+            </div>
+            <div class="bmi-adv-chip-wrap" id="bmiAdvChronicChips"></div>
+          </div>
+
+          <!-- ═══ ALERJİLER ═══ -->
+          <div class="bmi-adv-section">
+            <div class="bmi-adv-section-head">
+              <div class="bmi-adv-section-icon" style="background:rgba(236,72,153,.12)"><iconify-icon icon="solar:shield-warning-bold" style="font-size:18px;color:#EC4899"></iconify-icon></div>
+              <div>
+                <div class="bmi-adv-section-title">Alerjiler / İntoleranslar</div>
+                <div class="bmi-adv-section-desc">Gluten, laktoz, fındık vb.</div>
+              </div>
+            </div>
+            <div class="bmi-adv-chip-wrap" id="bmiAdvAllergyChips"></div>
+          </div>
+
+          <!-- ═══ YAŞAM TARZI ═══ -->
+          <div class="bmi-adv-section">
+            <div class="bmi-adv-section-head">
+              <div class="bmi-adv-section-icon" style="background:rgba(59,130,246,.12)"><iconify-icon icon="solar:running-bold" style="font-size:18px;color:#3B82F6"></iconify-icon></div>
+              <div>
+                <div class="bmi-adv-section-title">Yaşam Tarzı</div>
+                <div class="bmi-adv-section-desc">Günlük alışkanlıkların.</div>
+              </div>
+            </div>
+
+            <!-- Su tüketimi -->
+            <div class="bmi-adv-lifestyle-item">
+              <div class="bmi-adv-lifestyle-label">
+                <iconify-icon icon="solar:glass-water-bold" style="font-size:16px;color:#06B6D4"></iconify-icon>
+                <span>Günlük ortalama su tüketimi</span>
+              </div>
+              <div class="bmi-adv-stepper">
+                <button type="button" class="bmi-adv-step-btn" onclick="_bmiAdvAdjWater(-1)">−</button>
+                <div class="bmi-adv-step-value"><span id="bmiAdvWaterVal">8</span> <span class="bmi-adv-step-unit">bardak</span></div>
+                <button type="button" class="bmi-adv-step-btn" onclick="_bmiAdvAdjWater(1)">+</button>
+              </div>
+            </div>
+
+            <!-- Haftalık spor -->
+            <div class="bmi-adv-lifestyle-item">
+              <div class="bmi-adv-lifestyle-label">
+                <iconify-icon icon="solar:dumbbells-bold" style="font-size:16px;color:#8B5CF6"></iconify-icon>
+                <span>Haftalık spor gün sayısı</span>
+              </div>
+              <div class="bmi-adv-day-grid" id="bmiAdvSportDays"></div>
+            </div>
+
+            <!-- Uyku -->
+            <div class="bmi-adv-lifestyle-item">
+              <div class="bmi-adv-lifestyle-label">
+                <iconify-icon icon="solar:moon-bold" style="font-size:16px;color:#6366F1"></iconify-icon>
+                <span>Günlük ortalama uyku</span>
+              </div>
+              <div class="bmi-adv-stepper">
+                <button type="button" class="bmi-adv-step-btn" onclick="_bmiAdvAdjSleep(-1)">−</button>
+                <div class="bmi-adv-step-value"><span id="bmiAdvSleepVal">7</span> <span class="bmi-adv-step-unit">saat</span></div>
+                <button type="button" class="bmi-adv-step-btn" onclick="_bmiAdvAdjSleep(1)">+</button>
+              </div>
+            </div>
+
+            <!-- Hiç yemediklerin -->
+            <div class="bmi-adv-lifestyle-item bmi-adv-lifestyle-item--full">
+              <div class="bmi-adv-lifestyle-label">
+                <iconify-icon icon="solar:close-circle-bold" style="font-size:16px;color:#EF4444"></iconify-icon>
+                <span>Asla yemediğin besinler</span>
+              </div>
+              <div class="bmi-adv-tag-input">
+                <div class="bmi-adv-tag-list" id="bmiAdvAvoidTags"></div>
+                <input type="text" id="bmiAdvAvoidInput" class="bmi-adv-tag-input-field" placeholder="örn. soğan, ciğer… (enter ile ekle)" onkeydown="_bmiAdvAvoidKey(event)">
+              </div>
+            </div>
+
+            <!-- Hedef -->
+            <div class="bmi-adv-lifestyle-item bmi-adv-lifestyle-item--full">
+              <div class="bmi-adv-lifestyle-label">
+                <iconify-icon icon="solar:target-bold" style="font-size:16px;color:#10B981"></iconify-icon>
+                <span>Hedefin</span>
+              </div>
+              <div class="bmi-adv-goal-grid" id="bmiAdvGoalGrid"></div>
+            </div>
+          </div>
+
+          <!-- Privacy note -->
+          <div class="bmi-adv-privacy">
+            <iconify-icon icon="solar:lock-keyhole-minimalistic-bold" style="font-size:15px;color:#10B981;flex-shrink:0;margin-top:1px"></iconify-icon>
+            <span>Verileriniz yalnızca size özel diyet algoritmasını optimize etmek için kullanılır ve <b>uçtan uca şifrelenmiş</b> olarak saklanır. İstediğiniz zaman silebilirsiniz.</span>
+          </div>
+
+          <button class="bmi-adv-save-btn" onclick="saveBMIAdvanced()">
+            <iconify-icon icon="solar:check-circle-bold" style="font-size:18px"></iconify-icon> Tamam
+          </button>
         </div>
       </div>
     </div>

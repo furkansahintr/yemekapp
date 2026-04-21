@@ -583,7 +583,9 @@
                         "
                     >
                         <div
-                            style="display: flex; align-items: center; gap: 2px"
+                            style="display: flex; align-items: center; gap: 2px; cursor: pointer"
+                            onclick="openRecipeReviews()"
+                            id="detailRatingWrap"
                         >
                             <iconify-icon
                                 icon="solar:star-bold"
@@ -599,6 +601,10 @@
                                 id="detailRating"
                                 >4.8 (234 değerlendirme)</span
                             >
+                            <iconify-icon
+                                icon="solar:alt-arrow-right-linear"
+                                style="font-size: 12px; color: var(--text-tertiary); margin-left: 2px"
+                            ></iconify-icon>
                         </div>
                         <div
                             style="
@@ -1676,6 +1682,7 @@
                     // User-side components
                     "js/menu.js",
                     "js/detail.js",
+                    "js/recipe-reviews.js",
                     "js/community.js",
                     "js/stories.js",
                     "js/ai.js",
@@ -1687,11 +1694,13 @@
                     "js/new-post.js",
                     "js/plans.js",
                     "js/qr-scan.js",
+                    "js/qr-games.js",
                     "js/post-report.js",
                     "js/premium.js",
                     "js/support.js",
                     "js/orders.js",
                     "js/order-review.js",
+                    "js/my-reviews.js",
                     "js/payments.js",
                     "js/achievements.js",
                     "js/reservations.js",
@@ -1712,6 +1721,7 @@
                     "js/biz-staff.js",
                     "js/biz-shifts.js",
                     "js/biz-menu.js",
+                    "js/biz-menu-schedule.js",
                     "js/biz-waiter-calls.js",
                     "js/biz-reviews.js",
                     "js/biz-ai.js",
@@ -1726,6 +1736,7 @@
                     "js/biz-branch-achievements.js",
                     "js/biz-qr-menu.js",
                     "js/biz-legal-docs.js",
+                    "js/biz-announcements.js",
                     "js/biz-commission.js",
                     "js/biz-wallet.js",
                     "js/biz-delivery-settings.js",
@@ -1760,6 +1771,7 @@
                     "js/admin-incident.js",
                     "js/admin-community.js",
                     "js/admin-ai.js",
+                    "js/admin-biz-announcements.js",
                     "js/admin-settings.js",
                 ];
                 let i = 0;

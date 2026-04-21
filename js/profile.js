@@ -460,6 +460,7 @@ function openBMICalculator() {
   if (el) { el.classList.add('open'); el.style.display = 'flex'; }
   const res = document.getElementById('bmiResult');
   if (res) res.style.display = 'none';
+  _bmiAdvSyncTile();
 }
 
 function closeBMICalculator() {
@@ -571,6 +572,12 @@ function calculateBMI() {
     }
   }
 
+  /* Premium AI butonu — detaylı profil doluysa göster */
+  const premBtn = document.getElementById('bmiAiPremiumBtn');
+  if (premBtn) {
+    premBtn.style.display = _bmiAdvHasData() ? 'flex' : 'none';
+  }
+
   const res = document.getElementById('bmiResult');
   if (res) res.style.display = 'flex';
 }
@@ -598,6 +605,359 @@ function bmiAskAI() {
     const input = document.getElementById('aiChatInput');
     if (input) {
       input.value = 'BMI sonucuma göre sağlıklı diyet önerisi ver. Boy: ' + h + 'cm, Kilo: ' + w + 'kg' + extraStr;
+      aiSend();
+    }
+  }, 400);
+}
+
+/* ═══ BMI DETAYLI SAĞLIK PROFİLİ ═══ */
+
+var USER_HEALTH_PROFILE = {
+  blood: { fbs:null, hba1c:null, b12:null, iron:null, ferritin:null, tsh:null, chol:null, vitD:null },
+  labFile: null,
+  chronic: [],
+  allergies: [],
+  water: 8,
+  sportDays: null,
+  sleep: 7,
+  avoid: [],
+  goal: null
+};
+
+var BMI_CHRONIC_OPTS = [
+  { id:'diabetes', label:'Diyabet', icon:'solar:sugar-bold' },
+  { id:'hypertension', label:'Hipertansiyon', icon:'solar:heart-pulse-bold' },
+  { id:'thyroid', label:'Tiroid Sorunu', icon:'solar:pulse-bold' },
+  { id:'cholesterol', label:'Yüksek Kolesterol', icon:'solar:drop-bold' },
+  { id:'cardio', label:'Kalp/Damar', icon:'solar:heart-bold' },
+  { id:'anemia', label:'Anemi', icon:'solar:test-tube-bold' },
+  { id:'reflux', label:'Reflü/Gastrit', icon:'solar:cup-bold' },
+  { id:'asthma', label:'Astım', icon:'solar:wind-bold' },
+  { id:'kidney', label:'Böbrek', icon:'solar:water-bold' },
+  { id:'pcos', label:'PCOS', icon:'solar:women-bold' },
+  { id:'celiac', label:'Çölyak', icon:'solar:shield-warning-bold' },
+  { id:'ibs', label:'İBS', icon:'solar:stomach-bold' }
+];
+
+var BMI_ALLERGY_OPTS = [
+  { id:'gluten', label:'Gluten' },
+  { id:'lactose', label:'Laktoz' },
+  { id:'nuts', label:'Fındık / Fıstık' },
+  { id:'egg', label:'Yumurta' },
+  { id:'seafood', label:'Deniz Ürünleri' },
+  { id:'soy', label:'Soya' },
+  { id:'sesame', label:'Susam' },
+  { id:'sulfite', label:'Sülfit' }
+];
+
+var BMI_GOAL_OPTS = [
+  { id:'lose', label:'Kilo Ver', icon:'solar:arrow-down-bold', tone:'#3B82F6' },
+  { id:'maintain', label:'Koru', icon:'solar:equal-bold', tone:'#10B981' },
+  { id:'gain', label:'Kilo Al', icon:'solar:arrow-up-bold', tone:'#F59E0B' },
+  { id:'muscle', label:'Kas Yap', icon:'solar:dumbbells-bold', tone:'#8B5CF6' }
+];
+
+function openBMIAdvanced() {
+  const el = document.getElementById('bmiAdvOverlay');
+  if (!el) return;
+  el.classList.add('open');
+  el.style.display = 'flex';
+  _bmiAdvRenderChronic();
+  _bmiAdvRenderAllergies();
+  _bmiAdvRenderSportDays();
+  _bmiAdvRenderAvoid();
+  _bmiAdvRenderGoal();
+  _bmiAdvPopulateInputs();
+}
+
+function closeBMIAdvanced() {
+  const el = document.getElementById('bmiAdvOverlay');
+  if (el) { el.classList.remove('open'); el.style.display = 'none'; }
+}
+
+function _bmiAdvPopulateInputs() {
+  const b = USER_HEALTH_PROFILE.blood;
+  const map = { bmiAdvFbs:'fbs', bmiAdvHba1c:'hba1c', bmiAdvB12:'b12', bmiAdvIron:'iron', bmiAdvFerritin:'ferritin', bmiAdvTsh:'tsh', bmiAdvChol:'chol', bmiAdvVitD:'vitD' };
+  Object.keys(map).forEach(function(id){
+    const inp = document.getElementById(id);
+    if (inp) inp.value = b[map[id]] == null ? '' : b[map[id]];
+  });
+  const wv = document.getElementById('bmiAdvWaterVal');
+  if (wv) wv.textContent = USER_HEALTH_PROFILE.water;
+  const sv = document.getElementById('bmiAdvSleepVal');
+  if (sv) sv.textContent = USER_HEALTH_PROFILE.sleep;
+  const fd = document.getElementById('bmiAdvUploadDesc');
+  if (fd && USER_HEALTH_PROFILE.labFile) {
+    fd.textContent = USER_HEALTH_PROFILE.labFile + ' — yüklendi';
+  }
+}
+
+function _bmiAdvRenderChronic() {
+  const host = document.getElementById('bmiAdvChronicChips');
+  if (!host) return;
+  let html = '';
+  BMI_CHRONIC_OPTS.forEach(function(o){
+    const on = USER_HEALTH_PROFILE.chronic.indexOf(o.id) !== -1;
+    html += '<button type="button" class="bmi-adv-chip' + (on?' is-on':'') + '" onclick="_bmiAdvToggleChronic(\''+o.id+'\')">'
+         + '<iconify-icon icon="'+o.icon+'" style="font-size:14px"></iconify-icon>'
+         + '<span>'+o.label+'</span>'
+         + '</button>';
+  });
+  host.innerHTML = html;
+}
+
+function _bmiAdvToggleChronic(id) {
+  const arr = USER_HEALTH_PROFILE.chronic;
+  const i = arr.indexOf(id);
+  if (i === -1) arr.push(id); else arr.splice(i, 1);
+  _bmiAdvRenderChronic();
+}
+
+function _bmiAdvRenderAllergies() {
+  const host = document.getElementById('bmiAdvAllergyChips');
+  if (!host) return;
+  let html = '';
+  BMI_ALLERGY_OPTS.forEach(function(o){
+    const on = USER_HEALTH_PROFILE.allergies.indexOf(o.id) !== -1;
+    html += '<button type="button" class="bmi-adv-chip bmi-adv-chip--pink' + (on?' is-on':'') + '" onclick="_bmiAdvToggleAllergy(\''+o.id+'\')">'
+         + '<span>'+o.label+'</span>'
+         + '</button>';
+  });
+  host.innerHTML = html;
+}
+
+function _bmiAdvToggleAllergy(id) {
+  const arr = USER_HEALTH_PROFILE.allergies;
+  const i = arr.indexOf(id);
+  if (i === -1) arr.push(id); else arr.splice(i, 1);
+  _bmiAdvRenderAllergies();
+}
+
+function _bmiAdvRenderSportDays() {
+  const host = document.getElementById('bmiAdvSportDays');
+  if (!host) return;
+  let html = '';
+  for (let i = 0; i <= 7; i++) {
+    const on = USER_HEALTH_PROFILE.sportDays === i;
+    const lbl = i === 0 ? 'Yok' : (i === 7 ? 'Her gün' : i);
+    html += '<button type="button" class="bmi-adv-day' + (on?' is-on':'') + '" onclick="_bmiAdvPickSport('+i+')">'+lbl+'</button>';
+  }
+  host.innerHTML = html;
+}
+
+function _bmiAdvPickSport(n) {
+  USER_HEALTH_PROFILE.sportDays = USER_HEALTH_PROFILE.sportDays === n ? null : n;
+  _bmiAdvRenderSportDays();
+}
+
+function _bmiAdvAdjWater(delta) {
+  let v = (USER_HEALTH_PROFILE.water || 0) + delta;
+  if (v < 0) v = 0;
+  if (v > 20) v = 20;
+  USER_HEALTH_PROFILE.water = v;
+  const el = document.getElementById('bmiAdvWaterVal');
+  if (el) el.textContent = v;
+}
+
+function _bmiAdvAdjSleep(delta) {
+  let v = (USER_HEALTH_PROFILE.sleep || 0) + delta;
+  if (v < 0) v = 0;
+  if (v > 14) v = 14;
+  USER_HEALTH_PROFILE.sleep = v;
+  const el = document.getElementById('bmiAdvSleepVal');
+  if (el) el.textContent = v;
+}
+
+function _bmiAdvRenderAvoid() {
+  const host = document.getElementById('bmiAdvAvoidTags');
+  if (!host) return;
+  let html = '';
+  USER_HEALTH_PROFILE.avoid.forEach(function(t, i){
+    html += '<span class="bmi-adv-tag">'+_bmiAdvEsc(t)+'<button type="button" class="bmi-adv-tag-x" onclick="_bmiAdvRemoveAvoid('+i+')">×</button></span>';
+  });
+  host.innerHTML = html;
+}
+
+function _bmiAdvAvoidKey(e) {
+  if (e.key !== 'Enter' && e.key !== ',') return;
+  e.preventDefault();
+  const inp = e.target;
+  const v = (inp.value || '').trim().replace(/,+$/, '');
+  if (v && USER_HEALTH_PROFILE.avoid.indexOf(v) === -1) {
+    USER_HEALTH_PROFILE.avoid.push(v);
+    _bmiAdvRenderAvoid();
+  }
+  inp.value = '';
+}
+
+function _bmiAdvRemoveAvoid(i) {
+  USER_HEALTH_PROFILE.avoid.splice(i, 1);
+  _bmiAdvRenderAvoid();
+}
+
+function _bmiAdvRenderGoal() {
+  const host = document.getElementById('bmiAdvGoalGrid');
+  if (!host) return;
+  let html = '';
+  BMI_GOAL_OPTS.forEach(function(o){
+    const on = USER_HEALTH_PROFILE.goal === o.id;
+    html += '<button type="button" class="bmi-adv-goal' + (on?' is-on':'') + '" style="--gt:'+o.tone+'" onclick="_bmiAdvPickGoal(\''+o.id+'\')">'
+         + '<iconify-icon icon="'+o.icon+'" style="font-size:18px;color:'+o.tone+'"></iconify-icon>'
+         + '<span>'+o.label+'</span>'
+         + '</button>';
+  });
+  host.innerHTML = html;
+}
+
+function _bmiAdvPickGoal(id) {
+  USER_HEALTH_PROFILE.goal = USER_HEALTH_PROFILE.goal === id ? null : id;
+  _bmiAdvRenderGoal();
+}
+
+function _bmiAdvFilePicked(e) {
+  const f = e.target && e.target.files && e.target.files[0];
+  if (!f) return;
+  USER_HEALTH_PROFILE.labFile = f.name;
+  const d = document.getElementById('bmiAdvUploadDesc');
+  if (d) d.textContent = f.name + ' — yüklendi (AI otomatik okuyacak)';
+}
+
+function saveBMIAdvanced() {
+  const b = USER_HEALTH_PROFILE.blood;
+  const pick = function(id){
+    const v = parseFloat((document.getElementById(id) || {}).value);
+    return isFinite(v) ? v : null;
+  };
+  b.fbs = pick('bmiAdvFbs');
+  b.hba1c = pick('bmiAdvHba1c');
+  b.b12 = pick('bmiAdvB12');
+  b.iron = pick('bmiAdvIron');
+  b.ferritin = pick('bmiAdvFerritin');
+  b.tsh = pick('bmiAdvTsh');
+  b.chol = pick('bmiAdvChol');
+  b.vitD = pick('bmiAdvVitD');
+
+  closeBMIAdvanced();
+  _bmiAdvSyncTile();
+  if (typeof showToast === 'function') showToast('Sağlık profilin kaydedildi');
+}
+
+function resetBMIAdvanced() {
+  if (!confirm('Tüm detaylı sağlık verilerin silinsin mi?')) return;
+  USER_HEALTH_PROFILE = {
+    blood: { fbs:null, hba1c:null, b12:null, iron:null, ferritin:null, tsh:null, chol:null, vitD:null },
+    labFile: null,
+    chronic: [],
+    allergies: [],
+    water: 8,
+    sportDays: null,
+    sleep: 7,
+    avoid: [],
+    goal: null
+  };
+  openBMIAdvanced();
+  _bmiAdvSyncTile();
+}
+
+function _bmiAdvHasData() {
+  const p = USER_HEALTH_PROFILE;
+  const b = p.blood;
+  const anyBlood = Object.keys(b).some(function(k){ return b[k] != null; });
+  return !!(anyBlood || p.labFile || p.chronic.length || p.allergies.length || p.avoid.length || p.sportDays != null || p.goal);
+}
+
+function _bmiAdvSyncTile() {
+  const badge = document.getElementById('bmiAdvTileBadge');
+  const desc = document.getElementById('bmiAdvTileDesc');
+  const tile = document.getElementById('bmiAdvTile');
+  if (!badge || !desc || !tile) return;
+  if (_bmiAdvHasData()) {
+    badge.style.display = 'inline-flex';
+    tile.classList.add('is-filled');
+    const bits = [];
+    const b = USER_HEALTH_PROFILE.blood;
+    const bloodN = Object.keys(b).filter(function(k){ return b[k] != null; }).length;
+    if (bloodN) bits.push(bloodN + ' kan değeri');
+    if (USER_HEALTH_PROFILE.chronic.length) bits.push(USER_HEALTH_PROFILE.chronic.length + ' kronik durum');
+    if (USER_HEALTH_PROFILE.allergies.length) bits.push(USER_HEALTH_PROFILE.allergies.length + ' alerji');
+    if (USER_HEALTH_PROFILE.avoid.length) bits.push(USER_HEALTH_PROFILE.avoid.length + ' kısıt');
+    if (USER_HEALTH_PROFILE.goal) bits.push('hedef seçildi');
+    desc.textContent = bits.length ? bits.join(' • ') : 'Veriler kaydedildi — düzenlemek için dokun';
+  } else {
+    badge.style.display = 'none';
+    tile.classList.remove('is-filled');
+    desc.textContent = 'Kan değerleri, kronik durumlar ve yaşam tarzı — diyetisyen hassasiyetinde.';
+  }
+}
+
+function _bmiAdvEsc(s) {
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function _bmiAdvLabelOf(arr, opts) {
+  const map = {};
+  opts.forEach(function(o){ map[o.id] = o.label; });
+  return arr.map(function(id){ return map[id] || id; });
+}
+
+function bmiAskAIDetailed() {
+  closeBMICalculator();
+  closeSettingsPanel();
+
+  const h = document.getElementById('bmiHeight').value;
+  const w = document.getElementById('bmiWeight').value;
+  const dob = (document.getElementById('bmiDob') || {}).value || '';
+  const age = _bmiAgeFromDob(dob);
+  const gender = _bmiGetGender();
+  const bmr = _bmiCalcBMR(parseFloat(w), parseFloat(h), age, gender);
+
+  const p = USER_HEALTH_PROFILE;
+  const parts = ['Kişiye özel detaylı diyet programı hazırla.'];
+  parts.push('Boy: ' + h + ' cm, Kilo: ' + w + ' kg');
+  if (age) parts.push('Yaş: ' + age);
+  if (gender === 'male') parts.push('Cinsiyet: Erkek');
+  else if (gender === 'female') parts.push('Cinsiyet: Kadın');
+  if (bmr) parts.push('BMR: ' + bmr + ' kcal/gün');
+
+  const b = p.blood;
+  const blood = [];
+  if (b.fbs != null) blood.push('Açlık Kan Şekeri ' + b.fbs + ' mg/dL');
+  if (b.hba1c != null) blood.push('HbA1c %' + b.hba1c);
+  if (b.b12 != null) blood.push('B12 ' + b.b12 + ' pg/mL');
+  if (b.iron != null) blood.push('Demir ' + b.iron + ' µg/dL');
+  if (b.ferritin != null) blood.push('Ferritin ' + b.ferritin + ' ng/mL');
+  if (b.tsh != null) blood.push('TSH ' + b.tsh + ' mIU/L');
+  if (b.chol != null) blood.push('Kolesterol ' + b.chol + ' mg/dL');
+  if (b.vitD != null) blood.push('D Vitamini ' + b.vitD + ' ng/mL');
+  if (blood.length) parts.push('Kan Değerleri: ' + blood.join(', '));
+  if (p.labFile) parts.push('Tahlil Dosyası: ' + p.labFile);
+
+  if (p.chronic.length) parts.push('Kronik Durumlar: ' + _bmiAdvLabelOf(p.chronic, BMI_CHRONIC_OPTS).join(', '));
+  if (p.allergies.length) parts.push('Alerji/İntolerans: ' + _bmiAdvLabelOf(p.allergies, BMI_ALLERGY_OPTS).join(', '));
+  if (p.avoid.length) parts.push('Yemediği Besinler: ' + p.avoid.join(', '));
+
+  const life = [];
+  if (p.water) life.push('günde ' + p.water + ' bardak su');
+  if (p.sportDays != null) life.push('haftada ' + p.sportDays + ' gün spor');
+  if (p.sleep) life.push(p.sleep + ' saat uyku');
+  if (life.length) parts.push('Yaşam Tarzı: ' + life.join(', '));
+
+  if (p.goal) {
+    const goal = BMI_GOAL_OPTS.filter(function(g){ return g.id === p.goal; })[0];
+    if (goal) parts.push('Hedef: ' + goal.label);
+  }
+
+  parts.push('Lütfen bu verilere göre kan değerlerini sentezleyerek haftalık örnek menü ve beslenme önerileri ver.');
+
+  const prompt = parts.join('. ');
+
+  switchTab('ai');
+  setTimeout(function() {
+    const input = document.getElementById('aiChatInput');
+    if (input) {
+      input.value = prompt;
       aiSend();
     }
   }, 400);
@@ -1222,11 +1582,21 @@ function _updateWalletPill() {
     + t.toLocaleString('tr-TR');
 }
 
+/* Ödeme Yöntemleri sayacı — tile üzerinde "N kart" */
+function _updatePaymentsCount() {
+  var el = document.getElementById('profPaymentsCount');
+  if (!el) return;
+  var n = (typeof _PAY_CARDS !== 'undefined' && _PAY_CARDS) ? _PAY_CARDS.length : 0;
+  el.textContent = n > 0 ? n + ' kart' : 'Ekle';
+}
+
 /* Sayfa yüklendiğinde özetleri güncelle */
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(_updateAllergenSummary, 500);
   setTimeout(_updateMyRecipeCount, 500);
   setTimeout(_updateWalletPill, 500);
+  setTimeout(_updatePaymentsCount, 500);
+  setTimeout(function(){ if (typeof _mrSyncTileBadge === 'function') _mrSyncTileBadge(); }, 600);
 });
 
 /* ═══════════════════════════════════════════════

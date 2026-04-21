@@ -2978,3 +2978,75 @@ var ADMIN_RECIPE_EXTRAS = [
 
 // Admin notify log (onay/red sonrası bildirim kayıtları)
 var ADMIN_RECIPE_NOTIFICATIONS = [];
+
+/* ═══════════════════════════════════════════════════════════
+   İŞLETME DUYURULARI — ADMIN PANELİ YÖNETİM KAYDI
+   ═══════════════════════════════════════════════════════════ */
+// Her kayıt: yayın tarihi, oluşturan admin, hedefleme, urgency, silme metadata
+// Silinen duyurular 7 gün arşivde kalır, sonra otomatik temizlenir.
+var ADMIN_BIZ_ANNOUNCEMENTS = [
+  {
+    id:'ann_001',
+    title:'Yeni Komisyon Oranı Duyurusu',
+    body:'Sevgili iş ortaklarımız,\n\n1 Mayıs 2026 tarihinden itibaren sistemimizde puan bazlı yeni komisyon tarifesi yürürlüğe girecektir. 4.5+ puana sahip işletmelerimizde komisyon %2\'ye kadar düşecek, 3.5 altındaki işletmelerde ise %6\'ya çıkacaktır.',
+    image:null, link:null, tag:'Sistem', urgency:'critical',
+    sentAt:'2026-04-21T10:00:00Z', publishedBy:'Ayşe Kaya · Operasyon Admin',
+    targeting:{ type:'all', label:'Tüm İşletmeler', count:185 },
+    status:'published', deleted:false
+  },
+  {
+    id:'ann_002',
+    title:'Bayram Kampanyası Dönemi',
+    body:'Değerli işletmemiz,\n\nRamazan Bayramı\'na özel olarak işletme paneline yeni bir kampanya aracı entegre edildi.',
+    image:'https://images.unsplash.com/photo-1583344281720-c0ed6366e5b0?w=600&h=300&fit=crop',
+    link:null, tag:'Kampanya', urgency:'normal',
+    sentAt:'2026-04-18T14:30:00Z', publishedBy:'Mehmet Çakır · Pazarlama',
+    targeting:{ type:'category', label:'Restoranlar & Kafeler', count:142, categories:['restaurant','cafe'] },
+    status:'published', deleted:false
+  },
+  {
+    id:'ann_003',
+    title:'Uygulama Güncellemesi v2.4',
+    body:'v2.4 güncellemesi ile yenilenen dashboard, AI asistanı ve rezervasyon token bloke sistemi yayında.',
+    image:null, link:null, tag:'Güncelleme', urgency:'important',
+    sentAt:'2026-04-10T09:15:00Z', publishedBy:'Emre Yıldız · Ürün',
+    targeting:{ type:'all', label:'Tüm İşletmeler', count:185 },
+    status:'published', deleted:false
+  },
+  {
+    id:'ann_004',
+    title:'İstanbul Bölgesi Ödeme Sistemi Bakımı',
+    body:'28 Nisan 04:00-06:00 arası bakım sebebiyle İstanbul bölgesinde online ödeme kısa süreli kesintiye uğrayabilir.',
+    image:null, link:null, tag:'Bakım', urgency:'important',
+    sentAt:'2026-04-22T18:00:00Z', publishedBy:'Barış Demir · DevOps',
+    targeting:{ type:'location', label:'İstanbul — Tüm İlçeler', count:58, cities:['İstanbul'] },
+    status:'scheduled', deleted:false
+  },
+  {
+    id:'ann_005',
+    title:'Kadıköy Bölgesi Pilot Test',
+    body:'Kadıköy şubelerimize özel yeni self-checkout prototipi 1 hafta test edilecek.',
+    image:null, link:null, tag:'Pilot', urgency:'normal',
+    sentAt:'2026-04-15T11:00:00Z', publishedBy:'Ayşe Kaya · Operasyon Admin',
+    targeting:{ type:'manual', label:'Özel Seçim (5 şube)', count:5, branchIds:['b1','b2','b3'] },
+    status:'published', deleted:true,
+    deletedAt:'2026-04-20T09:30:00Z', deletedBy:'Emre Yıldız · Ürün'
+  },
+  {
+    id:'ann_006',
+    title:'Kış Kampanyası Kapatma Bildirimi',
+    body:'Kış kampanyası sona erdi; yeni yaz kampanyalarımızı yakında paylaşacağız.',
+    image:null, link:null, tag:'Kampanya', urgency:'normal',
+    sentAt:'2026-03-28T10:00:00Z', publishedBy:'Mehmet Çakır · Pazarlama',
+    targeting:{ type:'all', label:'Tüm İşletmeler', count:185 },
+    status:'published', deleted:true,
+    deletedAt:'2026-04-18T14:00:00Z', deletedBy:'Ayşe Kaya · Operasyon Admin'
+  }
+];
+
+function admBizAnnDaysLeft(a) {
+  if (!a.deletedAt) return null;
+  var purge = new Date(a.deletedAt).getTime() + 7 * 86400000;
+  var left = purge - Date.now();
+  return Math.max(0, Math.ceil(left / 86400000));
+}
