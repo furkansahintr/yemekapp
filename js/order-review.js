@@ -101,7 +101,7 @@ function _orvRender() {
   // Content
   h += '<div class="orv-body" id="orvBody">';
   if (_orv.tab === 'biz') h += _orvRenderBizTab(order);
-  else h += '<div class="orv-placeholder">Ürün tab (P5) yakında...</div>';
+  else h += _orvRenderItemsTab(order);
   h += '</div>';
 
   body.innerHTML = h;
@@ -153,4 +153,75 @@ function _orvRenderBizTab(order) {
 function _orvSetBizRating(n) {
   _orv.biz.rating = n;
   _orvRender();
+}
+
+/* ═══ P5 — Ürün Tab ═══ */
+function _orvRenderItemsTab(order) {
+  var items = order.items || [];
+  if (items.length === 0) {
+    return '<div class="orv-placeholder">Bu siparişte ürün bulunamadı</div>';
+  }
+
+  var h = '<div class="orv-items-intro">'
+    + '<iconify-icon icon="solar:dish-linear" style="font-size:14px;color:#F65013"></iconify-icon>'
+    + '<span>Her ürüne ayrı puan ve yorum verebilirsin</span>'
+    + '</div>';
+
+  h += '<div class="orv-items-list">';
+  for (var i = 0; i < items.length; i++) {
+    h += _orvItemCard(items[i], i);
+  }
+  h += '</div>';
+
+  return h;
+}
+
+function _orvItemCard(item, idx) {
+  var key = item.name || ('item_' + idx);
+  var rec = _orv.items[key] || { rating: 0, comment: '' };
+  if (!_orv.items[key]) _orv.items[key] = rec;
+
+  var h = '<div class="orv-item-card">'
+    + '<div class="orv-item-head">'
+    + '<div class="orv-item-ico"><iconify-icon icon="solar:dish-bold" style="font-size:20px;color:#F59E0B"></iconify-icon></div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div class="orv-item-name">' + _orvEsc(item.name || '—') + '</div>'
+    + '<div class="orv-item-meta">'
+    + (item.qty ? item.qty + ' adet' : '')
+    + (item.price ? ' · ₺' + item.price : '')
+    + '</div>'
+    + '</div>'
+    + '</div>';
+
+  // Yıldızlar
+  h += '<div class="orv-stars orv-stars--sm">';
+  for (var s = 1; s <= 5; s++) {
+    var filled = s <= rec.rating;
+    h += '<button class="orv-star' + (filled ? ' on' : '') + '" onclick="_orvSetItemRating(\'' + _orvEscAttr(key) + '\',' + s + ')" aria-label="' + s + ' yıldız">'
+      + '<iconify-icon icon="' + (filled ? 'solar:star-bold' : 'solar:star-linear') + '" style="font-size:26px"></iconify-icon>'
+      + '</button>';
+  }
+  h += '</div>';
+
+  // Yorum
+  h += '<input type="text" class="orv-item-note" placeholder="Opsiyonel yorum..." maxlength="120" value="' + _orvEsc(rec.comment) + '" oninput="_orvSetItemComment(\'' + _orvEscAttr(key) + '\',this.value)">';
+
+  h += '</div>';
+  return h;
+}
+
+function _orvEscAttr(s) {
+  return String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+function _orvSetItemRating(key, n) {
+  if (!_orv.items[key]) _orv.items[key] = { rating: 0, comment: '' };
+  _orv.items[key].rating = n;
+  _orvRender();
+}
+
+function _orvSetItemComment(key, v) {
+  if (!_orv.items[key]) _orv.items[key] = { rating: 0, comment: '' };
+  _orv.items[key].comment = v;
+  // Input olduğu için re-render yok — değer state'te zaten
 }
