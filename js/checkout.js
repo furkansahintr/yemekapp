@@ -66,3 +66,179 @@ function _chkInjectStyles() {
 
 /* Script yüklenince stil hemen hazırlansın */
 _chkInjectStyles();
+
+/* ═══════════════════════════════════════════════════════════
+   P3 — Checkout Popup (kayıtlı kart + yeni kart)
+   ═══════════════════════════════════════════════════════════ */
+
+var _chk = {
+  total: 0,          // TL
+  useWallet: false,  // hibrit toggle
+  walletUse: 0,      // kullanılacak token
+  cardId: null,      // seçili kart
+  addingCard: false, // "Yeni Kart Ekle" formu açık mı
+  newCard: { num:'', exp:'', cvv:'', name:'', save:true },
+  submitting: false
+};
+
+function openCheckoutPopup(total) {
+  _chkInjectStyles();
+  _chkInjectCheckoutStyles();
+
+  _chk.total = total || 0;
+  _chk.useWallet = false;
+  _chk.walletUse = 0;
+  _chk.addingCard = false;
+  _chk.newCard = { num:'', exp:'', cvv:'', name:'', save:true };
+  _chk.submitting = false;
+
+  // Default kart: birincil veya ilk
+  if (typeof USER_WALLET !== 'undefined' && USER_WALLET && Array.isArray(USER_WALLET.cards) && USER_WALLET.cards.length > 0) {
+    var primary = USER_WALLET.cards.find(function(c){ return c.primary; }) || USER_WALLET.cards[0];
+    _chk.cardId = primary.id;
+  } else {
+    _chk.cardId = null;
+    _chk.addingCard = true; // kayıtlı kart yok → direkt ekle
+  }
+
+  var existing = document.getElementById('chkModalBd');
+  if (existing) existing.remove();
+
+  var bd = document.createElement('div');
+  bd.id = 'chkModalBd';
+  bd.className = 'chk-modal-bd';
+  bd.onclick = function(e){ if (e.target === bd) closeCheckoutPopup(); };
+  bd.innerHTML = '<div class="chk-modal" id="chkModal"><div id="chkModalBody"></div></div>';
+
+  var host = document.getElementById('phone') || document.body;
+  host.appendChild(bd);
+  requestAnimationFrame(function(){
+    bd.classList.add('open');
+    var m = document.getElementById('chkModal');
+    if (m) m.classList.add('open');
+  });
+
+  _chkRender();
+}
+
+function closeCheckoutPopup() {
+  var bd = document.getElementById('chkModalBd');
+  if (!bd) return;
+  bd.classList.remove('open');
+  var m = document.getElementById('chkModal');
+  if (m) m.classList.remove('open');
+  setTimeout(function(){ if (bd.parentNode) bd.remove(); }, 260);
+}
+
+function _chkRender() {
+  var body = document.getElementById('chkModalBody');
+  if (!body) return;
+
+  var cards = (typeof USER_WALLET !== 'undefined' && USER_WALLET && USER_WALLET.cards) ? USER_WALLET.cards : [];
+
+  var h = '<div class="chk-head">'
+    + '<div class="chk-close" onclick="closeCheckoutPopup()"><iconify-icon icon="solar:close-circle-bold" style="font-size:22px;color:var(--text-muted)"></iconify-icon></div>'
+    + '<div style="flex:1"><div class="chk-title"><iconify-icon icon="solar:bag-check-bold" style="font-size:17px;color:#F65013"></iconify-icon>Ödemeyi Onayla</div>'
+    + '<div class="chk-sub">Toplam <b>₺' + _chkFmtTL(_chk.total) + '</b></div></div>'
+    + '</div>';
+
+  // Kayıtlı kartlar
+  h += '<div class="chk-section">'
+    + '<div class="chk-sec-lbl"><iconify-icon icon="solar:card-bold" style="font-size:13px;color:#3B82F6"></iconify-icon>Kayıtlı Kartlar</div>'
+    + '<div class="chk-card-list">';
+  if (cards.length === 0) {
+    h += '<div class="chk-empty"><iconify-icon icon="solar:card-linear" style="font-size:26px;opacity:.3"></iconify-icon><span>Henüz kayıtlı kart yok</span></div>';
+  }
+  for (var i = 0; i < cards.length; i++) {
+    var c = cards[i];
+    var sel = !_chk.addingCard && _chk.cardId === c.id;
+    var brandBg = c.brand === 'Visa' ? '#1A1F71' : (c.brand === 'Mastercard' ? '#EB001B' : '#6B7280');
+    h += '<div class="chk-card-row' + (sel ? ' selected' : '') + '" onclick="_chkSelectCard(\'' + c.id + '\')">'
+      + '<div class="chk-card-brand" style="background:' + brandBg + '">' + _chkEsc(c.brand === 'Visa' ? 'VISA' : (c.brand === 'Mastercard' ? 'MC' : c.brand)) + '</div>'
+      + '<div style="flex:1">'
+      + '<div class="chk-card-num">•••• •••• •••• ' + _chkEsc(c.last4) + '</div>'
+      + '<div class="chk-card-meta">' + _chkEsc(c.brand) + (c.primary ? ' · Birincil' : '') + '</div>'
+      + '</div>'
+      + (sel ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:20px;color:#10B981"></iconify-icon>' : '<iconify-icon icon="solar:stop-linear" style="font-size:20px;color:var(--text-muted)"></iconify-icon>')
+      + '</div>';
+  }
+  // Her zaman "Yeni Kart Ekle"
+  h += '<div class="chk-card-row chk-card-row--new' + (_chk.addingCard ? ' selected' : '') + '" onclick="_chkSelectNewCard()">'
+    + '<div class="chk-card-brand chk-card-brand--new"><iconify-icon icon="solar:add-circle-bold" style="font-size:18px"></iconify-icon></div>'
+    + '<div style="flex:1"><div class="chk-card-num">Yeni Kart Ekle</div>'
+    + '<div class="chk-card-meta">Kart bilgilerini gir</div></div>'
+    + (_chk.addingCard ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:20px;color:#10B981"></iconify-icon>' : '<iconify-icon icon="solar:stop-linear" style="font-size:20px;color:var(--text-muted)"></iconify-icon>')
+    + '</div>';
+  h += '</div></div>';
+
+  // Yeni kart formu (addingCard ise)
+  if (_chk.addingCard) {
+    h += '<div class="chk-new-card-form">'
+      + '<input class="chk-inp" placeholder="Kart üzerindeki isim" value="' + _chkEsc(_chk.newCard.name) + '" oninput="_chk.newCard.name=this.value">'
+      + '<input class="chk-inp" placeholder="Kart Numarası (16 hane)" maxlength="19" value="' + _chkEsc(_chk.newCard.num) + '" oninput="_chk.newCard.num=this.value">'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      + '<input class="chk-inp" placeholder="AA/YY" maxlength="5" value="' + _chkEsc(_chk.newCard.exp) + '" oninput="_chk.newCard.exp=this.value">'
+      + '<input class="chk-inp" placeholder="CVV" maxlength="4" value="' + _chkEsc(_chk.newCard.cvv) + '" oninput="_chk.newCard.cvv=this.value">'
+      + '</div>'
+      + '<label class="chk-save-lbl"><input type="checkbox"' + (_chk.newCard.save ? ' checked' : '') + ' onchange="_chk.newCard.save=this.checked"><span>Kartı kaydet</span></label>'
+      + '</div>';
+  }
+
+  body.innerHTML = h;
+}
+
+function _chkSelectCard(id) {
+  _chk.cardId = id;
+  _chk.addingCard = false;
+  _chkRender();
+}
+
+function _chkSelectNewCard() {
+  _chk.addingCard = true;
+  _chkRender();
+}
+
+function _chkEsc(s) {
+  if (!s && s !== 0) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function _chkFmtTL(n) {
+  return (Math.round(n * 100) / 100).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* ═══ P3 — Ek stiller ═══ */
+function _chkInjectCheckoutStyles() {
+  if (document.getElementById('chkCheckoutStyles')) return;
+  var s = document.createElement('style');
+  s.id = 'chkCheckoutStyles';
+  s.textContent = [
+    '.chk-modal-bd{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;transition:opacity .24s ease}',
+    '.chk-modal-bd.open{opacity:1}',
+    '.chk-modal{width:100%;max-width:100%;background:var(--bg-phone);border-radius:22px 22px 0 0;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.9,.25,1)}',
+    '.chk-modal.open{transform:translateY(0)}',
+    '.chk-head{position:sticky;top:0;display:flex;align-items:center;gap:10px;padding:14px 16px 10px;background:var(--bg-phone);z-index:3;border-bottom:1px solid var(--border-soft)}',
+    '.chk-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%;background:var(--bg-phone-secondary)}',
+    '.chk-close:active{transform:scale(.92)}',
+    '.chk-title{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:800;color:var(--text-primary)}',
+    '.chk-sub{font-size:11.5px;color:var(--text-muted);margin-top:2px}',
+    '.chk-sub b{color:var(--text-primary);font-weight:800}',
+    '.chk-section{padding:12px 14px;display:flex;flex-direction:column;gap:8px}',
+    '.chk-sec-lbl{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--text-muted)}',
+    '.chk-card-list{display:flex;flex-direction:column;gap:7px}',
+    '.chk-card-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-phone);border:1.5px solid var(--border-soft);border-radius:12px;cursor:pointer;transition:all .15s}',
+    '.chk-card-row:active{transform:scale(.98)}',
+    '.chk-card-row.selected{border-color:#10B981;background:rgba(16,185,129,.06)}',
+    '.chk-card-row--new{border-style:dashed}',
+    '.chk-card-brand{width:44px;height:28px;border-radius:5px;color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}',
+    '.chk-card-brand--new{background:var(--bg-phone-secondary);color:var(--text-muted);border:1.5px dashed var(--border-soft)}',
+    '.chk-card-num{font-size:12.5px;font-weight:700;color:var(--text-primary);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:1px}',
+    '.chk-card-meta{font-size:10.5px;color:var(--text-muted);margin-top:2px}',
+    '.chk-empty{padding:18px;background:var(--bg-phone-secondary);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text-muted);font-size:11.5px}',
+    '.chk-new-card-form{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px}',
+    '.chk-inp{padding:11px 13px;border:1.5px solid var(--border-soft);background:var(--bg-phone-secondary);border-radius:10px;color:var(--text-primary);font-size:13px;outline:none;font-family:inherit;width:100%}',
+    '.chk-inp:focus{border-color:#10B981}',
+    '.chk-save-lbl{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-primary);cursor:pointer;padding:4px 0}',
+    '.chk-save-lbl input{accent-color:#10B981}'
+  ].join('\n');
+  document.head.appendChild(s);
+}
