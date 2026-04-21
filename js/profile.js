@@ -1002,10 +1002,22 @@ function closeAllergenPage() {
   _updateAllergenSummary();
 }
 
+/* Cüzdan bakiye pill — tile üzerinde canlı token */
+function _updateWalletPill() {
+  var el = document.getElementById('profWalletBalance');
+  if (!el) return;
+  var t = (typeof USER_WALLET !== 'undefined' && USER_WALLET && typeof USER_WALLET.tokens === 'number')
+    ? USER_WALLET.tokens
+    : 0;
+  el.innerHTML = '<iconify-icon icon="solar:dollar-minimalistic-bold" style="font-size:10px;color:#F59E0B;vertical-align:-1px"></iconify-icon> '
+    + t.toLocaleString('tr-TR');
+}
+
 /* Sayfa yüklendiğinde özetleri güncelle */
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(_updateAllergenSummary, 500);
   setTimeout(_updateMyRecipeCount, 500);
+  setTimeout(_updateWalletPill, 500);
 });
 
 /* ═══════════════════════════════════════════════
