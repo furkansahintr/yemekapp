@@ -273,8 +273,89 @@ function _arvSelectAllPending() {
   _arvRefreshList();
 }
 
+/* ═══ P10 — Toplu Onay Akışı ═══ */
 function _arvBulkApprove() {
-  if (typeof _admToast === 'function') _admToast('Toplu onay P10 yakında...', 'ok');
+  var ids = Object.keys(_arv.selectedIds).filter(function(k){ return _arv.selectedIds[k]; });
+  if (ids.length === 0) return;
+
+  // Onay modalı
+  var host = document.getElementById('adminPhone');
+  var existing = document.getElementById('arvBulkDialog');
+  if (existing) existing.remove();
+
+  var list = ids.map(_arvRecipe).filter(Boolean);
+  // Yüksek benzerlik içeren kayıt var mı?
+  var warnings = [];
+  for (var i = 0; i < list.length; i++) {
+    var hits = _arvFindSimilar(list[i]);
+    if (hits[0] && hits[0].score >= 80) warnings.push({ recipe: list[i], score: hits[0].score });
+  }
+
+  var m = document.createElement('div');
+  m.id = 'arvBulkDialog';
+  m.className = 'arv-bulk-dialog';
+  m.onclick = function(e){ if (e.target === m) { m.remove(); } };
+
+  var h = '<div class="arv-bulk-card">'
+    + '<div class="arv-bulk-head">'
+    + '<iconify-icon icon="solar:check-read-bold" style="font-size:28px;color:#22C55E"></iconify-icon>'
+    + '<div><div class="arv-bulk-title">Toplu Onayla</div>'
+    + '<div class="arv-bulk-sub">' + list.length + ' tarif tek seferde onaylanacak</div></div>'
+    + '</div>';
+
+  // Tarif mini listesi
+  h += '<div class="arv-bulk-list">';
+  for (var j = 0; j < Math.min(6, list.length); j++) {
+    h += '<div class="arv-bulk-row">'
+      + '<div class="arv-bulk-img" style="background-image:url(' + (list[j].cover || '') + ')"></div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="arv-bulk-name">' + _arvEsc(list[j].title) + '</div>'
+      + '<div class="arv-bulk-user">' + _arvEsc(list[j].userName || '—') + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+  if (list.length > 6) h += '<div class="arv-bulk-more">+' + (list.length - 6) + ' diğer tarif</div>';
+  h += '</div>';
+
+  // Uyarı (kritik benzerlik)
+  if (warnings.length > 0) {
+    h += '<div class="arv-bulk-warn">'
+      + '<iconify-icon icon="solar:danger-triangle-bold" style="font-size:15px;color:#EF4444"></iconify-icon>'
+      + '<span><b>' + warnings.length + ' tarifte kritik benzerlik</b> tespit edildi (>%80). Onaylamadan önce teker teker incelemeni öneririm.</span>'
+      + '</div>';
+  }
+
+  h += '<div class="arv-bulk-btns">'
+    + '<button class="arv-btn-ghost" onclick="document.getElementById(\'arvBulkDialog\').remove()">Vazgeç</button>'
+    + '<button class="arv-btn-green" onclick="_arvConfirmBulk()">'
+    + '<iconify-icon icon="solar:check-read-bold" style="font-size:14px"></iconify-icon>Hepsini Onayla</button>'
+    + '</div>'
+    + '</div>';
+
+  m.innerHTML = h;
+  host.appendChild(m);
+  requestAnimationFrame(function(){ m.classList.add('open'); });
+}
+
+function _arvConfirmBulk() {
+  var ids = Object.keys(_arv.selectedIds).filter(function(k){ return _arv.selectedIds[k]; });
+  var approvedCount = 0;
+  for (var i = 0; i < ids.length; i++) {
+    var r = _arvRecipe(ids[i]);
+    if (!r) continue;
+    r.status = 'approved';
+    (r.responseHistory = r.responseHistory || []).push({ action:'approved_bulk', at: new Date().toISOString(), by:'admin' });
+    _arvLogNotification(ids[i], 'approved', 'Tarifiniz toplu inceleme ile doğrulandı ve yayına alındı.');
+    approvedCount++;
+  }
+
+  _arv.selectedIds = {};
+  _arv.bulkMode = false;
+  var dlg = document.getElementById('arvBulkDialog');
+  if (dlg) dlg.remove();
+
+  if (typeof _admToast === 'function') _admToast('✓ ' + approvedCount + ' tarif toplu onaylandı · Bildirimler gönderildi', 'ok');
+  _arvRender(document.getElementById('adminRecipesContainer'));
 }
 
 /* ═══ P2 — Onaylanmış Tab ═══ */
