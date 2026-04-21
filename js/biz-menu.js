@@ -37,24 +37,40 @@ function _menuCanEditItem(item) {
 }
 
 /* ═══ OPEN MENU MANAGEMENT ═══ */
-function openBizMenuMgmt() {
+/* ═══ MENU VIEW MODE ═══
+   'full' (default): tam yetki — Ürün/Grup oluştur, ayarlar, düzenle/sil aktif
+   'home': sadece izleme + stok toggle. Şube Ayarları'nda tam moda geçilir. */
+var bizMenuViewMode = 'full';
+
+function openBizMenuMgmt(mode) {
   if (!bizRoleGuard('menu')) return;
+  if (mode) bizMenuViewMode = mode;
   bizMenuActiveCategory = 'all';
   bizMenuActiveTab = 'single';
   const overlay = createBizOverlay('bizMenuOverlay', 'Menü Yönetimi', renderBizMenuContent());
   document.getElementById('bizPhone').appendChild(overlay);
-  /* Topbar'a Ayarlar (çark) butonu enjekte et — createBizOverlay varsayılan olarak
-     sağ aksiyon butonu sunmuyor, bu yüzden son child olarak ekliyoruz. */
-  const topbar = overlay.firstElementChild;
-  if (topbar) {
-    const gear = document.createElement('div');
-    gear.className = 'btn-icon';
-    gear.title = 'Menü Ayarları';
-    gear.onclick = openBizMenuSettings;
-    gear.innerHTML = '<iconify-icon icon="solar:settings-linear" style="font-size:20px"></iconify-icon>';
-    topbar.appendChild(gear);
+  /* Topbar'a Ayarlar (çark) butonu enjekte et — sadece tam yetki (full) modunda.
+     createBizOverlay varsayılan olarak sağ aksiyon butonu sunmuyor. */
+  if (bizMenuViewMode === 'full') {
+    const topbar = overlay.firstElementChild;
+    if (topbar) {
+      const gear = document.createElement('div');
+      gear.className = 'btn-icon';
+      gear.title = 'Menü Ayarları';
+      gear.onclick = openBizMenuSettings;
+      gear.innerHTML = '<iconify-icon icon="solar:settings-linear" style="font-size:20px"></iconify-icon>';
+      topbar.appendChild(gear);
+    }
   }
 }
+
+/* Home mode için wrapper — Navbar > Anasayfa tile'ından çağrılır */
+function openBizMenuView() {
+  openBizMenuMgmt('home');
+}
+
+/* Home mode helper */
+function _menuIsHome() { return bizMenuViewMode === 'home'; }
 
 /* ═══ SWITCH CATEGORY ═══ */
 function switchBizMenuCategory(cat) {
@@ -109,7 +125,20 @@ function renderBizMenuContent() {
     </div>`;
   }
 
+  /* Home mode info banner — anasayfadan geldiğinde */
+  let homeBanner = '';
+  if (_menuIsHome()) {
+    homeBanner = `<div style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:linear-gradient(135deg,rgba(59,130,246,0.07),rgba(99,102,241,0.05));border:1px solid rgba(59,130,246,0.22);border-radius:var(--r-lg);margin-bottom:12px">
+      <iconify-icon icon="solar:info-circle-bold" style="font-size:18px;color:#3B82F6;flex-shrink:0;margin-top:1px"></iconify-icon>
+      <div>
+        <div style="font:var(--fw-semibold) var(--fs-xs)/1.3 var(--font);color:var(--text-primary)">Sadece stok durumunu güncelleyebilirsin</div>
+        <div style="font:var(--fw-regular) 10.5px/1.5 var(--font);color:var(--text-muted);margin-top:3px">Ürün ekleme ve düzenleme için <b style="color:var(--text-primary)">Şube Ayarları &gt; Menü Yönetimi</b> sekmesini kullan.</div>
+      </div>
+    </div>`;
+  }
+
   return `
+    ${homeBanner}
     ${roleBanner}
     <!-- Single / Combo Tabs -->
     <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--glass-card);border-radius:var(--r-full);padding:3px">
@@ -153,7 +182,7 @@ function renderBizMenuSingleTab() {
       ${renderBizMenuItems()}
     </div>
 
-    ${canEdit ? `
+    ${canEdit && !_menuIsHome() ? `
     <div onclick="openProductCreationWizard()" style="margin-top:16px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
       <iconify-icon icon="solar:add-circle-bold" style="font-size:18px;color:#fff"></iconify-icon>
       <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Ürün Oluştur</span>
@@ -167,7 +196,7 @@ function renderBizMenuComboTab() {
   const combos = BIZ_COMBO_PRODUCTS.filter(c => c.branchId === bizActiveBranch);
   const singleProducts = BIZ_PRODUCTS.filter(p => p.branchId === bizActiveBranch && p.type === 'single');
 
-  if (singleProducts.length === 0 && canEdit) {
+  if (singleProducts.length === 0 && canEdit && !_menuIsHome()) {
     return `
     <div style="padding:40px 16px;text-align:center">
       <iconify-icon icon="solar:danger-triangle-bold" style="font-size:40px;color:#F59E0B;display:block;margin:0 auto 12px"></iconify-icon>
@@ -183,7 +212,7 @@ function renderBizMenuComboTab() {
     <div id="bizMenuItemsList" style="display:flex;flex-direction:column;gap:10px">
       ${renderBizComboItems()}
     </div>
-    ${canEdit ? `
+    ${canEdit && !_menuIsHome() ? `
     <div onclick="openComboCreationWizard()" style="margin-top:16px;background:linear-gradient(135deg,#8B5CF6,#6366F1);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
       <iconify-icon icon="solar:layers-bold" style="font-size:18px;color:#fff"></iconify-icon>
       <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Grup Ürün Oluştur</span>
@@ -227,13 +256,20 @@ function renderBizMenuItems() {
           ${hasDetail && product.allergens && product.allergens.length > 0 ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:#EF4444;background:rgba(239,68,68,0.1)"><iconify-icon icon="solar:danger-triangle-linear" style="font-size:9px;vertical-align:-1px"></iconify-icon> ${product.allergens.length} alerjen</span>` : ''}
         </div>
       </div>
-      ${itemEditable ? `
+      ${itemEditable ? (_menuIsHome() ? `
+      <!-- Home mode: sadece stok toggle (var/yok), pen ikonu kaldırıldı -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px" onclick="event.stopPropagation()">
+        <div onclick="bizToggleMenuItem('${item.id}')" style="width:40px;height:22px;border-radius:11px;background:${item.status === 'active' ? '#22C55E' : '#EF4444'};position:relative;cursor:pointer;transition:background .2s;box-shadow:inset 0 1px 3px rgba(0,0,0,0.15)">
+          <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;${item.status === 'active' ? 'right:2px' : 'left:2px'};box-shadow:0 1px 3px rgba(0,0,0,.22)"></div>
+        </div>
+        <span style="font:var(--fw-semibold) 9.5px/1 var(--font);color:${item.status === 'active' ? '#22C55E' : '#EF4444'};letter-spacing:.3px;text-transform:uppercase">${item.status === 'active' ? 'Stok Var' : 'Tükendi'}</span>
+      </div>` : `
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px" onclick="event.stopPropagation()">
         <div onclick="bizToggleMenuItem('${item.id}')" style="width:36px;height:20px;border-radius:10px;background:${item.status === 'active' ? 'var(--primary)' : 'var(--glass-card-strong)'};position:relative;cursor:pointer">
           <div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${item.status === 'active' ? 'right:2px' : 'left:2px'}"></div>
         </div>
         <iconify-icon icon="solar:pen-linear" onclick="openProductCreationWizard('${item.id}')" style="font-size:16px;color:var(--text-muted);cursor:pointer"></iconify-icon>
-      </div>` : `
+      </div>`) : `
       <div style="display:flex;align-items:center">
         <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 8px;border-radius:var(--r-full);color:${item.status === 'active' ? '#22C55E' : '#EF4444'};background:${item.status === 'active' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}">${item.status === 'active' ? 'Aktif' : 'Pasif'}</span>
       </div>`}

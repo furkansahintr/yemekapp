@@ -283,7 +283,7 @@ const BIZ_TILE_DEFS = {
   liveOrders:   { icon: 'solar:bag-music-bold',                     color: '#22C55E', title: 'Canlı Siparişler', fn: 'openBizLiveOrders', custom: true },
   orders:       { icon: 'solar:bag-check-bold',                    color: '#8B5CF6', title: 'Siparişler',       fn: 'openBizOrders' },
   tables:       { icon: 'solar:sofa-2-bold',                       color: '#3B82F6', title: 'Masalar',          fn: 'openBizTables' },
-  menu:         { icon: 'solar:notebook-bold',                     color: '#F59E0B', title: 'Menü',             fn: 'openBizMenuMgmt' },
+  menu:         { icon: 'solar:notebook-bold',                     color: '#F59E0B', title: 'Menü',             fn: 'openBizMenuView' },
   waiterCalls:  { icon: 'solar:bell-bing-bold',                    color: '#EF4444', title: 'Garson Çağrıları', fn: 'openBizWaiterCalls' },
   staff:        { icon: 'solar:users-group-two-rounded-bold',      color: '#EC4899', title: 'Personel',         fn: 'openBizStaff' },
   reviews:      { icon: 'solar:star-bold',                         color: '#F59E0B', title: 'Değerlendirmeler', fn: 'openBizReviews' },
