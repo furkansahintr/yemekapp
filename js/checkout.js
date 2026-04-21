@@ -5,7 +5,7 @@
 /* ═══ P1 — Toast + Badge Bump ═══ */
 
 /* Global showToast (yoksa tanımla) — başka modüller de kullanıyor */
-if (typeof window.showToast !== 'function') {
+if (typeof window.showToast !== 'function' || !window.showToast.__chkEnhanced) {
   window.showToast = function(message, opts) {
     _chkInjectStyles();
     var existing = document.getElementById('chkToast');
@@ -15,15 +15,63 @@ if (typeof window.showToast !== 'function') {
     t.className = 'chk-toast';
     var icon = (opts && opts.icon) || 'solar:check-circle-bold';
     var color = (opts && opts.color) || '#10B981';
-    t.innerHTML = '<iconify-icon icon="' + icon + '" style="font-size:18px;color:' + color + '"></iconify-icon>'
-      + '<span>' + String(message).replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+    var actionLabel = (opts && opts.actionLabel) || null;
+    var actionId = 'chkToastAction_' + Date.now().toString(36);
+
+    var safe = String(message).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var html = '<iconify-icon icon="' + icon + '" style="font-size:18px;color:' + color + '"></iconify-icon>'
+      + '<span class="chk-toast-msg">' + safe + '</span>';
+    if (actionLabel) {
+      html += '<button id="' + actionId + '" class="chk-toast-action">'
+        + String(actionLabel).replace(/</g,'&lt;')
+        + ' <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:12px"></iconify-icon></button>';
+    }
+    t.innerHTML = html;
     document.body.appendChild(t);
+
+    if (actionLabel && opts && typeof opts.onAction === 'function') {
+      var btn = document.getElementById(actionId);
+      if (btn) btn.onclick = function(e) {
+        e.stopPropagation();
+        try { opts.onAction(); } catch(_) {}
+        t.classList.remove('show');
+        setTimeout(function(){ if (t.parentNode) t.remove(); }, 280);
+      };
+    }
+
     requestAnimationFrame(function(){ t.classList.add('show'); });
+    var ms = (opts && opts.duration) || 2500;
     setTimeout(function(){
       t.classList.remove('show');
-      setTimeout(function(){ if (t.parentNode) t.remove(); }, 280);
-    }, 2400);
+      setTimeout(function(){ if (t.parentNode) t.remove(); }, 320);
+    }, ms);
   };
+  window.showToast.__chkEnhanced = true;
+}
+
+/* Buton üzerinde kısa tick animasyonu — Sepete Ekle feedback'i
+   btn: HTMLElement veya id string. done callback opsiyonel. */
+function buttonTick(btn, opts) {
+  var el = (typeof btn === 'string') ? document.getElementById(btn) : btn;
+  if (!el) { if (opts && opts.done) opts.done(); return; }
+  if (el.__tickBusy) return;
+  el.__tickBusy = true;
+
+  var originalHTML = el.innerHTML;
+  var originalWidth = el.offsetWidth + 'px';
+  var holdMs = (opts && opts.hold) || 650;
+
+  el.style.minWidth = originalWidth;
+  el.classList.add('chk-btn-tick');
+  el.innerHTML = '<iconify-icon icon="solar:check-circle-bold" style="font-size:20px;color:#fff;animation:chkTickPop .32s cubic-bezier(.2,.9,.25,1)"></iconify-icon>';
+
+  setTimeout(function() {
+    el.innerHTML = originalHTML;
+    el.classList.remove('chk-btn-tick');
+    el.style.minWidth = '';
+    el.__tickBusy = false;
+    if (opts && typeof opts.done === 'function') opts.done();
+  }, holdMs);
 }
 
 /* Sepet badge bump — addToCart sonrası ikon hafif zıplasın */
@@ -52,14 +100,23 @@ function _chkInjectStyles() {
   s.id = 'chkStyles';
   s.textContent = [
     /* Toast */
-    '.chk-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(-20px);bottom:calc(env(safe-area-inset-bottom,0) + 96px);z-index:999;display:inline-flex;align-items:center;gap:8px;padding:11px 16px;background:var(--bg-phone);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.18);font:var(--fw-medium) var(--fs-sm)/1.2 var(--font);opacity:0;pointer-events:none;transition:opacity .24s ease, transform .28s cubic-bezier(.2,.9,.25,1);max-width:90%}',
+    '.chk-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(-20px);bottom:calc(env(safe-area-inset-bottom,0) + 96px);z-index:9999;display:inline-flex;align-items:center;gap:10px;padding:11px 14px 11px 16px;background:rgba(17,24,39,.92);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:999px;box-shadow:0 10px 32px rgba(0,0,0,.35);font:var(--fw-medium) var(--fs-sm)/1.2 var(--font);opacity:0;pointer-events:none;transition:opacity .28s ease, transform .32s cubic-bezier(.2,.9,.25,1);max-width:92%;backdrop-filter:blur(8px)}',
     '.chk-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}',
+    '.chk-toast-msg{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}',
+    '.chk-toast-action{margin-left:4px;padding:6px 11px;border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;font:var(--fw-semibold) var(--fs-xs)/1 var(--font);font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:3px;transition:background .18s}',
+    '.chk-toast-action:hover,.chk-toast-action:active{background:rgba(255,255,255,.3)}',
     /* Badge bump */
     '@keyframes chkBadgeBump{0%{transform:scale(1)}30%{transform:scale(1.35)}60%{transform:scale(.92)}100%{transform:scale(1)}}',
     '.chk-badge-bump{animation:chkBadgeBump .45s cubic-bezier(.2,.9,.25,1)}',
     /* Icon pulse */
     '@keyframes chkIconPulse{0%{box-shadow:0 0 0 0 rgba(246,80,19,.45)}100%{box-shadow:0 0 0 14px rgba(246,80,19,0)}}',
-    '.chk-icon-pulse{animation:chkIconPulse .55s ease-out;border-radius:50%}'
+    '.chk-icon-pulse{animation:chkIconPulse .55s ease-out;border-radius:50%}',
+    /* Button tick feedback */
+    '@keyframes chkTickPop{0%{transform:scale(0) rotate(-180deg);opacity:0}60%{transform:scale(1.18) rotate(0deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}',
+    '.chk-btn-tick{pointer-events:none;background:#10B981 !important;color:#fff !important;transition:background .2s ease}',
+    /* Cart icon empty/active state */
+    '#headerCartBtn.chk-cart-active iconify-icon{color:var(--primary) !important}',
+    '#headerCartBtn iconify-icon{transition:color .25s ease}'
   ].join('\n');
   document.head.appendChild(s);
 }
