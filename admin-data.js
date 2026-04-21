@@ -2883,3 +2883,98 @@ var ADMIN_AI_SCENARIOS = [
     }
   }
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN RECIPES — REVAMP SEED EXTENSION
+   aiAllergens · editRequestNote · rejectReason · similarityHints · bekleyen yanıt
+   ═══════════════════════════════════════════════════════════ */
+
+// Mevcut ADMIN_RECIPES'lara ek bilgileri "zenginleştir" (idempotent)
+(function() {
+  if (typeof ADMIN_RECIPES === 'undefined') return;
+  for (var i = 0; i < ADMIN_RECIPES.length; i++) {
+    var r = ADMIN_RECIPES[i];
+    if (!r.aiAllergens) r.aiAllergens = (r.allergens || []).slice();
+    if (!r.prepTime) r.prepTime = Math.max(10, Math.round((r.cookTime || 30) * 0.4));
+    if (!r.tagCount) r.tagCount = (r.tags || []).length * 3 + Math.floor(Math.random() * 8);
+    if (!r.favoriteCount) r.favoriteCount = r.likes || 0;
+    if (!r.responseHistory) r.responseHistory = [];
+  }
+})();
+
+// Yeni: awaiting_response ve ek bekleyen/reddedilen seedler
+var ADMIN_RECIPE_EXTRAS = [
+  {
+    id:'rc_await_01', title:'Fırın Sebzeli Tavuk', userId:'u11', userName:'Selin Arslan', category:'main', status:'awaiting_response',
+    date:'2026-04-14T09:20:00', editRequestedAt:'2026-04-16T11:30:00',
+    editRequestNote:'Lütfen pişirme adımlarına fırın sıcaklığı ve süresi eklenmeli. Ayrıca kapak kullanıp kullanılmayacağı belirtilmeli.',
+    cover:'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&h=300&fit=crop',
+    description:'Fırında sebzeyle pişen nefis tavuk.',
+    ingredients:[{name:'Tavuk but',amount:'4 adet'},{name:'Patates',amount:'3 adet'},{name:'Havuç',amount:'2 adet'}],
+    steps:['Tavukları marine et.','Sebzeleri doğra.','Fırında pişir.'],
+    media:[{type:'photo',url:'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=800',flagged:false}],
+    allergens:[], aiAllergens:[],
+    tags:['Fırın','Pratik','Aile'], tagCount:6,
+    saves:0, comments:0, likes:0, favoriteCount:0,
+    prepTime:15, cookTime:50, servings:4, difficulty:'Kolay',
+    responseHistory:[{action:'edit_requested', at:'2026-04-16T11:30:00', by:'admin', note:'Pişirme detayları eksik.'}]
+  },
+  {
+    id:'rc_await_02', title:'Humus Sandviç', userId:'u12', userName:'Burak Yıldız', category:'lunch', status:'awaiting_response',
+    date:'2026-04-13T14:15:00', editRequestedAt:'2026-04-15T10:10:00',
+    editRequestNote:'Görsel çözünürlüğü düşük, lütfen daha net bir fotoğraf yükleyin.',
+    cover:'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400&h=300&fit=crop',
+    description:'Vegan humus sandviç.',
+    ingredients:[{name:'Tam buğday ekmek',amount:'2 dilim'},{name:'Humus',amount:'3 kaşık'},{name:'Marul',amount:'2 yaprak'}],
+    steps:['Ekmeğe humus sür.','Sebzeleri yerleştir.','Kapat ve servis et.'],
+    media:[{type:'photo',url:'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=800',flagged:false}],
+    allergens:['Glüten','Susam'], aiAllergens:['Glüten','Susam'],
+    tags:['Vegan','Hızlı','Kahvaltı'], tagCount:4,
+    saves:0, comments:0, likes:0, favoriteCount:0,
+    prepTime:5, cookTime:0, servings:1, difficulty:'Kolay',
+    responseHistory:[{action:'edit_requested', at:'2026-04-15T10:10:00', by:'admin', note:'Fotoğraf netleştirilecek.'}]
+  },
+  {
+    id:'rc_rej_01', title:'Çiğ Tavuk Salatası', userId:'u13', userName:'Emre Kaya', category:'salad', status:'rejected',
+    date:'2026-04-10T12:00:00', rejectedAt:'2026-04-11T09:45:00',
+    rejectReason:'Gıda güvenliği: Çiğ tavuk kullanımı sağlık açısından sakıncalıdır. Tarif yayına alınamaz.',
+    cover:'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&h=300&fit=crop',
+    description:'Taze tavuk salatası.',
+    ingredients:[{name:'Çiğ tavuk göğüs',amount:'300 g'},{name:'Marul',amount:'1 baş'}],
+    steps:['Tavuğu doğra.','Salatayı karıştır.'],
+    media:[{type:'photo',url:'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800',flagged:true}],
+    allergens:[], aiAllergens:['Çiğ Et - Risk'],
+    tags:['Diyet','Düşük Kalori'], tagCount:2,
+    saves:0, comments:0, likes:0, favoriteCount:0,
+    prepTime:10, cookTime:0, servings:2, difficulty:'Kolay',
+    responseHistory:[{action:'rejected', at:'2026-04-11T09:45:00', by:'admin', note:'Çiğ tavuk güvenli değil.'}]
+  },
+  {
+    id:'rc_rej_02', title:'Enerji İçeceği Kokteyl', userId:'u14', userName:'Can Demir', category:'drink', status:'rejected',
+    date:'2026-04-08T20:15:00', rejectedAt:'2026-04-09T16:20:00',
+    rejectReason:'Telif: Tarif, başka bir platformdan kopyalanmış ve orijinal değildir. Ayrıca tarif zaten kayıtlı.',
+    cover:'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop',
+    description:'Klasik kokteyl.',
+    ingredients:[{name:'Enerji içeceği',amount:'200 ml'},{name:'Votka',amount:'50 ml'}],
+    steps:['Buzla karıştır.'],
+    media:[{type:'photo',url:'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800',flagged:false}],
+    allergens:[], aiAllergens:['Alkol'],
+    tags:['Parti'], tagCount:1,
+    saves:0, comments:0, likes:0, favoriteCount:0,
+    prepTime:3, cookTime:0, servings:1, difficulty:'Kolay',
+    responseHistory:[{action:'rejected', at:'2026-04-09T16:20:00', by:'admin', note:'Telif ve mükerrer.'}]
+  }
+];
+
+// Eğer ADMIN_RECIPES mevcutsa, extras'ları ekle (duplicate kontrolü)
+(function() {
+  if (typeof ADMIN_RECIPES === 'undefined') return;
+  var existingIds = {};
+  for (var i = 0; i < ADMIN_RECIPES.length; i++) existingIds[ADMIN_RECIPES[i].id] = true;
+  for (var j = 0; j < ADMIN_RECIPE_EXTRAS.length; j++) {
+    if (!existingIds[ADMIN_RECIPE_EXTRAS[j].id]) ADMIN_RECIPES.push(ADMIN_RECIPE_EXTRAS[j]);
+  }
+})();
+
+// Admin notify log (onay/red sonrası bildirim kayıtları)
+var ADMIN_RECIPE_NOTIFICATIONS = [];
