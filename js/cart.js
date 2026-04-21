@@ -107,6 +107,13 @@ function removeCartItem(idx, source) {
 
 function checkoutCart() {
   if (deliveryMode === 'pickup') { confirmPickupOrder(); return; }
+  // Yeni akış: Ödeme popup (kart + cüzdan hibrit)
+  if (typeof openCheckoutPopup === 'function') {
+    var subtotal = (typeof getCartTotal === 'function') ? getCartTotal() : 0;
+    var fee = (typeof getCartDeliveryFee === 'function') ? getCartDeliveryFee() : 0;
+    openCheckoutPopup(subtotal + fee);
+    return;
+  }
   if (typeof goToAddressSelection === 'function') goToAddressSelection();
 }
 
