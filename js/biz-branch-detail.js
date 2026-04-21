@@ -317,7 +317,7 @@ function openBizBranchDetail(branchId) {
             ${branch.tableQRMode ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(249,115,22,.14);color:#EA580C;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">AKTİF</span>' : ''}
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
-          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="bizActiveBranch='${branch.id}';openBizMenuMgmt()">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="bizActiveBranch='${branch.id}';openBizMenuMgmt('full')">
             <iconify-icon icon="solar:notebook-bold" style="font-size:20px;color:#F59E0B"></iconify-icon>
             <div style="flex:1">
               <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Menü Yönetimi</div>
