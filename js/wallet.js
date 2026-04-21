@@ -45,6 +45,7 @@ function _wltClose() {
   var o = document.getElementById('wltOverlay');
   if (o) o.remove();
   _wltCloseAll();
+  if (typeof _updateWalletPill === 'function') _updateWalletPill();
 }
 
 function _wltCloseAll() {
@@ -437,6 +438,7 @@ function _wltComplete3D() {
     date: new Date().toISOString(),
     channel: 'Kart Yükleme'
   });
+  if (typeof _updateWalletPill === 'function') _updateWalletPill();
 
   _wlt.loadStep = 4;
   _wltRenderLoad();
@@ -704,6 +706,7 @@ function _wltSubmitShare() {
 
   USER_WALLET.tokens -= amt;
   WALLET_DAILY_SHARED += amt;
+  if (typeof _updateWalletPill === 'function') _updateWalletPill();
 
   WALLET_TRANSACTIONS.unshift({
     id: 'tx_' + Date.now().toString(36),
