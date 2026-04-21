@@ -371,11 +371,24 @@ function bmiAskAI() {
   closeSettingsPanel();
   const h = document.getElementById('bmiHeight').value;
   const w = document.getElementById('bmiWeight').value;
+  const dob = (document.getElementById('bmiDob') || {}).value || '';
+  const age = _bmiAgeFromDob(dob);
+  const gender = _bmiGetGender();
+  const bmr = _bmiCalcBMR(parseFloat(w), parseFloat(h), age, gender);
+
+  const extras = [];
+  if (age) extras.push('Yaş: ' + age);
+  if (gender === 'male') extras.push('Cinsiyet: Erkek');
+  else if (gender === 'female') extras.push('Cinsiyet: Kadın');
+  if (bmr) extras.push('BMR: ' + bmr + ' kcal/gün');
+
+  const extraStr = extras.length ? '. ' + extras.join(', ') : '';
+
   switchTab('ai');
   setTimeout(function() {
     const input = document.getElementById('aiChatInput');
     if (input) {
-      input.value = 'BMI sonucuma göre sağlıklı diyet önerisi ver. Boy: ' + h + 'cm, Kilo: ' + w + 'kg';
+      input.value = 'BMI sonucuma göre sağlıklı diyet önerisi ver. Boy: ' + h + 'cm, Kilo: ' + w + 'kg' + extraStr;
       aiSend();
     }
   }, 400);
