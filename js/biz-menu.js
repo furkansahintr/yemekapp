@@ -125,7 +125,20 @@ function renderBizMenuContent() {
     </div>`;
   }
 
+  /* Home mode info banner — anasayfadan geldiğinde */
+  let homeBanner = '';
+  if (_menuIsHome()) {
+    homeBanner = `<div style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:linear-gradient(135deg,rgba(59,130,246,0.07),rgba(99,102,241,0.05));border:1px solid rgba(59,130,246,0.22);border-radius:var(--r-lg);margin-bottom:12px">
+      <iconify-icon icon="solar:info-circle-bold" style="font-size:18px;color:#3B82F6;flex-shrink:0;margin-top:1px"></iconify-icon>
+      <div>
+        <div style="font:var(--fw-semibold) var(--fs-xs)/1.3 var(--font);color:var(--text-primary)">Sadece stok durumunu güncelleyebilirsin</div>
+        <div style="font:var(--fw-regular) 10.5px/1.5 var(--font);color:var(--text-muted);margin-top:3px">Ürün ekleme ve düzenleme için <b style="color:var(--text-primary)">Şube Ayarları &gt; Menü Yönetimi</b> sekmesini kullan.</div>
+      </div>
+    </div>`;
+  }
+
   return `
+    ${homeBanner}
     ${roleBanner}
     <!-- Single / Combo Tabs -->
     <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--glass-card);border-radius:var(--r-full);padding:3px">
