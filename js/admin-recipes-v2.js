@@ -79,7 +79,60 @@ function _arvRefreshList() {
   if (_arv.tab === 'approved') { box.innerHTML = _arvRenderApproved(); return; }
   if (_arv.tab === 'pending') { box.innerHTML = _arvRenderPending(); return; }
   if (_arv.tab === 'awaiting') { box.innerHTML = _arvRenderAwaiting(); return; }
-  box.innerHTML = '<div class="arv-placeholder">Liste (P9) yakında...</div>';
+  if (_arv.tab === 'rejected') { box.innerHTML = _arvRenderRejected(); return; }
+  box.innerHTML = '<div class="arv-placeholder">Liste bulunamadı</div>';
+}
+
+/* ═══ P9 — Reddedilen Tab ═══ */
+function _arvRenderRejected() {
+  var list = _arvFilterList('rejected');
+  // En yeni red önce
+  list.sort(function(a,b){ return new Date(b.rejectedAt || b.date) - new Date(a.rejectedAt || a.date); });
+
+  if (list.length === 0) {
+    return '<div class="arv-empty">'
+      + '<iconify-icon icon="solar:shield-check-linear" style="font-size:42px;opacity:.3;color:#22C55E"></iconify-icon>'
+      + '<div>Reddedilmiş tarif yok</div>'
+      + '<div class="arv-empty-sub">Henüz hiçbir tarif reddedilmemiş.</div>'
+      + '</div>';
+  }
+
+  var h = '<div class="arv-info-bar arv-info-bar--red">'
+    + '<iconify-icon icon="solar:archive-bold" style="font-size:14px;color:#EF4444"></iconify-icon>'
+    + '<span>Reddedilmiş tarif arşivi · ' + list.length + ' kayıt</span>'
+    + '</div>';
+
+  h += '<div class="arv-rejected-list">';
+  for (var i = 0; i < list.length; i++) {
+    h += _arvRejectedCard(list[i]);
+  }
+  h += '</div>';
+  return h;
+}
+
+function _arvRejectedCard(r) {
+  return '<div class="arv-r-card" onclick="_arvOpenDetail(\'' + r.id + '\')">'
+    + '<div class="arv-r-head">'
+    + '<div class="arv-r-img" style="background-image:url(' + (r.cover || '') + ')"></div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div class="arv-r-title">' + _arvEsc(r.title || '') + '</div>'
+    + '<div class="arv-r-meta">'
+    + '<span>' + _arvEsc(r.userName || '—') + '</span>'
+    + '<span class="arv-dot">·</span>'
+    + '<span class="arv-cat-pill">' + _arvEsc(r.category || '—') + '</span>'
+    + '<span class="arv-dot">·</span>'
+    + '<span>' + _arvFmtDate(r.rejectedAt || r.date) + '</span>'
+    + '</div>'
+    + '</div>'
+    + '<span class="arv-status-pill arv-status-pill--rejected">Reddedildi</span>'
+    + '</div>'
+    + (r.rejectReason
+        ? '<div class="arv-r-reason">'
+          + '<iconify-icon icon="solar:close-circle-bold" style="font-size:13px;color:#EF4444"></iconify-icon>'
+          + '<span>' + _arvEsc(r.rejectReason) + '</span>'
+          + '</div>'
+        : '')
+    + '</div>';
 }
 
 /* ═══ P8 — Cevap Bekleyen Tab ═══ */
