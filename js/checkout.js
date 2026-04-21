@@ -187,7 +187,86 @@ function _chkRender() {
   /* Cüzdan bloğu */
   h += _chkRenderWalletBlock();
 
+  /* Özet + Onayla */
+  h += _chkRenderSummaryFooter();
+
   body.innerHTML = h;
+}
+
+/* ═══ P5 — Özet Footer + Onayla ═══ */
+function _chkRenderSummaryFooter() {
+  var calc = _chkWalletCalc();
+  var total = _chk.total || 0;
+
+  var h = '<div class="chk-summary">'
+    + '<div class="chk-sum-row"><span>Toplam</span><b>₺' + _chkFmtTL(total) + '</b></div>'
+    + '<div class="chk-sum-row" style="color:' + (calc.walletUse > 0 ? '#B45309' : 'var(--text-muted)') + '">'
+    + '<span><iconify-icon icon="solar:wallet-money-linear" style="font-size:12px"></iconify-icon> Cüzdan</span>'
+    + '<b>' + (calc.walletUse > 0 ? '-' + calc.walletUse + ' Token' : '—') + '</b></div>'
+    + '<div class="chk-sum-row" style="color:' + (calc.cardUse > 0 ? 'var(--text-primary)' : 'var(--text-muted)') + '">'
+    + '<span><iconify-icon icon="solar:card-linear" style="font-size:12px"></iconify-icon> Karttan Çekilecek</span>'
+    + '<b>' + (calc.cardUse > 0 ? '₺' + _chkFmtTL(calc.cardUse) : '—') + '</b></div>'
+    + '</div>';
+
+  var valid = _chkValid(calc);
+  h += '<div class="chk-footer">'
+    + '<button class="chk-btn-pay' + (valid ? '' : ' disabled') + '"' + (valid ? ' onclick="_chkSubmit()"' : '') + '>'
+    + (_chk.submitting
+        ? '<iconify-icon icon="solar:refresh-linear" style="font-size:15px;animation:chkBadgeBump 1s linear infinite"></iconify-icon>İşleniyor...'
+        : '<iconify-icon icon="solar:shield-check-bold" style="font-size:15px"></iconify-icon>Ödemeyi Tamamla')
+    + '</button>'
+    + '</div>';
+  return h;
+}
+
+function _chkValid(calc) {
+  if (!calc) calc = _chkWalletCalc();
+  if (_chk.submitting) return false;
+  if (_chk.total <= 0) return false;
+
+  // Cüzdan tek başına yeterli ise kart opsiyonel
+  if (_chk.useWallet && calc.walletUse >= _chk.total) return true;
+
+  // Kart gerekiyor → ya kayıtlı seçili ya da yeni kart formu doldurulmuş
+  if (_chk.addingCard) {
+    var c = _chk.newCard;
+    var cleanNum = (c.num || '').replace(/\s+/g, '');
+    return cleanNum.length >= 13 && (c.exp || '').length >= 4 && (c.cvv || '').length >= 3;
+  }
+  return !!_chk.cardId;
+}
+
+function _chkSubmit() {
+  _chk.submitting = true;
+  _chkRender();
+  setTimeout(function() {
+    var calc = _chkWalletCalc();
+    // Cüzdan düş
+    if (_chk.useWallet && typeof USER_WALLET !== 'undefined' && USER_WALLET) {
+      USER_WALLET.tokens = Math.max(0, (USER_WALLET.tokens || 0) - calc.walletUse);
+      if (typeof _updateWalletPill === 'function') _updateWalletPill();
+    }
+    // Yeni kart kaydet
+    if (_chk.addingCard && _chk.newCard.save && typeof USER_WALLET !== 'undefined' && USER_WALLET) {
+      var last4 = (_chk.newCard.num || '').replace(/\s+/g,'').slice(-4);
+      USER_WALLET.cards = USER_WALLET.cards || [];
+      USER_WALLET.cards.push({
+        id: 'c_' + Date.now().toString(36),
+        brand: 'Visa', last4: last4, primary: false
+      });
+    }
+    closeCheckoutPopup();
+    if (typeof showToast === 'function') showToast('Siparişiniz oluşturuldu · Ödeme başarılı', { icon:'solar:check-circle-bold' });
+    // Sepeti temizle
+    if (typeof cart !== 'undefined' && Array.isArray(cart)) cart.length = 0;
+    if (typeof updateCartBadge === 'function') updateCartBadge();
+    if (typeof renderCartBadge === 'function') renderCartBadge();
+    var cartOverlay = document.getElementById('cartOverlay');
+    if (cartOverlay) cartOverlay.classList.remove('open');
+    // Success ekranı
+    var ok = document.getElementById('orderSuccessOverlay');
+    if (ok && ok.classList) ok.classList.add('open');
+  }, 700);
 }
 
 /* ═══ P4 — Cüzdan toggle + hibrit hesaplama ═══ */
@@ -328,7 +407,18 @@ function _chkInjectCheckoutStyles() {
     '.chk-slider{position:absolute;inset:0;cursor:pointer;background:var(--bg-phone-secondary);border-radius:999px;transition:background .22s}',
     '.chk-slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .22s;box-shadow:0 1px 3px rgba(0,0,0,.18)}',
     '.chk-switch input:checked + .chk-slider{background:#F59E0B}',
-    '.chk-switch input:checked + .chk-slider:before{transform:translateX(18px)}'
+    '.chk-switch input:checked + .chk-slider:before{transform:translateX(18px)}',
+    /* Summary + Footer */
+    '.chk-summary{margin:4px 14px 8px;padding:12px 14px;background:var(--bg-phone-secondary);border-radius:12px;display:flex;flex-direction:column;gap:6px}',
+    '.chk-sum-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--text-primary)}',
+    '.chk-sum-row span{display:inline-flex;align-items:center;gap:5px;color:var(--text-muted)}',
+    '.chk-sum-row b{font-weight:800;font-variant-numeric:tabular-nums}',
+    '.chk-sum-row:first-child{padding-bottom:6px;border-bottom:1px dashed var(--border-soft)}',
+    '.chk-sum-row:first-child b{color:#F65013;font-size:15px}',
+    '.chk-footer{position:sticky;bottom:0;padding:12px 14px max(env(safe-area-inset-bottom),12px);background:var(--bg-phone);border-top:1px solid var(--border-soft);z-index:2}',
+    '.chk-btn-pay{width:100%;padding:14px;border:none;background:linear-gradient(135deg,#F65013,#EA580C);color:#fff;border-radius:14px;font-size:13.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 4px 14px rgba(246,80,19,.3);font-family:inherit;transition:transform .15s}',
+    '.chk-btn-pay:active{transform:scale(.98)}',
+    '.chk-btn-pay.disabled{opacity:.42;cursor:not-allowed;transform:none;box-shadow:none}'
   ].join('\n');
   document.head.appendChild(s);
 }
