@@ -387,8 +387,97 @@ function _arvRenderDetail() {
   // AI Alerjen Analizi (pending ve awaiting için editable)
   h += _arvRenderAIAllergens(r);
 
+  // Benzer tarifler (pending ve awaiting için — admin duplicate kontrolü)
+  if (r.status === 'pending' || r.status === 'awaiting_response') {
+    h += _arvRenderSimilar(r);
+  }
+
   h += '</div>';
   body.innerHTML = h;
+}
+
+/* ═══ P6 — Benzer Tarif Algoritması ═══ */
+// Simple Jaccard benzerliği: title tokens + ingredient names
+function _arvSimilarity(a, b) {
+  function tokens(rec) {
+    var words = [];
+    (String(rec.title || '').toLowerCase().split(/[\s,]+/)).forEach(function(w){ if (w.length > 2) words.push(w); });
+    (rec.ingredients || []).forEach(function(ing){
+      String(ing.name || '').toLowerCase().split(/[\s,()]+/).forEach(function(w){ if (w.length > 2) words.push(w); });
+    });
+    return words;
+  }
+  var ta = tokens(a);
+  var tb = tokens(b);
+  if (!ta.length || !tb.length) return 0;
+  var setA = {};
+  var setB = {};
+  ta.forEach(function(w){ setA[w] = true; });
+  tb.forEach(function(w){ setB[w] = true; });
+  var keysA = Object.keys(setA);
+  var keysB = Object.keys(setB);
+  var inter = 0;
+  for (var i = 0; i < keysA.length; i++) if (setB[keysA[i]]) inter++;
+  var unionSize = keysA.length + keysB.length - inter;
+  return unionSize === 0 ? 0 : Math.round((inter / unionSize) * 100);
+}
+
+function _arvFindSimilar(r) {
+  var hits = [];
+  for (var i = 0; i < ADMIN_RECIPES.length; i++) {
+    var other = ADMIN_RECIPES[i];
+    if (other.id === r.id) continue;
+    if (other.status !== 'approved') continue;
+    var score = _arvSimilarity(r, other);
+    if (score >= 40) hits.push({ recipe: other, score: score });
+  }
+  hits.sort(function(a,b){ return b.score - a.score; });
+  return hits.slice(0, 5);
+}
+
+function _arvRenderSimilar(r) {
+  var hits = _arvFindSimilar(r);
+  var highest = hits[0] ? hits[0].score : 0;
+  var danger = highest >= 80;
+
+  var h = '<div class="arv-dr-similar' + (danger ? ' arv-dr-similar--danger' : '') + '">'
+    + '<div class="arv-sim-head">'
+    + '<div class="arv-sim-badge' + (danger ? ' arv-sim-badge--danger' : '') + '">'
+    + '<iconify-icon icon="' + (danger ? 'solar:danger-triangle-bold' : 'solar:copy-linear') + '" style="font-size:13px"></iconify-icon>'
+    + (danger ? '%' + highest + ' KRİTİK EŞLEŞME' : 'BENZERLİK TARAMASI')
+    + '</div>'
+    + '<div class="arv-sim-title">' + (hits.length > 0 ? hits.length + ' benzeyen tarif bulundu' : 'Benzeyen tarif bulunamadı') + '</div>'
+    + '</div>';
+
+  if (danger) {
+    h += '<div class="arv-sim-danger-msg">'
+      + '<iconify-icon icon="solar:shield-warning-bold" style="font-size:15px"></iconify-icon>'
+      + '<span>Bu tarif <b>%' + highest + '</b> oranında zaten onaylı bir tarife benziyor. Mükerrer içerik olabilir — reddetmeyi değerlendirin.</span>'
+      + '</div>';
+  }
+
+  if (hits.length > 0) {
+    h += '<div class="arv-sim-list">';
+    for (var i = 0; i < hits.length; i++) {
+      var hit = hits[i];
+      var barColor = hit.score >= 80 ? '#EF4444' : hit.score >= 60 ? '#F59E0B' : '#10B981';
+      h += '<div class="arv-sim-row">'
+        + '<div class="arv-sim-img" style="background-image:url(' + (hit.recipe.cover || '') + ')"></div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div class="arv-sim-name">' + _arvEsc(hit.recipe.title) + '</div>'
+        + '<div class="arv-sim-user">' + _arvEsc(hit.recipe.userName || '—') + '</div>'
+        + '<div class="arv-sim-bar-wrap">'
+        + '<div class="arv-sim-bar"><div class="arv-sim-bar-fill" style="width:' + hit.score + '%;background:' + barColor + '"></div></div>'
+        + '<span class="arv-sim-pct" style="color:' + barColor + '">%' + hit.score + '</span>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+    }
+    h += '</div>';
+  }
+
+  h += '</div>';
+  return h;
 }
 
 /* ═══ P5 — AI Alerjen Paneli ═══ */
