@@ -256,13 +256,20 @@ function renderBizMenuItems() {
           ${hasDetail && product.allergens && product.allergens.length > 0 ? `<span style="font:var(--fw-medium) 9px/1 var(--font);padding:2px 6px;border-radius:var(--r-full);color:#EF4444;background:rgba(239,68,68,0.1)"><iconify-icon icon="solar:danger-triangle-linear" style="font-size:9px;vertical-align:-1px"></iconify-icon> ${product.allergens.length} alerjen</span>` : ''}
         </div>
       </div>
-      ${itemEditable ? `
+      ${itemEditable ? (_menuIsHome() ? `
+      <!-- Home mode: sadece stok toggle (var/yok), pen ikonu kaldırıldı -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px" onclick="event.stopPropagation()">
+        <div onclick="bizToggleMenuItem('${item.id}')" style="width:40px;height:22px;border-radius:11px;background:${item.status === 'active' ? '#22C55E' : '#EF4444'};position:relative;cursor:pointer;transition:background .2s;box-shadow:inset 0 1px 3px rgba(0,0,0,0.15)">
+          <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;${item.status === 'active' ? 'right:2px' : 'left:2px'};box-shadow:0 1px 3px rgba(0,0,0,.22)"></div>
+        </div>
+        <span style="font:var(--fw-semibold) 9.5px/1 var(--font);color:${item.status === 'active' ? '#22C55E' : '#EF4444'};letter-spacing:.3px;text-transform:uppercase">${item.status === 'active' ? 'Stok Var' : 'Tükendi'}</span>
+      </div>` : `
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px" onclick="event.stopPropagation()">
         <div onclick="bizToggleMenuItem('${item.id}')" style="width:36px;height:20px;border-radius:10px;background:${item.status === 'active' ? 'var(--primary)' : 'var(--glass-card-strong)'};position:relative;cursor:pointer">
           <div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${item.status === 'active' ? 'right:2px' : 'left:2px'}"></div>
         </div>
         <iconify-icon icon="solar:pen-linear" onclick="openProductCreationWizard('${item.id}')" style="font-size:16px;color:var(--text-muted);cursor:pointer"></iconify-icon>
-      </div>` : `
+      </div>`) : `
       <div style="display:flex;align-items:center">
         <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 8px;border-radius:var(--r-full);color:${item.status === 'active' ? '#22C55E' : '#EF4444'};background:${item.status === 'active' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}">${item.status === 'active' ? 'Aktif' : 'Pasif'}</span>
       </div>`}
