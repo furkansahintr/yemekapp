@@ -75,7 +75,94 @@ function _arvRender(c) {
 function _arvRefreshList() {
   var box = document.getElementById('arvListWrap');
   if (!box) return;
-  box.innerHTML = '<div class="arv-placeholder">Liste (P2-P3-P8-P9) yakında...</div>';
+
+  if (_arv.tab === 'approved') { box.innerHTML = _arvRenderApproved(); return; }
+  box.innerHTML = '<div class="arv-placeholder">Liste (P3-P8-P9) yakında...</div>';
+}
+
+/* ═══ P2 — Onaylanmış Tab ═══ */
+function _arvFilterList(status) {
+  var q = (_arv.search || '').toLowerCase().trim();
+  return ADMIN_RECIPES.filter(function(r) {
+    if (r.status !== status) return false;
+    if (!q) return true;
+    return (r.title || '').toLowerCase().indexOf(q) > -1
+      || (r.userName || '').toLowerCase().indexOf(q) > -1
+      || (r.category || '').toLowerCase().indexOf(q) > -1;
+  });
+}
+
+function _arvFmtDate(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' · ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+function _arvFmtNum(n) {
+  if (!n) return '0';
+  if (n >= 1000) return (n/1000).toFixed(1).replace('.0','') + 'K';
+  return String(n);
+}
+
+function _arvRenderApproved() {
+  var list = _arvFilterList('approved');
+  list.sort(function(a,b){ return (b.favoriteCount||0) - (a.favoriteCount||0); });
+
+  if (list.length === 0) {
+    return '<div class="arv-empty">'
+      + '<iconify-icon icon="solar:chef-hat-linear" style="font-size:42px;opacity:.3"></iconify-icon>'
+      + '<div>Onaylanmış tarif bulunamadı</div>'
+      + '</div>';
+  }
+
+  var h = '<div class="arv-info-bar">'
+    + '<iconify-icon icon="solar:chart-2-bold" style="font-size:14px;color:#22C55E"></iconify-icon>'
+    + '<span>Etkileşim verilerine göre sıralı · ' + list.length + ' tarif</span>'
+    + '</div>';
+
+  h += '<div class="arv-approved-grid">';
+  for (var i = 0; i < list.length; i++) {
+    h += _arvApprovedCard(list[i]);
+  }
+  h += '</div>';
+  return h;
+}
+
+function _arvApprovedCard(r) {
+  return '<div class="arv-a-card" onclick="_arvOpenDetail(\'' + r.id + '\')">'
+    + '<div class="arv-a-img" style="background-image:url(' + (r.cover || '') + ')"></div>'
+    + '<div class="arv-a-body">'
+    + '<div class="arv-a-title">' + _arvEsc(r.title || '') + '</div>'
+    + '<div class="arv-a-meta">'
+    + '<span><iconify-icon icon="solar:user-linear" style="font-size:11px"></iconify-icon>' + _arvEsc(r.userName || '—') + '</span>'
+    + '<span class="arv-dot">·</span>'
+    + '<span class="arv-cat-pill">' + _arvEsc(r.category || '—') + '</span>'
+    + '</div>'
+    + '<div class="arv-a-date"><iconify-icon icon="solar:calendar-linear" style="font-size:11px"></iconify-icon>' + _arvFmtDate(r.date) + '</div>'
+    + '<div class="arv-a-stats">'
+    + _arvStatCell('solar:heart-bold', '#EF4444', r.favoriteCount || 0)
+    + _arvStatCell('solar:bookmark-bold', '#3B82F6', r.saves || 0)
+    + _arvStatCell('solar:chat-round-dots-bold', '#F59E0B', r.comments || 0)
+    + _arvStatCell('solar:tag-linear', '#8B5CF6', r.tagCount || 0)
+    + '</div>'
+    + '<div class="arv-a-time">'
+    + '<iconify-icon icon="solar:clock-circle-linear" style="font-size:12px;color:var(--text-muted)"></iconify-icon>'
+    + '<span>Hazırlık <b>' + (r.prepTime || 0) + '</b> dk · Pişirme <b>' + (r.cookTime || 0) + '</b> dk</span>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+function _arvStatCell(icon, color, val) {
+  return '<div class="arv-stat-cell" title="' + val + '">'
+    + '<iconify-icon icon="' + icon + '" style="font-size:12px;color:' + color + '"></iconify-icon>'
+    + '<span>' + _arvFmtNum(val) + '</span>'
+    + '</div>';
+}
+
+function _arvOpenDetail(id) {
+  if (typeof _admToast === 'function') _admToast('Detay drawer P4 yakında... (' + id + ')', 'ok');
 }
 
 function _arvSetTab(tab) {
