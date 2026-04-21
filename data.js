@@ -698,6 +698,7 @@ const USER_PROFILE = {
   email: 'furkan.sahin@campusaxess.com',
   phone: '+905551234548',
   stats: { followers: 128, following: 87, posts: 12 },
+  socialLinks: { instagram: '', tiktok: '', twitter: '', youtube: '', website: '' },
   health: { height: 178, weight: 75, age: 26 },
   wallet: { balance: 350, currency: 'puan' },
   // User's own posts (3-column grid photos)

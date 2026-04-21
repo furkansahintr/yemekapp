@@ -436,7 +436,7 @@ function renderCommStories(){
   const container=document.getElementById('commStoriesContainer');
   if(!container||typeof STORIES==='undefined')return;
   container.innerHTML=`<div class="stories-scroll" style="padding:12px var(--app-px) 0">${STORIES.map((s,i)=>`
-    <div class="story-item" onclick="viewStory(${i})">
+    <div class="story-item" onclick="onStoryAvatarTap(${i})">
       <div class="story-ring${s.hasNew?' story-ring-new':''}${s.isOwn?' story-ring-own':''}">
         <img src="${s.avatar}" alt="${s.name}">
         ${s.isOwn?'<div class="story-add-btn"><iconify-icon icon="solar:add-circle-bold" style="font-size:18px;color:var(--primary)"></iconify-icon></div>':''}
@@ -444,6 +444,21 @@ function renderCommStories(){
       <span class="story-name">${s.name}</span>
     </div>
   `).join('')}</div>`;
+}
+
+/* Story avatar click router:
+   - Own avatar → her zaman kendi hikayesini göster (yoksa bile direkt "Hikaye Oluştur"a)
+   - Başkası → o kullanıcının profil sayfasına git
+*/
+function onStoryAvatarTap(idx){
+  if(typeof STORIES === 'undefined') return;
+  const s = STORIES[idx];
+  if(!s) return;
+  if(s.isOwn){
+    viewStory(idx);
+  } else {
+    if(typeof openProfOverlay === 'function') openProfOverlay(s);
+  }
 }
 
 function renderCommFeed(){

@@ -7,11 +7,14 @@
           <div class="btn-icon" onclick="closeProfOverlay()">
             <iconify-icon icon="solar:arrow-left-outline" style="font-size:20px"></iconify-icon>
           </div>
-          <span class="prof-topbar-name">furkan</span>
+          <span class="prof-topbar-name" id="profTopbarName">furkan</span>
           <div class="prof-topbar-actions">
-            <div class="btn-icon" onclick="openNotifications()" style="position:relative">
+            <div class="btn-icon" onclick="openNotifications()" style="position:relative" id="profBellBtn">
               <iconify-icon icon="solar:bell-linear" style="font-size:22px"></iconify-icon>
               <span class="comm-notif-dot"></span>
+            </div>
+            <div class="btn-icon" onclick="openProfSocialMenu()" id="profSocialBtn" title="Sosyal Medya">
+              <iconify-icon icon="solar:menu-dots-bold" style="font-size:22px"></iconify-icon>
             </div>
             <div class="btn-icon" onclick="openCommMenu()">
               <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:22px"></iconify-icon>
@@ -22,19 +25,19 @@
         <!-- Profile Header -->
         <div class="prof-header">
           <div class="prof-avatar-area">
-            <img class="prof-avatar" src="https://i.pravatar.cc/200?img=11" alt="Furkan">
+            <img class="prof-avatar" src="https://i.pravatar.cc/200?img=11" alt="Furkan" id="profAvatarImg">
           </div>
           <div class="prof-stats">
-            <div class="prof-stat">
-              <span class="prof-stat-num">12</span>
+            <div class="prof-stat" onclick="openProfStatList('posts')" style="cursor:pointer">
+              <span class="prof-stat-num" id="profStatPosts">12</span>
               <span class="prof-stat-label">Paylaşım</span>
             </div>
-            <div class="prof-stat">
-              <span class="prof-stat-num">128</span>
+            <div class="prof-stat" onclick="openProfStatList('followers')" style="cursor:pointer">
+              <span class="prof-stat-num" id="profStatFollowers">128</span>
               <span class="prof-stat-label">Takipçi</span>
             </div>
-            <div class="prof-stat">
-              <span class="prof-stat-num">87</span>
+            <div class="prof-stat" onclick="openProfStatList('following')" style="cursor:pointer">
+              <span class="prof-stat-num" id="profStatFollowing">87</span>
               <span class="prof-stat-label">Takip</span>
             </div>
           </div>
@@ -43,12 +46,18 @@
           <div class="prof-name">Furkan</div>
           <div class="prof-bio">Yemek yapmayı ve yeni tarifler keşfetmeyi seviyorum!</div>
         </div>
-        <div class="prof-action-row">
-          <button class="prof-edit-btn" onclick="openProfileEdit()">
+        <div class="prof-action-row" id="profActionRow">
+          <button class="prof-edit-btn" onclick="openProfileEdit()" id="profEditBtn">
             <iconify-icon icon="solar:pen-2-linear" style="font-size:14px"></iconify-icon> Profili Düzenle
           </button>
-          <button class="prof-share-btn">
+          <button class="prof-share-btn" onclick="shareProfile()" id="profShareBtn">
             <iconify-icon icon="solar:share-linear" style="font-size:14px"></iconify-icon> Paylaş
+          </button>
+          <button class="prof-edit-btn" onclick="toggleFollow()" id="profFollowBtn" style="display:none">
+            <iconify-icon icon="solar:user-plus-bold" style="font-size:14px"></iconify-icon> Takip Et
+          </button>
+          <button class="prof-share-btn" onclick="messageUser()" id="profMessageBtn" style="display:none">
+            <iconify-icon icon="solar:chat-round-linear" style="font-size:14px"></iconify-icon> Mesaj
           </button>
         </div>
 

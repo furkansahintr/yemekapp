@@ -185,10 +185,219 @@ function removeFavorite(idx, type) {
   renderFavoritesPageContent();
 }
 
-function openProfOverlay() {
+/* Şu an görüntülenen profil (null → kendi profili) */
+var _profViewedUser = null;
+
+function openProfOverlay(user) {
+  _profViewedUser = user || null;
   const el = document.getElementById('profOverlay');
   if (el) { el.classList.add('open'); el.style.display = 'flex'; }
   initProfile();
+  _profApplyViewedUser();
+}
+
+/* Kimin profili gösteriliyorsa o kullanıcıya göre topbar/avatar/buton durumlarını ayarla */
+function _profApplyViewedUser() {
+  var isOwn = !_profViewedUser;
+  var u = _profViewedUser;
+  var nameEl = document.getElementById('profTopbarName');
+  var avatarEl = document.getElementById('profAvatarImg');
+  var editBtn = document.getElementById('profEditBtn');
+  var shareBtn = document.getElementById('profShareBtn');
+  var followBtn = document.getElementById('profFollowBtn');
+  var msgBtn = document.getElementById('profMessageBtn');
+  var socialBtn = document.getElementById('profSocialBtn');
+  var bellBtn = document.getElementById('profBellBtn');
+
+  if (isOwn) {
+    if (nameEl) nameEl.textContent = (USER_PROFILE.username || '@furkan').replace(/^@/, '');
+    if (avatarEl) avatarEl.src = USER_PROFILE.avatar;
+    if (editBtn) editBtn.style.display = '';
+    if (shareBtn) shareBtn.style.display = '';
+    if (followBtn) followBtn.style.display = 'none';
+    if (msgBtn) msgBtn.style.display = 'none';
+    if (bellBtn) bellBtn.style.display = '';
+  } else {
+    if (nameEl) nameEl.textContent = (u.username || u.name || 'kullanıcı').toLowerCase().replace(/\s+/g, '').replace(/^@/, '');
+    if (avatarEl && u.avatar) avatarEl.src = u.avatar;
+    if (editBtn) editBtn.style.display = 'none';
+    if (shareBtn) shareBtn.style.display = 'none';
+    if (followBtn) { followBtn.style.display = ''; followBtn.dataset.following = u.following ? '1' : '0'; _profRefreshFollowBtn(); }
+    if (msgBtn) msgBtn.style.display = '';
+    if (bellBtn) bellBtn.style.display = 'none';
+  }
+  if (socialBtn) socialBtn.style.display = ''; // her iki durumda görünür
+}
+
+function _profRefreshFollowBtn() {
+  var b = document.getElementById('profFollowBtn');
+  if (!b) return;
+  var on = b.dataset.following === '1';
+  b.innerHTML = on
+    ? '<iconify-icon icon="solar:check-circle-bold" style="font-size:14px"></iconify-icon> Takiptesin'
+    : '<iconify-icon icon="solar:user-plus-bold" style="font-size:14px"></iconify-icon> Takip Et';
+}
+
+function toggleFollow() {
+  var b = document.getElementById('profFollowBtn');
+  if (!b) return;
+  b.dataset.following = b.dataset.following === '1' ? '0' : '1';
+  _profRefreshFollowBtn();
+  if (typeof showToast === 'function') showToast(b.dataset.following === '1' ? 'Takip ediliyor' : 'Takipten çıkıldı');
+}
+
+function messageUser() {
+  if (typeof showToast === 'function') showToast('Mesajlaşma — yakında');
+  else alert('Mesajlaşma — yakında');
+}
+
+function shareProfile() {
+  var u = _profViewedUser ? (_profViewedUser.username || _profViewedUser.name || 'user') : (USER_PROFILE.username || 'furkan');
+  var handle = String(u).replace(/^@/, '').toLowerCase().replace(/\s+/g, '');
+  var link = 'yemekapp.com/@' + handle;
+  if (navigator.clipboard) navigator.clipboard.writeText(link);
+  if (typeof showToast === 'function') showToast('Profil linki kopyalandı: ' + link);
+  else alert('Profil linki kopyalandı: ' + link);
+}
+
+/* ── 3-nokta sosyal medya menüsü ── */
+function openProfSocialMenu() {
+  var isOwn = !_profViewedUser;
+  var links = isOwn ? (USER_PROFILE.socialLinks || {}) : (_profViewedUser.socialLinks || {});
+  var items = [
+    { key:'instagram', label:'Instagram',  icon:'mdi:instagram',       color:'#E1306C' },
+    { key:'tiktok',    label:'TikTok',     icon:'ic:baseline-tiktok',  color:'#000' },
+    { key:'twitter',   label:'X / Twitter',icon:'mdi:twitter',         color:'#1DA1F2' },
+    { key:'youtube',   label:'YouTube',    icon:'mdi:youtube',         color:'#FF0000' },
+    { key:'website',   label:'Web Site',   icon:'solar:global-linear', color:'#6B7280' }
+  ];
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'profSocialModal';
+  m.style.cssText = 'position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding:0;opacity:0;transition:opacity .2s';
+  m.onclick = function(e){ if (e.target === m) _profCloseSocialMenu(); };
+  var rows = items.map(function(it){
+    var val = links[it.key] || '';
+    var has = !!val.trim();
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-subtle)">'
+      + '<div style="width:36px;height:36px;border-radius:50%;background:' + it.color + '14;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      +   '<iconify-icon icon="' + it.icon + '" style="font-size:18px;color:' + it.color + '"></iconify-icon>'
+      + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + it.label + '</div>'
+      +   (has
+          ? '<div style="font:var(--fw-regular) 11.5px/1.3 var(--font);color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + val + '</div>'
+          : '<div style="font:var(--fw-regular) 11.5px/1.3 var(--font);color:var(--text-tertiary);margin-top:2px">' + (isOwn ? 'Eklemek için dokun' : 'Paylaşılmamış') + '</div>')
+      + '</div>'
+      + (isOwn
+          ? '<button onclick="_profEditSocial(\'' + it.key + '\')" style="padding:6px 10px;border:1px solid var(--border-subtle);background:var(--bg-phone);color:var(--primary);border-radius:var(--r-full);font:var(--fw-bold) 11px/1 var(--font);cursor:pointer">' + (has ? 'Düzenle' : 'Ekle') + '</button>'
+          : (has ? '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)" onclick="window.open(\'' + (val.startsWith('http') ? val : 'https://' + val) + '\')"></iconify-icon>' : ''))
+      + '</div>';
+  }).join('');
+  m.innerHTML = '<div style="width:100%;max-width:440px;background:var(--bg-page);border-radius:var(--r-xl) var(--r-xl) 0 0;overflow:hidden;transform:translateY(16px);transition:transform .28s ease" id="profSocialBox">'
+    + '<div style="padding:14px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:10px">'
+    +   '<iconify-icon icon="solar:link-bold" style="font-size:18px;color:var(--primary)"></iconify-icon>'
+    +   '<div style="flex:1"><div style="font:var(--fw-bold) var(--fs-md)/1 var(--font);color:var(--text-primary)">Sosyal Medya</div>'
+    +   '<div style="font:var(--fw-regular) 11px/1.3 var(--font);color:var(--text-muted);margin-top:3px">' + (isOwn ? 'Linklerini ekle, topluluğa göster' : 'Bu kullanıcının sosyal hesapları') + '</div></div>'
+    +   '<div class="btn-icon" onclick="_profCloseSocialMenu()" style="width:32px;height:32px"><iconify-icon icon="solar:close-circle-linear" style="font-size:18px"></iconify-icon></div>'
+    + '</div>'
+    + rows
+    + '</div>';
+  phone.appendChild(m);
+  requestAnimationFrame(function(){
+    m.style.opacity = '1';
+    var box = document.getElementById('profSocialBox');
+    if (box) box.style.transform = 'translateY(0)';
+  });
+}
+function _profCloseSocialMenu() {
+  var m = document.getElementById('profSocialModal');
+  if (!m) return;
+  m.style.opacity = '0';
+  setTimeout(function(){ if (m.parentNode) m.remove(); }, 220);
+}
+function _profEditSocial(key) {
+  var labels = { instagram:'Instagram', tiktok:'TikTok', twitter:'X / Twitter', youtube:'YouTube', website:'Web Site' };
+  if (!USER_PROFILE.socialLinks) USER_PROFILE.socialLinks = {};
+  var cur = USER_PROFILE.socialLinks[key] || '';
+  var val = prompt(labels[key] + ' linkini veya kullanıcı adını gir:', cur);
+  if (val == null) return;
+  USER_PROFILE.socialLinks[key] = val.trim();
+  _profCloseSocialMenu();
+  openProfSocialMenu();
+}
+
+/* ── Paylaşım/Takipçi/Takip liste sayfası (arama'lı) ── */
+function openProfStatList(kind) {
+  if (kind === 'posts') {
+    // Posts → direkt ilgili tab'a git
+    if (typeof setProfTab === 'function') setProfTab('posts');
+    return;
+  }
+  var phone = document.getElementById('phone');
+  var m = document.createElement('div');
+  m.id = 'profStatListOverlay';
+  m.style.cssText = 'position:fixed;inset:0;z-index:92;background:var(--bg-phone);display:flex;flex-direction:column;overflow:hidden';
+
+  // Demo kullanıcı listesi
+  var fakeUsers = (typeof USER_FRIENDS !== 'undefined' && USER_FRIENDS.length) ? USER_FRIENDS : (typeof STORIES !== 'undefined' ? STORIES.filter(function(s){ return !s.isOwn; }) : []);
+  var isFollowers = kind === 'followers';
+  var title = isFollowers ? 'Takipçiler' : 'Takip Ediliyor';
+  var count = (USER_PROFILE.stats && (isFollowers ? USER_PROFILE.stats.followers : USER_PROFILE.stats.following)) || fakeUsers.length;
+
+  function rows(filter) {
+    var list = fakeUsers;
+    if (filter) list = list.filter(function(u){ return (u.name || u.username || '').toLowerCase().indexOf(filter.toLowerCase()) > -1; });
+    if (!list.length) return '<div style="padding:40px 16px;text-align:center;color:var(--text-muted);font:var(--fw-regular) 12px/1.4 var(--font)">Eşleşme yok</div>';
+    return list.map(function(u){
+      var handle = (u.username || u.name || '').toLowerCase().replace(/^@/, '').replace(/\s+/g, '');
+      return '<div onclick="closeProfStatList();openProfOverlay({name:\'' + (u.name || handle) + '\', username:\'@' + handle + '\', avatar:\'' + u.avatar + '\'})" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-subtle);cursor:pointer">'
+        + '<img src="' + u.avatar + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover">'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + (u.name || handle) + '</div>'
+        +   '<div style="font:var(--fw-regular) 11.5px/1.3 var(--font);color:var(--text-muted);margin-top:2px">@' + handle + '</div>'
+        + '</div>'
+        + '<button onclick="event.stopPropagation();_profToggleFollowRow(this)" data-on="' + (isFollowers ? '0' : '1') + '" style="padding:6px 12px;border:1px solid var(--border-subtle);background:' + (isFollowers ? 'var(--primary)' : 'var(--bg-phone)') + ';color:' + (isFollowers ? '#fff' : 'var(--text-primary)') + ';border-radius:var(--r-full);font:var(--fw-bold) 11px/1 var(--font);cursor:pointer">' + (isFollowers ? 'Takip Et' : 'Takipten Çık') + '</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  m.innerHTML = '<div style="padding:max(env(safe-area-inset-top),16px) var(--app-px) 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-subtle)">'
+    + '<div class="btn-icon" onclick="closeProfStatList()"><iconify-icon icon="solar:arrow-left-linear" style="font-size:20px"></iconify-icon></div>'
+    + '<div style="flex:1"><div style="font:var(--fw-bold) var(--fs-md)/1.2 var(--font);color:var(--text-primary)">' + title + '</div>'
+    + '<div style="font:var(--fw-regular) 11px/1 var(--font);color:var(--text-muted);margin-top:3px">' + count + ' kişi</div></div>'
+    + '</div>'
+    + '<div style="padding:10px var(--app-px);border-bottom:1px solid var(--border-subtle)">'
+    +   '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-btn);border-radius:var(--r-full)">'
+    +     '<iconify-icon icon="solar:magnifer-linear" style="font-size:15px;color:var(--text-muted)"></iconify-icon>'
+    +     '<input type="text" placeholder="Ara..." oninput="_profStatListFilter(this.value)" style="flex:1;border:none;background:transparent;outline:none;font:var(--fw-medium) 13px/1 var(--font);color:var(--text-primary)">'
+    +   '</div>'
+    + '</div>'
+    + '<div style="flex:1;overflow-y:auto" id="profStatListBody">' + rows('') + '</div>';
+  phone.appendChild(m);
+  window._profStatRowsFn = rows;
+}
+function closeProfStatList() {
+  var m = document.getElementById('profStatListOverlay');
+  if (m) m.remove();
+  window._profStatRowsFn = null;
+}
+function _profStatListFilter(v) {
+  var body = document.getElementById('profStatListBody');
+  if (body && window._profStatRowsFn) body.innerHTML = window._profStatRowsFn(v || '');
+}
+function _profToggleFollowRow(btn) {
+  var on = btn.dataset.on === '1';
+  btn.dataset.on = on ? '0' : '1';
+  if (on) {
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
+    btn.textContent = 'Takip Et';
+  } else {
+    btn.style.background = 'var(--bg-phone)';
+    btn.style.color = 'var(--text-primary)';
+    btn.textContent = 'Takipten Çık';
+  }
 }
 
 function closeProfOverlay() {

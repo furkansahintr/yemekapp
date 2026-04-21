@@ -8,7 +8,12 @@ function renderStories(){
 }
 
 function viewStory(idx){
-  if(STORIES[idx].isOwn && !STORIES[idx].hasNew) return;
+  // Own story tap: hasNew yoksa direkt "Hikaye Oluştur" ekranına
+  if(STORIES[idx].isOwn && !STORIES[idx].hasNew){
+    if(typeof openNewStoryPage === 'function') openNewStoryPage();
+    else if(typeof openNewPost === 'function') openNewPost();
+    return;
+  }
   storyViewerIdx = idx;
   const s = STORIES[idx];
   document.getElementById('storyViewerAvatar').src = s.avatar;
@@ -38,6 +43,14 @@ function viewStory(idx){
 
 function nextStory(){
   clearTimeout(storyTimer);
+  // Eğer kullanıcı kendi hikayesini izliyorsa ve sonuna geldi → "Hikaye Oluştur"
+  if(STORIES[storyViewerIdx] && STORIES[storyViewerIdx].isOwn){
+    closeStoryViewer();
+    if(typeof openNewStoryPage === 'function') openNewStoryPage();
+    else if(typeof openNewPost === 'function') openNewPost();
+    else if(typeof showToast === 'function') showToast('Hikaye oluştur — yakında');
+    return;
+  }
   let next = storyViewerIdx + 1;
   while(next < STORIES.length && STORIES[next].isOwn && !STORIES[next].hasNew) next++;
   if(next >= STORIES.length){

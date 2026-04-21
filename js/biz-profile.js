@@ -95,14 +95,14 @@ function openBizProfOverlay() {
       </div>
 
       <div class="prof-tabs">
-        <div class="prof-tab active" data-biztab="posts" onclick="setBizProfTab('posts')">
-          <iconify-icon icon="solar:posts-carousel-horizontal-bold" style="font-size:22px"></iconify-icon>
-        </div>
-        <div class="prof-tab" data-biztab="menu" onclick="setBizProfTab('menu')">
+        <div class="prof-tab active" data-biztab="menu" onclick="setBizProfTab('menu')" title="Menü">
           <iconify-icon icon="solar:notebook-bold" style="font-size:22px"></iconify-icon>
         </div>
-        <div class="prof-tab" data-biztab="liked" onclick="setBizProfTab('liked')">
-          <iconify-icon icon="solar:heart-bold" style="font-size:22px"></iconify-icon>
+        <div class="prof-tab" data-biztab="posts" onclick="setBizProfTab('posts')" title="Gönderiler">
+          <iconify-icon icon="solar:posts-carousel-horizontal-bold" style="font-size:22px"></iconify-icon>
+        </div>
+        <div class="prof-tab" data-biztab="videos" onclick="setBizProfTab('videos')" title="Videolar">
+          <iconify-icon icon="solar:play-circle-bold" style="font-size:22px"></iconify-icon>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ function openBizProfOverlay() {
   overlay.style.zIndex = '70';
   overlay.innerHTML = overlayHtml;
   document.getElementById('bizPhone').appendChild(overlay);
-  setBizProfTab('posts');
+  setBizProfTab('menu');
 }
 
 function closeBizProfOverlay() {
@@ -145,8 +145,9 @@ function setBizProfTab(tab) {
   });
   const c = document.getElementById('bizProfTabContent');
   if (!c) return;
-  if (tab === 'posts') c.innerHTML = _renderBizProfPosts();
-  else if (tab === 'menu') c.innerHTML = _renderBizProfMenu();
+  if (tab === 'menu') c.innerHTML = _renderBizProfMenu();
+  else if (tab === 'posts') c.innerHTML = _renderBizProfPosts();
+  else if (tab === 'videos') c.innerHTML = _renderBizProfVideos();
   else if (tab === 'liked') c.innerHTML = _renderBizProfLiked();
 }
 
@@ -169,9 +170,11 @@ function _renderBizProfPosts() {
 }
 
 function _renderBizProfMenu() {
-  const items = (typeof BIZ_MENU_ITEMS !== 'undefined') ? BIZ_MENU_ITEMS : [];
+  // Sadece aktif (status === 'active') olanları göster
+  var allItems = (typeof BIZ_MENU_ITEMS !== 'undefined') ? BIZ_MENU_ITEMS : [];
+  var items = allItems.filter(function(m){ return !m.status || m.status === 'active'; });
   if (!items.length) {
-    return `<div style="text-align:center;padding:40px 0;color:var(--text-muted)"><iconify-icon icon="solar:notebook-linear" style="font-size:40px"></iconify-icon><div style="margin-top:8px">Menü boş</div></div>`;
+    return `<div style="text-align:center;padding:40px 0;color:var(--text-muted)"><iconify-icon icon="solar:notebook-linear" style="font-size:40px"></iconify-icon><div style="margin-top:8px">Aktif menü kalemi yok</div></div>`;
   }
   return `<div style="display:flex;flex-direction:column;gap:10px">
     ${items.slice(0, 20).map(m => `
@@ -182,6 +185,24 @@ function _renderBizProfMenu() {
           ${m.description ? `<div style="font:var(--fw-regular) 11px/1.3 var(--font);color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical">${escHtml(m.description)}</div>` : ''}
         </div>
         <div style="font:var(--fw-bold) var(--fs-sm)/1 var(--font);color:var(--primary)">₺${m.price || 0}</div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function _renderBizProfVideos() {
+  // Video post'ları (varsa type==='video', yoksa video thumbnail'i olan post'lar)
+  var feed = (typeof COMMUNITY_FEED !== 'undefined') ? COMMUNITY_FEED : [];
+  var videos = feed.filter(function(p){ return p.type === 'video' || p.isVideo; }).slice(0, 9);
+  if (!videos.length) {
+    return `<div style="text-align:center;padding:40px 0;color:var(--text-muted)"><iconify-icon icon="solar:play-circle-linear" style="font-size:40px"></iconify-icon><div style="margin-top:8px">Henüz video paylaşımı yok</div><div style="font:var(--fw-regular) 11px/1.4 var(--font);margin-top:4px;max-width:260px;margin-left:auto;margin-right:auto">İlk videonuzu paylaşarak müşterilere mutfağınızı tanıtın</div></div>`;
+  }
+  return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px">
+    ${videos.map(p => `
+      <div style="aspect-ratio:1;position:relative;background:#000;overflow:hidden;border-radius:2px;cursor:pointer">
+        ${p.img ? `<img src="${p.img}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.85" loading="lazy">` : ''}
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none"><iconify-icon icon="solar:play-bold" style="font-size:32px;color:#fff;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))"></iconify-icon></div>
+        ${p.duration ? `<div style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.65);color:#fff;font:var(--fw-bold) 9.5px/1 var(--font);padding:3px 6px;border-radius:var(--r-sm)">${p.duration}</div>` : ''}
       </div>
     `).join('')}
   </div>`;
