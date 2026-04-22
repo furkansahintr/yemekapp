@@ -1073,6 +1073,7 @@ function _qrRejectJoin(id) {
 function _qrRenderQuickTabs() {
   var el = document.getElementById('qrQuickTabs');
   if (!el || !_activeTableSession) return;
+  _qrInjectQuickStyles();
   var extra = _QR_BIZ_EXTRA[_activeTableSession.businessId] || {};
   var storiesCount = (extra.stories || []).length;
   var freshStories = (extra.stories || []).filter(function(x){ return x.isNew; }).length;
