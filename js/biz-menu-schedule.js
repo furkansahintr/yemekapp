@@ -85,6 +85,29 @@ function _bmsFmtDate(iso) {
   return d.toLocaleDateString('tr-TR', { day:'numeric', month:'short' });
 }
 
+/* Wizard içinde gösterilen özet kart — "Satış Zamanlaması" */
+function bmsSummaryCardHtml(schedule, openHandler) {
+  var s = schedule || _bmsDefaultSchedule();
+  var enabled = !!s.enabled;
+  var summary = enabled ? _bmsSummary({ schedule: s }) : 'Her zaman satışta';
+  var icon = !enabled ? 'solar:clock-circle-linear'
+    : s.type === 'daily' ? 'solar:clock-circle-bold'
+    : s.type === 'weekly' ? 'solar:calendar-mark-bold'
+    : s.type === 'monthDays' ? 'solar:calendar-bold'
+    : 'solar:calendar-date-bold';
+  var color = enabled ? 'var(--primary)' : 'var(--text-muted)';
+  return '<div style="padding:14px;border:1.5px dashed ' + (enabled ? 'var(--primary)' : 'var(--border-subtle)') + ';border-radius:var(--r-xl);background:' + (enabled ? 'var(--primary-soft)' : 'var(--bg-phone)') + ';display:flex;align-items:center;gap:12px;cursor:pointer" onclick="' + openHandler + '">'
+    + '<div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:' + (enabled ? 'var(--primary)' : 'var(--glass-card)') + '">'
+    +   '<iconify-icon icon="' + icon + '" style="font-size:18px;color:' + (enabled ? '#fff' : 'var(--text-muted)') + '"></iconify-icon>'
+    + '</div>'
+    + '<div style="flex:1;min-width:0">'
+    +   '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">Satış Zamanlaması</div>'
+    +   '<div style="font:var(--fw-regular) 11.5px/1.3 var(--font);color:' + color + ';margin-top:3px">' + summary + '</div>'
+    + '</div>'
+    + '<iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-muted)"></iconify-icon>'
+    + '</div>';
+}
+
 /* Küçük saat/takvim badge — liste kartında */
 function bmsBadgeHtml(item) {
   var s = item.schedule;
@@ -114,8 +137,22 @@ function openBmSchedule(itemId, kind) {
 }
 
 function _bmsFindTarget() {
+  if (_bms.targetType === 'draft') {
+    var label = (_bms.draftMeta && _bms.draftMeta.label) || 'Yeni Ürün';
+    return { name: label, schedule: _bms.draft };
+  }
   if (_bms.targetType === 'combo') return BIZ_COMBO_PRODUCTS.find(function(c){ return c.id === _bms.targetId; });
   return BIZ_MENU_ITEMS.find(function(m){ return m.id === _bms.targetId; });
+}
+
+/* Wizard / draft mode — henüz kaydedilmemiş ürünler için */
+function openBmScheduleDraft(getSchedule, setSchedule, label) {
+  _bms.targetId = null;
+  _bms.targetType = 'draft';
+  _bms.draftMeta = { getSchedule: getSchedule, setSchedule: setSchedule, label: label };
+  _bms.draft = JSON.parse(JSON.stringify((getSchedule && getSchedule()) || _bmsDefaultSchedule()));
+  _bmsInjectStyles();
+  _bmsRender();
 }
 
 function _bmsRender() {
@@ -180,11 +217,11 @@ function _bmsTypeFields(d) {
       + '<div class="bms-field"><label>Kapanış</label><input type="time" class="bms-input" value="' + (d.dailyHours.end || '22:00') + '" onchange="_bms.draft.dailyHours.end=this.value"></div>';
   }
   if (d.type === 'weekly') {
-    var names = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+    var names = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
     return '<div class="bms-days-grid">' + names.map(function(n, i){
       var day = i + 1;
       var on = (d.weekdays || []).indexOf(day) > -1;
-      return '<div class="bms-day' + (on ? ' active' : '') + '" onclick="_bmsToggleDay(' + day + ')">' + n.slice(0,3) + '</div>';
+      return '<div class="bms-day' + (on ? ' active' : '') + '" onclick="_bmsToggleDay(' + day + ')">' + n + '</div>';
     }).join('') + '</div>';
   }
   if (d.type === 'monthDays') {
@@ -223,6 +260,14 @@ function _bmsToggleMonthDay(day) {
 }
 
 function _bmsSave() {
+  if (_bms.targetType === 'draft') {
+    if (_bms.draftMeta && typeof _bms.draftMeta.setSchedule === 'function') {
+      _bms.draftMeta.setSchedule(JSON.parse(JSON.stringify(_bms.draft)));
+    }
+    if (typeof _admToast === 'function') _admToast('Zamanlama hazır · kaydedildiğinde uygulanır', 'ok');
+    closeBmSchedule();
+    return;
+  }
   var target = _bmsFindTarget();
   if (!target) return;
   target.schedule = JSON.parse(JSON.stringify(_bms.draft));
