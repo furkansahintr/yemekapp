@@ -282,6 +282,14 @@ function openBizBranchDetail(branchId) {
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizSelfService('${branch.id}')">
+            <iconify-icon icon="solar:qr-code-bold" style="font-size:20px;color:#0EA5E9"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary)">Self-Servis</div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(function(){ if (typeof bizSelfServiceSummary !== 'function') return 'Statik QR + performans raporu'; const s = bizSelfServiceSummary(branch.id, 'day'); return s.scans + ' okunma · ' + s.orders + ' sipariş · bugün'; })()}</div>
+            </div>
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
           <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizReservationSettings('${branch.id}')">
             <iconify-icon icon="solar:calendar-mark-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
             <div style="flex:1">
