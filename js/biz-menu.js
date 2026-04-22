@@ -269,7 +269,10 @@ function renderBizMenuItems() {
         <div onclick="bizToggleMenuItem('${item.id}')" style="width:36px;height:20px;border-radius:10px;background:${item.status === 'active' ? 'var(--primary)' : 'var(--glass-card-strong)'};position:relative;cursor:pointer">
           <div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${item.status === 'active' ? 'right:2px' : 'left:2px'}"></div>
         </div>
-        <iconify-icon icon="solar:pen-linear" onclick="openProductCreationWizard('${item.id}')" style="font-size:16px;color:var(--text-muted);cursor:pointer"></iconify-icon>
+        <div style="display:flex;align-items:center;gap:8px">
+          <iconify-icon icon="solar:clock-circle-linear" onclick="openBmSchedule('${item.id}','item')" style="font-size:16px;color:var(--text-muted);cursor:pointer" title="Satış Zamanlaması"></iconify-icon>
+          <iconify-icon icon="solar:pen-linear" onclick="openProductCreationWizard('${item.id}')" style="font-size:16px;color:var(--text-muted);cursor:pointer"></iconify-icon>
+        </div>
       </div>`) : `
       <div style="display:flex;align-items:center">
         <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);padding:4px 8px;border-radius:var(--r-full);color:${item.status === 'active' ? '#22C55E' : '#EF4444'};background:${item.status === 'active' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)'}">${item.status === 'active' ? 'Aktif' : 'Pasif'}</span>
@@ -426,7 +429,11 @@ function openProductCreationWizard(editMenuItemId) {
     aiAnalysis: existingProduct ? { ...existingProduct.aiAnalysis } : null,
     // Step 4: Yayınlama
     publishType: 'now', // 'now' | 'scheduled'
-    publishDate: existingProduct ? existingProduct.publishDate : null
+    publishDate: existingProduct ? existingProduct.publishDate : null,
+    // Gelişmiş Görünürlük Zamanlaması (günlük saat / haftalık / aylık / tarih aralığı)
+    schedule: existingMenuItem && existingMenuItem.schedule
+      ? JSON.parse(JSON.stringify(existingMenuItem.schedule))
+      : (typeof _bmsDefaultSchedule === 'function' ? _bmsDefaultSchedule() : { enabled: false })
   };
 
   _renderWizard();
@@ -1294,8 +1301,31 @@ function _renderStep4() {
           <input id="wiz_pubTime" type="time" value="${_wizardState.publishDate ? _wizardState.publishDate.split('T')[1] || '12:00' : '12:00'}" style="width:100%;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
         </div>
       </div>` : ''}
+
+      <!-- Gelişmiş Görünürlük Zamanlaması (Satış Zamanlaması) -->
+      <div style="margin-top:4px">
+        <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block;margin-bottom:8px">Satış Zamanlaması <span style="font:var(--fw-regular) 10px/1 var(--font);color:var(--text-muted);margin-left:4px">(isteğe bağlı)</span></label>
+        ${typeof bmsSummaryCardHtml === 'function' ? bmsSummaryCardHtml(_wizardState.schedule, 'wizOpenScheduleEditor()') : ''}
+        <div style="display:flex;align-items:flex-start;gap:6px;margin-top:8px;padding:8px 10px;background:var(--glass-card);border-radius:var(--r-md)">
+          <iconify-icon icon="solar:info-circle-bold" style="font-size:13px;color:var(--text-muted);flex-shrink:0;margin-top:1px"></iconify-icon>
+          <span style="font:var(--fw-regular) 10.5px/1.4 var(--font);color:var(--text-muted)">Zamanlama aktifse, ürün kullanıcıya yalnızca belirlediğin saat / gün / tarih aralığında görünür.</span>
+        </div>
+      </div>
     </div>
   `;
+}
+
+function wizOpenScheduleEditor() {
+  if (typeof openBmScheduleDraft !== 'function') return;
+  openBmScheduleDraft(
+    function() { return _wizardState.schedule; },
+    function(s) {
+      _wizardState.schedule = s;
+      const body = document.getElementById('wizardBody');
+      if (body) body.innerHTML = _renderStep4();
+    },
+    _wizardState.name || 'Ürün'
+  );
 }
 
 function wizSetPublishType(type) {
@@ -1332,6 +1362,7 @@ function _saveProduct() {
       mi.category = _wizardState.category;
       mi.kitchenCategory = _wizardState.kitchenCategory;
       mi.status = status;
+      if (_wizardState.schedule) mi.schedule = JSON.parse(JSON.stringify(_wizardState.schedule));
     }
     // Update or create product record
     let prod = BIZ_PRODUCTS.find(p => p.menuItemId === _wizardState.editMenuItemId);
@@ -1366,7 +1397,8 @@ function _saveProduct() {
       category: _wizardState.category,
       kitchenCategory: _wizardState.kitchenCategory,
       status: status,
-      branchId: bizActiveBranch
+      branchId: bizActiveBranch,
+      schedule: _wizardState.schedule ? JSON.parse(JSON.stringify(_wizardState.schedule)) : undefined
     });
     // Create product record
     BIZ_PRODUCTS.push(_buildProductObject(newMenuId, status, publishDate, now));
@@ -1442,7 +1474,10 @@ function openComboCreationWizard(editComboId) {
     publishType: 'now',
     publishDate: existingCombo ? existingCombo.publishDate : null,
     aiAnalysis: existingCombo ? { ...existingCombo.aiAnalysis } : null,
-    allergens: existingCombo ? [...(existingCombo.allergens || [])] : []
+    allergens: existingCombo ? [...(existingCombo.allergens || [])] : [],
+    schedule: existingCombo && existingCombo.schedule
+      ? JSON.parse(JSON.stringify(existingCombo.schedule))
+      : (typeof _bmsDefaultSchedule === 'function' ? _bmsDefaultSchedule() : { enabled: false })
   };
 
   _renderComboWizard();
@@ -2002,8 +2037,31 @@ function _renderComboStep3() {
           <input id="combo_pubTime" type="time" value="12:00" style="width:100%;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);font:var(--fw-regular) var(--fs-sm)/1 var(--font);color:var(--text-primary);background:var(--bg-phone);outline:none;box-sizing:border-box">
         </div>
       </div>` : ''}
+
+      <!-- Gelişmiş Görünürlük Zamanlaması (Satış Zamanlaması) -->
+      <div style="margin-top:4px">
+        <label style="font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary);display:block;margin-bottom:8px">Satış Zamanlaması <span style="font:var(--fw-regular) 10px/1 var(--font);color:var(--text-muted);margin-left:4px">(isteğe bağlı)</span></label>
+        ${typeof bmsSummaryCardHtml === 'function' ? bmsSummaryCardHtml(_comboState.schedule, 'comboOpenScheduleEditor()') : ''}
+        <div style="display:flex;align-items:flex-start;gap:6px;margin-top:8px;padding:8px 10px;background:var(--glass-card);border-radius:var(--r-md)">
+          <iconify-icon icon="solar:info-circle-bold" style="font-size:13px;color:var(--text-muted);flex-shrink:0;margin-top:1px"></iconify-icon>
+          <span style="font:var(--fw-regular) 10.5px/1.4 var(--font);color:var(--text-muted)">Paket; belirlenen saat / gün / tarih aralığında görünür. Zaman dışındayken menüden gizlenir.</span>
+        </div>
+      </div>
     </div>
   `;
+}
+
+function comboOpenScheduleEditor() {
+  if (typeof openBmScheduleDraft !== 'function') return;
+  openBmScheduleDraft(
+    function() { return _comboState.schedule; },
+    function(s) {
+      _comboState.schedule = s;
+      const body = document.getElementById('comboWizBody');
+      if (body) body.innerHTML = _renderComboStep3();
+    },
+    _comboState.name || 'Grup Ürün'
+  );
 }
 
 function comboSetPublishType(type) {
@@ -2048,6 +2106,7 @@ function _saveCombo() {
         image: _comboState.images[0] || null,
         allergens: _comboState.allergens,
         aiAnalysis: _comboState.aiAnalysis,
+        schedule: _comboState.schedule ? JSON.parse(JSON.stringify(_comboState.schedule)) : undefined,
         updatedAt: now
       });
     }
@@ -2069,6 +2128,7 @@ function _saveCombo() {
       image: _comboState.images[0] || null,
       allergens: _comboState.allergens,
       aiAnalysis: _comboState.aiAnalysis,
+      schedule: _comboState.schedule ? JSON.parse(JSON.stringify(_comboState.schedule)) : undefined,
       createdAt: now,
       updatedAt: now
     });

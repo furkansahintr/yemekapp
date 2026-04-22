@@ -154,6 +154,7 @@ function showDetail(i,source){
   }
 
   renderNutrition();
+  if (typeof renderRecipeNativeAd === 'function') renderRecipeNativeAd(item);
   document.getElementById('detailOverlay').classList.add('open');
   document.getElementById('detailOverlay').scrollTop=0;
 }
