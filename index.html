@@ -174,12 +174,11 @@
                                 font: var(--fw-bold) var(--fs-xl)/1.2
                                     var(--font);
                                 color: var(--text-primary);
-                                margin: 0 0 var(--app-px);
                             "
                         >
                             Teslimat Adresi
                         </div>
-                        <div class="g-input-wrap" style="margin-bottom:12px">
+                        <div class="g-input-wrap">
                             <iconify-icon
                                 icon="solar:magnifer-linear"
                                 style="font-size: 20px"
@@ -222,36 +221,20 @@
                                 </div>
                             </div>
                         </div>
-                        <div
-                            style="
-                                font: var(--fw-semibold) var(--fs-sm)/1
-                                    var(--font);
-                                color: var(--text-primary);
-                                padding: 12px 0 8px;
-                            "
-                        >
-                            Kayıtlı Adresler
-                        </div>
-                        <div
-                            id="locSavedList"
-                            class="loc-saved-list"
-                        ></div>
-                        <div
-                            class="loc-add-btn"
-                            onclick="closeLocationPicker()"
-                        >
-                            <iconify-icon
-                                icon="solar:add-circle-linear"
-                                style="font-size: 20px; color: var(--primary)"
-                            ></iconify-icon>
-                            <span
+                        <div class="loc-section">
+                            <div
                                 style="
-                                    font: var(--fw-medium) var(--fs-md)/1
+                                    font: var(--fw-semibold) var(--fs-sm)/1
                                         var(--font);
-                                    color: var(--primary);
+                                    color: var(--text-primary);
                                 "
-                                >Yeni Adres Ekle</span
                             >
+                                Kayıtlı Adresler
+                            </div>
+                            <div
+                                id="locSavedList"
+                                class="loc-saved-list"
+                            ></div>
                         </div>
                     </div>
                 </div>
