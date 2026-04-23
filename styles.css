@@ -76,8 +76,8 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 .g-input-wrap{display:flex;align-items:center;gap:12px;padding:14px 16px;background:transparent;border:1px solid var(--border-subtle);border-radius:var(--r-lg);min-height:68px;transition:border-color .15s,box-shadow .15s}
 .g-input-wrap:focus-within{border-color:var(--text-primary);box-shadow:0 0 0 1px var(--text-primary)}
 .g-input-wrap > iconify-icon{color:var(--text-primary);flex-shrink:0}
-.g-input-wrap .g-input-content{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
-.g-input-wrap label{font:var(--fw-semibold) 11px/1 var(--font);color:var(--text-muted);letter-spacing:.3px}
+.g-input-wrap .g-input-content{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.g-input-wrap label{font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)}
 .g-input-wrap input,.g-input-wrap textarea{width:100%;border:none;outline:none;background:transparent;font:var(--fw-regular) var(--fs-md)/1.2 var(--font);color:var(--text-primary);min-width:0;padding:0}
 .g-input-wrap input::placeholder,.g-input-wrap textarea::placeholder{color:var(--text-muted)}
 .plate{width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3D3535,#1A1616);box-shadow:0 2px 8px rgba(0,0,0,0.12);position:relative;overflow:hidden}
