@@ -25,7 +25,7 @@
   --glass-blur:blur(32px);
   --bg-surface:#FFFFFF;--bg-surface-alt:#FAFAFA;
   --primary:#F65013;--primary-deep:#D44410;--primary-light:#FEF0E8;--primary-soft:rgba(246,80,19,0.08);
-  --secondary:#6B7280;--tertiary:#F3F4F6;--bg-btn:rgb(243,244,246);
+  --secondary:#6B7280;--tertiary:#F3F4F6;--bg-btn:#F9FAFB;
   --text-primary:#18181B;--text-secondary:#52525B;--text-tertiary:#A1A1AA;--text-inverse:#FFFFFF;--text-muted:rgba(24,24,27,0.45);
   --border-subtle:rgba(3,7,18,0.08);--border-danger:rgba(225,29,72,0.08);
   --shadow-sm:0 3px 8px rgba(3,7,18,0.13);--shadow-md:0 5px 13px rgba(3,7,18,0.08);--shadow-lg:0 8px 21px rgba(3,7,18,0.05);
