@@ -42,7 +42,7 @@
   --glass-card:rgba(255,255,255,0.06);--glass-card-strong:rgba(255,255,255,0.09);--glass-card-tinted:rgba(246,80,19,0.08);
   --bg-surface:#0A0F1A;--bg-surface-alt:#111827;
   --primary-deep:#F88A60;--primary-light:#1C0D06;
-  --secondary:#9CA3AF;--tertiary:#111827;--bg-btn:rgb(17,24,39);
+  --secondary:#9CA3AF;--tertiary:#111827;--bg-btn:#F9FAFB;
   --text-primary:#FAFAFA;--text-secondary:#A1A1AA;--text-tertiary:#52525B;--text-inverse:#030712;--text-muted:rgba(250,250,250,0.4);
   --border-subtle:rgba(229,231,235,0.08);--border-danger:rgba(225,29,72,0.08);
   --shadow-sm:0 3px 8px rgba(156,163,175,0.13);--shadow-md:0 5px 13px rgba(156,163,175,0.08);--shadow-lg:0 8px 21px rgba(156,163,175,0.05);
