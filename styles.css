@@ -80,6 +80,15 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 .g-input-wrap label{font:var(--fw-semibold) var(--fs-sm)/1 var(--font);color:var(--text-primary)}
 .g-input-wrap input,.g-input-wrap textarea{width:100%;border:none;outline:none;background:transparent;font:var(--fw-regular) var(--fs-md)/1.2 var(--font);color:var(--text-primary);min-width:0;padding:0}
 .g-input-wrap input::placeholder,.g-input-wrap textarea::placeholder{color:var(--text-muted)}
+/* Global radio — input ile aynı dil (border, radius, ferah) + sağda işaret */
+.g-radio{display:flex;align-items:center;gap:12px;padding:14px 16px;background:transparent;border:1px solid var(--border-subtle);border-radius:var(--r-lg);min-height:68px;cursor:pointer;transition:border-color .15s}
+.g-radio.active{border-color:var(--primary)}
+.g-radio-content{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.g-radio-title{font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)}
+.g-radio-sub{font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-radio-mark{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s}
+.g-radio.active .g-radio-mark{border-color:var(--primary)}
+.g-radio.active .g-radio-mark::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--primary)}
 .plate{width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3D3535,#1A1616);box-shadow:0 2px 8px rgba(0,0,0,0.12);position:relative;overflow:hidden}
 .plate::after{content:'';position:absolute;inset:12%;border-radius:50%;background:radial-gradient(circle at 45% 40%,rgba(180,120,90,0.5),rgba(120,70,50,0.4),rgba(60,40,30,0.3))}
 .plate-sm{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3D3535,#1A1616);flex-shrink:0}
@@ -250,7 +259,7 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 .loc-search{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border-subtle);border-radius:var(--r-lg);background:var(--glass-card);margin-bottom:12px}
 .loc-search-input{flex:1;border:none;outline:none;background:none;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary)}
 .loc-search-input::placeholder{color:var(--text-muted)}
-.loc-current{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-lg);background:var(--primary-soft);cursor:pointer;margin-bottom:4px}
+.loc-current{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--primary);border-radius:var(--r-lg);background:transparent;cursor:pointer;margin-bottom:4px;min-height:68px}
 .loc-saved-list{display:flex;flex-direction:column;gap:2px}
 .loc-item{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-lg);cursor:pointer;transition:background .15s}
 .loc-item:active{background:var(--glass-card)}

@@ -266,14 +266,14 @@ function renderSavedAddresses() {
   var html = '';
   USER_ADDRESSES.forEach(function(addr) {
     var isActive = addr.id === SELECTED_ADDRESS_ID;
-    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r-lg);cursor:pointer;background:' + (isActive ? 'var(--glass-card-strong)' : 'transparent') + ';border:1.5px solid ' + (isActive ? 'var(--primary)' : 'transparent') + '" onclick="selectAddress(\'' + addr.id + '\')">';
-    html += '<iconify-icon icon="' + addr.icon + '" style="font-size:20px;color:' + (isActive ? 'var(--primary)' : 'var(--text-muted)') + '"></iconify-icon>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font:var(--fw-semibold) var(--fs-sm)/1.2 var(--font);color:var(--text-primary)">' + addr.label + '</div>';
-    html += '<div style="font:var(--fw-regular) var(--fs-xs)/1.3 var(--font);color:var(--text-tertiary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + addr.address + '</div>';
-    html += '</div>';
-    if (isActive) html += '<iconify-icon icon="solar:check-circle-bold" style="font-size:18px;color:var(--primary)"></iconify-icon>';
-    html += '</div>';
+    html += '<div class="g-radio' + (isActive ? ' active' : '') + '" onclick="selectAddress(\'' + addr.id + '\')">'
+      + '<iconify-icon icon="' + addr.icon + '" style="font-size:20px;color:' + (isActive ? 'var(--primary)' : 'var(--text-primary)') + '"></iconify-icon>'
+      + '<div class="g-radio-content">'
+      +   '<div class="g-radio-title">' + addr.label + '</div>'
+      +   '<div class="g-radio-sub">' + addr.address + '</div>'
+      + '</div>'
+      + '<span class="g-radio-mark"></span>'
+      + '</div>';
   });
   list.innerHTML = html;
 }
