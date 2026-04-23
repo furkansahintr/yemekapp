@@ -86,9 +86,6 @@ body{font-family:var(--font);color:var(--text-primary);margin:0;padding:0;min-he
 .home-section-header{display:flex;align-items:center;justify-content:space-between;padding:10px var(--app-px) 0}
 .home-section-title{font:var(--fw-semibold) var(--fs-lg)/1 var(--font);color:var(--text-primary)}
 .home-section-link{width:28px;height:28px;border-radius:50%;background:var(--bg-btn);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer}
-/* Ana sayfa header'daki action ikonları — tema bazlı arka plan · border yok */
-#headerIcons .btn-icon,#stickyIcons .btn-icon{background:#F9FAFB;border:none}
-[data-theme="dark"] #headerIcons .btn-icon,[data-theme="dark"] #stickyIcons .btn-icon{background:#111827}
 .home-scroll{display:flex;gap:10px;overflow-x:auto;overflow-y:clip;overflow-clip-margin:30px;scrollbar-width:none;padding:10px var(--app-px);-webkit-overflow-scrolling:touch}
 .home-scroll::-webkit-scrollbar{display:none}
 .scroll-card{flex-shrink:0;width:150px}
