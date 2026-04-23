@@ -47,7 +47,7 @@ function renderSection(title, items, indices, source, opts) {
   return `<div class="home-section">
     <div class="home-section-header">
       <span class="home-section-title">${title}${badge}</span>
-      <div class="home-section-link"><i class="ti ti-arrow-narrow-right" style="font-size:18px;color:var(--primary)"></i></div>
+      <div class="home-section-link"><i class="ti ti-arrow-narrow-right" style="font-size:18px;color:var(--text-primary)"></i></div>
     </div>
     <div class="home-scroll">${items.map((item, i) => renderScrollCard(item, indices[i], source)).join('')}</div>
   </div>`;
