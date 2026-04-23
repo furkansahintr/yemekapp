@@ -267,7 +267,7 @@ function renderSavedAddresses() {
   USER_ADDRESSES.forEach(function(addr) {
     var isActive = addr.id === SELECTED_ADDRESS_ID;
     html += '<div class="g-radio' + (isActive ? ' active' : '') + '" onclick="selectAddress(\'' + addr.id + '\')">'
-      + '<iconify-icon icon="' + addr.icon + '" style="font-size:20px;color:' + (isActive ? 'var(--primary)' : 'var(--text-primary)') + '"></iconify-icon>'
+      + '<iconify-icon icon="' + addr.icon + '" style="font-size:20px;color:var(--text-primary)"></iconify-icon>'
       + '<div class="g-radio-content">'
       +   '<div class="g-radio-title">' + addr.label + '</div>'
       +   '<div class="g-radio-sub">' + addr.address + '</div>'
