@@ -515,12 +515,13 @@ function _bizCanInviteStaff() {
 }
 
 function _bizAssignableRoles() {
+  // Task spec roles: Garson, Kurye, Şube Müdürü, Koordinatör, Mutfak Sorumlusu
   if (bizCurrentRole === 'owner') {
-    return ['manager','coordinator','chef','waiter','cashier','courier'];
+    return ['waiter','courier','manager','coordinator','chef'];
   }
   if (bizCurrentRole === 'manager') {
     // Managers cannot create owner OR other managers
-    return ['coordinator','chef','waiter','cashier','courier'];
+    return ['waiter','courier','coordinator','chef'];
   }
   return [];
 }
@@ -574,28 +575,27 @@ function openBizAddStaff() {
 
       <div style="display:flex;flex-direction:column;gap:12px">
         <label style="display:flex;flex-direction:column;gap:6px">
-          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Ad Soyad</span>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">İsim Soyisim</span>
           <input id="invName" type="text" placeholder="Örn. Mehmet Yıldız" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
         </label>
 
         <label style="display:flex;flex-direction:column;gap:6px">
           <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Telefon Numarası</span>
-          <input id="invPhone" type="tel" placeholder="+90 555 000 00 00" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
+          <input id="invPhone" type="tel" inputmode="numeric" placeholder="+90 555 000 00 00" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
         </label>
 
         <label style="display:flex;flex-direction:column;gap:6px">
-          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">E-posta</span>
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Mail Adresi</span>
           <input id="invEmail" type="email" placeholder="ornek@firma.com" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none">
         </label>
 
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Rol</span>
-          <div style="display:flex;flex-wrap:wrap;gap:8px" id="invRoleChips">
-            ${roles.map((r, i) => `
-              <div data-role="${r}" onclick="_bizPickInvRole('${r}')" class="inv-role-chip" style="padding:8px 12px;border-radius:var(--r-full);font:var(--fw-medium) var(--fs-xs)/1 var(--font);cursor:pointer;${i===0 ? 'background:var(--primary);color:#fff;border:1px solid var(--primary)' : 'background:var(--bg-phone);color:var(--text-secondary);border:1px solid var(--border-subtle)'}">${BIZ_ROLE_LABELS[r] || r}</div>
-            `).join('')}
-          </div>
-        </div>
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Rolü</span>
+          <select id="invRole" style="background:var(--bg-phone);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:12px 14px;font:var(--fw-regular) var(--fs-md)/1 var(--font);color:var(--text-primary);outline:none;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%236B7280%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;padding-right:38px">
+            <option value="" disabled selected>Seçiniz</option>
+            ${roles.map(r => `<option value="${r}">${BIZ_ROLE_LABELS[r] || r}</option>`).join('')}
+          </select>
+        </label>
 
         <div style="display:flex;flex-direction:column;gap:6px">
           <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-secondary)">Şube</span>
@@ -613,34 +613,21 @@ function openBizAddStaff() {
           `}
         </div>
 
-        <input type="hidden" id="invSelectedRole" value="${roles[0] || ''}">
-
         <div onclick="_bizSubmitInvite()" style="margin-top:6px;background:var(--primary);border-radius:var(--r-xl);padding:14px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
           <iconify-icon icon="solar:plain-bold" style="font-size:18px;color:#fff"></iconify-icon>
-          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Davet Gönder</span>
+          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:#fff">Gönder</span>
         </div>
-        <div style="font:var(--fw-regular) 11px/1.4 var(--font);color:var(--text-muted);text-align:center">SMS ve e-posta otomatik gönderilir. Kullanıcı uygulamadan giriş yaparak hesabını aktifleştirebilir.</div>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 }
 
-function _bizPickInvRole(role) {
-  document.getElementById('invSelectedRole').value = role;
-  document.querySelectorAll('.inv-role-chip').forEach(el => {
-    const active = el.dataset.role === role;
-    el.style.background = active ? 'var(--primary)' : 'var(--bg-phone)';
-    el.style.color = active ? '#fff' : 'var(--text-secondary)';
-    el.style.border = active ? '1px solid var(--primary)' : '1px solid var(--border-subtle)';
-  });
-}
-
 function _bizSubmitInvite() {
   const name  = (document.getElementById('invName').value || '').trim();
   const phone = (document.getElementById('invPhone').value || '').trim();
   const email = (document.getElementById('invEmail').value || '').trim();
-  const role  = document.getElementById('invSelectedRole').value;
+  const role  = document.getElementById('invRole').value;
   const branchId = document.getElementById('invBranch').value;
 
   if (!name || !phone || !email || !role || !branchId) {
@@ -677,7 +664,6 @@ function _bizSubmitInvite() {
 
   // Also create a BIZ_STAFF entry so the new person appears in the personnel list immediately
   const newStaffId = 'staff_' + Date.now();
-  const roleColors = { owner:'#8B5CF6', manager:'#3B82F6', coordinator:'#A855F7', chef:'#F59E0B', waiter:'#22C55E', cashier:'#06B6D4', courier:'#EF4444' };
   const avatarSeed = Math.floor(Math.random() * 70) + 1;
   if (typeof BIZ_STAFF !== 'undefined') {
     BIZ_STAFF.push({
@@ -697,51 +683,27 @@ function _bizSubmitInvite() {
   // Close form and show success card with credentials
   const form = document.getElementById('bizAddStaffModal');
   if (form) form.remove();
-  _bizShowInviteSent(invite, roleColors[role] || '#6B7280');
+  _bizShowInviteSent(invite);
 
   // Refresh staff list if open
   const container = document.getElementById('bizStaffMainContent');
   if (container) container.innerHTML = _renderStaffTabContent();
 }
 
-function _bizShowInviteSent(invite, color) {
+function _bizShowInviteSent(invite) {
   const modal = document.createElement('div');
   modal.id = 'bizInviteSentModal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.onclick = function(e){ if (e.target === modal) modal.remove(); };
   modal.innerHTML = `
     <div style="width:100%;max-width:380px;background:var(--bg-page);border-radius:var(--r-2xl);padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.3)">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:16px">
         <div style="width:60px;height:60px;border-radius:50%;background:#22C55E15;display:flex;align-items:center;justify-content:center">
           <iconify-icon icon="solar:check-circle-bold" style="font-size:36px;color:#22C55E"></iconify-icon>
         </div>
         <div style="font:var(--fw-bold) var(--fs-lg)/1.2 var(--font);color:var(--text-primary);text-align:center">Davet Gönderildi</div>
-        <div style="font:var(--fw-regular) var(--fs-sm)/1.4 var(--font);color:var(--text-muted);text-align:center">
-          <strong style="color:var(--text-primary)">${escHtml(invite.name)}</strong> kullanıcısına SMS ve e-posta ile giriş bilgileri iletildi.
-        </div>
-      </div>
-
-      <div style="background:var(--bg-phone);border:1px dashed var(--border-subtle);border-radius:var(--r-xl);padding:14px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Kullanıcı Adı</span>
-          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);font-family:monospace">${escHtml(invite.username)}</span>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span style="font:var(--fw-medium) var(--fs-xs)/1 var(--font);color:var(--text-muted)">Şifre</span>
-          <span style="font:var(--fw-semibold) var(--fs-md)/1 var(--font);color:var(--text-primary);font-family:monospace">${escHtml(invite.password)}</span>
-        </div>
-        <div style="height:1px;background:var(--border-subtle)"></div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <iconify-icon icon="solar:phone-bold" style="font-size:13px;color:var(--text-muted)"></iconify-icon>
-          <span style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-secondary)">${escHtml(invite.phone)}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <iconify-icon icon="solar:letter-bold" style="font-size:13px;color:var(--text-muted)"></iconify-icon>
-          <span style="font:var(--fw-regular) var(--fs-xs)/1.2 var(--font);color:var(--text-secondary)">${escHtml(invite.email)}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <iconify-icon icon="solar:shield-user-bold" style="font-size:13px;color:${color}"></iconify-icon>
-          <span style="font:var(--fw-medium) var(--fs-xs)/1.2 var(--font);color:${color}">${escHtml(BIZ_ROLE_LABELS[invite.role] || invite.role)} · ${escHtml(invite.branchName)}</span>
+        <div style="font:var(--fw-regular) var(--fs-sm)/1.5 var(--font);color:var(--text-secondary);text-align:center">
+          Kullanıcıya davet formu gönderildi. Kullanıcının mail adresine kullanıcı adı ve şifresi gönderilmiştir. Kullanıcı hesabım sayfasında işletmede çalışıyorum kısmından giriş yapabilir.
         </div>
       </div>
 
