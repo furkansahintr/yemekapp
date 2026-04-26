@@ -290,6 +290,15 @@ function openBizBranchDetail(branchId) {
             </div>
             <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
           </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizHotelRooms('${branch.id}')">
+            <iconify-icon icon="solar:bed-bold" style="font-size:20px;color:#EC4899"></iconify-icon>
+            <div style="flex:1">
+              <div style="font:var(--fw-medium) var(--fs-md)/1 var(--font);color:var(--text-primary);display:flex;align-items:center;gap:6px">Otel Odaları İçin <span style="font:var(--fw-bold) 9px/1 var(--font);color:#fff;background:linear-gradient(135deg,#7C3AED,#EC4899);padding:3px 6px;border-radius:var(--r-full);letter-spacing:.4px">YENİ</span></div>
+              <div style="font:var(--fw-regular) var(--fs-xs)/1 var(--font);color:var(--text-muted);margin-top:2px">${(function(){ const cfg = (branch.hotelRooms || {}); if (!cfg.enabled) return 'In-room dining · konukların odadan sipariş versin'; const rc = (cfg.rooms||[]).length; return rc + ' oda · ' + (cfg.qrMode === 'perRoom' ? 'odaya özel QR' : 'tek genel QR'); })()}</div>
+            </div>
+            ${((branch.hotelRooms||{}).enabled) ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--r-full);background:rgba(236,72,153,.14);color:#DB2777;font:var(--fw-bold) 9px/1.4 var(--font);letter-spacing:.3px">AKTİF</span>' : ''}
+            <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:16px;color:var(--text-tertiary)"></iconify-icon>
+          </div>
           <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border-subtle)" onclick="openBizReservationSettings('${branch.id}')">
             <iconify-icon icon="solar:calendar-mark-linear" style="font-size:20px;color:var(--text-secondary)"></iconify-icon>
             <div style="flex:1">
